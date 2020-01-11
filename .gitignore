@@ -1,0 +1,10 @@
+# Vim temporary files
+.*.swp
+.*.swo
+# Python temporary files
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+# Tox directory
+.tox
