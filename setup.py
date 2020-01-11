@@ -16,7 +16,7 @@ setup(
     entry_points={
         'tox': ['ansible-collection = tox_ansible_collection.hooks'],
     },
-    install_requires=['tox>=2.0'],
+    install_requires=['tox>=2.0', 'pyyaml'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     classifiers=[
         'Development Status :: 3 - Alpha',

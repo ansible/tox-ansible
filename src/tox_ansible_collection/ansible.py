@@ -1,6 +1,11 @@
 """A collection of classes that know how to traverse an Ansible Galaxy
 folder structure"""
 from __future__ import print_function
+from yaml import load
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 from os import path, listdir, walk
 
 
@@ -48,7 +53,8 @@ class Role(object):
         scenarios = []
         for folder, dirs, files in walk(self.path):
             if 'molecule.yml' in files:
-                scenarios.push(Scenario(self, path.join(self.path, folder)))
+                scenarios.append(Scenario(self, path.join(self.path, folder)))
+        return scenarios
 
 
 class Scenario(object):
@@ -65,7 +71,13 @@ class Scenario(object):
         """Determines the name of the scenario, which is not always
         self-evident"""
         name = path.basename(self.scenario_dir)
-        # TODO: Parse molecule.yml for overriding name
+        print(self.scenario_file)
+        with open(self.scenario_file, 'r') as c:
+            self.config = load(c.read(), Loader=Loader)
+        if self.config and \
+           'scenario' in self.config and \
+           'name' in self.config['scenario']:
+            name = self.config['scenario']['name']
         return name
 
     def get_environment(self):
