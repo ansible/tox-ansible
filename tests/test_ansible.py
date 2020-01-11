@@ -34,7 +34,7 @@ class TestRole(ToxAnsibleTestCase):
         r = Role(c, self.roles[0][0])
         self.assertTrue(r.is_role())
         fake_role = os.path.join(self._temp_dir, "roles", "fakerole")
-        os.makedirs(fake_role, exist_ok=True)
+        os.makedirs(fake_role)
         fr = Role(c, "fakerole")
         self.assertFalse(fr.is_role())
 

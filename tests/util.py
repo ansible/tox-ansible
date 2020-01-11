@@ -57,7 +57,7 @@ class ToxAnsibleTestCase(TestCase):
         # Create role and scenario dirs
         for role, scenarios in cls.roles:
             tasks = os.path.join(cls._temp_dir, "roles", role, "tasks")
-            os.makedirs(tasks, exist_ok=True)
+            os.makedirs(tasks)
             # It's not a role if it doesn't have a tasks/main.yml
             with open(os.path.join(tasks, "main.yml"), 'w') as tasks:
                 tasks.write('')
@@ -65,7 +65,7 @@ class ToxAnsibleTestCase(TestCase):
             for scenario, molecule in scenarios:
                 d = os.path.join(cls._temp_dir, "roles", role,
                                  "molecule", scenario)
-                os.makedirs(d, exist_ok=True)
+                os.makedirs(d)
                 with open(os.path.join(d, "molecule.yml"), 'w') as mol_file:
                     mol_file.write(dedent(molecule))
 
