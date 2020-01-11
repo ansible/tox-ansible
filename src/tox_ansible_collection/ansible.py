@@ -26,6 +26,7 @@ class Collection(object):
 
         roles = [Role(self, d) for d in listdir(self.roles_dir)]
         roles = [r for r in roles if r.is_role()]
+        print(len(roles))
 
         return roles
 
