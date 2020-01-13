@@ -17,6 +17,7 @@ DEPS = ['molecule', 'shade', 'docker']
 
 INI_SECTION = "ansible"
 INI_PYTHON_VERSIONS = "python"
+INI_ANSIBLE_VERSIONS = "ansible"
 INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 
 
@@ -84,21 +85,14 @@ class Options(object):
         return envconfigs
 
     def python_matrix(self, envs):
-        python = self.reader.getlist(INI_PYTHON_VERSIONS, sep=" ")
-        if not python:
-            return envs
-        results = []
-        for e in envs:
-            for py in python:
-                env = deepcopy(e)
-                env['name'].insert(0, 'py' + py.replace('.', ''))
-                env['basepython'] = 'python' + py
-                results.append(env)
-        return results
+        def base_python(env, version):
+            env['basepython'] = 'python' + version
+        return self._matrix(envs, INI_PYTHON_VERSIONS, 'py', base_python)
 
     def ansible_matrix(self, envs):
-        # TODO: multiply envs by ansible versions, if necessary
-        return envs
+        def ansible_dep(env, version):
+            env['deps'].append('ansible=={}.*'.format(version))
+        return self._matrix(envs, INI_ANSIBLE_VERSIONS, 'ansible', ansible_dep)
 
     def get_global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
@@ -128,3 +122,16 @@ class Options(object):
         self.config.distshare = reader.getpath("distshare", distshare_default)
         reader.addsubstitutions(distshare=self.config.distshare)
         return reader
+
+    def _matrix(self, envs, opt, factor, callback=lambda e: e):
+        versions = self.reader.getlist(opt, sep=" ")
+        if not versions:
+            return envs
+        results = []
+        for e in envs:
+            for version in versions:
+                env = deepcopy(e)
+                env['name'].insert(0, factor + version.replace('.', ''))
+                callback(env, version)
+                results.append(env)
+        return results
