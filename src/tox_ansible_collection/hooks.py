@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import tox
+import sys
 from .ansible import Collection
 from .compat import TOX_PARALLEL_ENV
 from .options import (
@@ -71,5 +72,10 @@ def tox_configure(config):
     if config.envlist_explicit:
         return
 
-    config.envlist = list(set(config.envlist + list(environments.keys())))
+    # Add environments to the executing list
+    config.envlist = list(config.envconfigs.keys())
+    config.envlist = list(options.filter_envlist(config.envconfigs).keys())
     config.envlist_default = config.envlist
+    if len(config.envlist) == 0:
+        print("****** No environments matched. This is a problem.")
+        sys.exit(101)

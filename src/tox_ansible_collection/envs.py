@@ -3,6 +3,8 @@ from tox.config import DepOption
 
 
 def customize_env(envconfig, env, options):
+    # Store the scenario for later
+    envconfig.scenario = env['scenario']
     # Default commands to run molecule
     if not envconfig.commands:
         envconfig.commands = _get_commands(env['scenario'], options)

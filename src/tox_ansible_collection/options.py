@@ -1,6 +1,7 @@
 import os
 import tox
 from copy import deepcopy
+from itertools import chain
 from .envs import customize_env
 
 
@@ -31,28 +32,22 @@ class Options(object):
         self.driver = self._parse_opt(opts, DRIVER_OPTION_NAME,
                                       DRIVER_ENV_NAME)
 
-    def _parse_opt(self, option, opt, env):
-        if option[opt] is not None:
-            return option[opt]
-
-        if env in os.environ:
-            return os.environ[env]
-
-        return None
-
-    def _get_reader(self, section, cfg, prefix=None):
-        """Creates a SectionReader and configures it with known and reasonable
-        substitution values based on the config."""
-        reader = tox.config.SectionReader(section, cfg, prefix=prefix)
-        distshare_default = "{homedir}/.tox/distshare"
-        reader.addsubstitutions(toxinidir=self.config.toxinidir,
-                                homedir=self.config.homedir,
-                                toxworkdir=self.config.toxworkdir)
-        self.config.distdir = reader.getpath("distdir", "{toxworkdir}/dist")
-        reader.addsubstitutions(distdir=self.config.distdir)
-        self.config.distshare = reader.getpath("distshare", distshare_default)
-        reader.addsubstitutions(distshare=self.config.distshare)
-        return reader
+    def filter_envlist(self, envs):
+        """Filters a list of environments to match the arguments already
+        provided to this code."""
+        if self.role:
+            def filter_role(e):
+                if hasattr(e[1], 'scenario'):
+                    return e[1].scenario.role.folder in self.role
+                return False
+            envs = dict(filter(filter_role, envs.items()))
+        if self.scenario:
+            def filter_scenario(e):
+                if hasattr(e[1], 'scenario'):
+                    return e[1].scenario.name in self.scenario
+                return False
+            envs = dict(filter(filter_scenario, envs.items()))
+        return envs
 
     def get_envs(self, scenario):
         """Creates a set of environments for the given scenario, based on
@@ -108,3 +103,28 @@ class Options(object):
     def get_global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
         return opts
+
+    def _parse_opt(self, option, opt, env):
+        if option[opt] is not None:
+            values = list(map(lambda a: a.split(','), option[opt]))
+            values = list(chain.from_iterable(values))
+            return values
+
+        if env in os.environ:
+            return os.environ[env].split(',')
+
+        return None
+
+    def _get_reader(self, section, cfg, prefix=None):
+        """Creates a SectionReader and configures it with known and reasonable
+        substitution values based on the config."""
+        reader = tox.config.SectionReader(section, cfg, prefix=prefix)
+        distshare_default = "{homedir}/.tox/distshare"
+        reader.addsubstitutions(toxinidir=self.config.toxinidir,
+                                homedir=self.config.homedir,
+                                toxworkdir=self.config.toxworkdir)
+        self.config.distdir = reader.getpath("distdir", "{toxworkdir}/dist")
+        reader.addsubstitutions(distdir=self.config.distdir)
+        self.config.distshare = reader.getpath("distshare", distshare_default)
+        reader.addsubstitutions(distshare=self.config.distshare)
+        return reader
