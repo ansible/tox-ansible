@@ -71,4 +71,5 @@ def tox_configure(config):
     if config.envlist_explicit:
         return
 
-    # TODO: enable filtering options
+    config.envlist = list(set(config.envlist + list(environments.keys())))
+    config.envlist_default = config.envlist
