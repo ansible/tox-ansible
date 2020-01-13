@@ -31,7 +31,6 @@ class Collection(object):
 
         roles = [Role(self, d) for d in listdir(self.roles_dir)]
         roles = [r for r in roles if r.is_role()]
-        print(len(roles))
 
         return roles
 
@@ -43,6 +42,9 @@ class Role(object):
         self.collection = collection
         self.folder = folder
         self.path = path.join(self.collection.roles_dir, self.folder)
+
+    def __str__(self):
+        return self.folder
 
     def is_role(self):
         """Tells you if this folder is actually a role."""
@@ -67,11 +69,13 @@ class Scenario(object):
                                        "molecule.yml")
         self.name = self._get_name()
 
+    def __str__(self):
+        return '{} - {}'.format(self.role.folder, self.name)
+
     def _get_name(self):
         """Determines the name of the scenario, which is not always
         self-evident"""
         name = path.basename(self.scenario_dir)
-        print(self.scenario_file)
         with open(self.scenario_file, 'r') as c:
             self.config = load(c.read(), Loader=Loader)
         if self.config and \
