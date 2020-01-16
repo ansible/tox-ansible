@@ -31,7 +31,7 @@ class Role(object):
         scenarios = []
         for folder, dirs, files in walk(self.directory):
             tree = folder.split(sep)
-            if len(tree) == 2 and tree[0] == "molecule" \
+            if len(tree) >= 2 and tree[-2] == "molecule" \
                and 'molecule.yml' in files:
                 scenarios.append(Scenario(path.join(self.directory, folder)))
         return scenarios

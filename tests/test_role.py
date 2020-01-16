@@ -42,13 +42,13 @@ class TestRole(TestCase):
         # Creates a directory structure that one might find in the role,
         # including both folders we won't care about, and some that we will
         walk_mock.return_value = [
-            ("defaults", [], ["main.yml"]),
-            ("templates", ["derp"], ["molecule.yml"]),
-            ("templates/derp", [], ["molecule.yml"]),
-            ("molecule", ["one", "two", "shared"], []),
-            ("molecule/one", [], ["molecule.yml"]),
-            ("molecule/two", [], ["molecule.yml", "playbook.yml"]),
-            ("molecule/shared", [], ["requirements.yml"])
+            ("/home/derp/defaults", [], ["main.yml"]),
+            ("/home/derp/templates", ["derp"], ["molecule.yml"]),
+            ("/home/derp/templates/derp", [], ["molecule.yml"]),
+            ("/home/derp/molecule", ["one", "two", "shared"], []),
+            ("/home/derp/molecule/one", [], ["molecule.yml"]),
+            ("/home/derp/molecule/two", [], ["molecule.yml", "playbook.yml"]),
+            ("/home/derp/molecule/shared", [], ["requirements.yml"])
         ]
         r = Role("roles/has_scenarios")
         scenarios = r.get_scenarios()

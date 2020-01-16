@@ -62,7 +62,7 @@ def tox_configure(config):
     # Add them to the envconfig list before testing for explicit calls, because
     # we want the user to be able to specifically state an auto-generated
     # test, if they want to
-    tox.add_envconfigs(tox_cases)
+    tox.add_envconfigs(tox_cases, options)
 
     # Don't filter down or add to envlist if an environment has been
     # specified by the user
