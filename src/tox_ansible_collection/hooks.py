@@ -1,9 +1,10 @@
 """Tox hook implementations."""
 from __future__ import print_function
 import os
-import tox
 import sys
-from .ansible import Collection
+from tox import hookimpl
+from .ansible import Ansible
+from .tox import Tox
 from .compat import TOX_PARALLEL_ENV
 from .options import (
     ROLE_OPTION_NAME,
@@ -18,7 +19,7 @@ from .options import (
 )
 
 
-@tox.hookimpl
+@hookimpl
 def tox_addoption(parser):
     """Add options to filter down to only executing the given roles and
     scenarios."""
@@ -36,7 +37,7 @@ def tox_addoption(parser):
         .format(DRIVER_ENV_NAME))
 
 
-@tox.hookimpl
+@hookimpl
 def tox_configure(config):
     """If the current folder includes a file named `galaxy.yml`, then look for
     a roles directory and generate environments for every (role, scenario)
@@ -45,27 +46,23 @@ def tox_configure(config):
     if TOX_PARALLEL_ENV in os.environ:
         return
 
-    collection = Collection()
+    ansible = Ansible()
+    tox = Tox(config)
+    options = Options(tox)
 
     # Only execute inside of a collection, otherwise we have nothing to do
-    if not collection.is_collection():
+    if not ansible.is_ansible():
         return
 
-    options = Options(config)
+    # Create any test cases that are discovered in the directory structure and
+    # expand them per any configured matrix axes in the config file
+    tox_cases = ansible.get_tox_cases()
+    tox_cases = options.expand_matrix(tox_cases)
 
-    # Generate all the needed environments
-    scenarios = []
-    environments = {}
-    # Find all the roles
-    roles = collection.get_roles()
-    # Find the scenarios in each role
-    for role in roles:
-        scenarios.extend(role.get_scenarios())
-    # generate a tox environment for each scenario
-    for scenario in scenarios:
-        environments.update(options.get_envs(scenario))
-
-    config.envconfigs.update(environments)
+    # Add them to the envconfig list before testing for explicit calls, because
+    # we want the user to be able to specifically state an auto-generated
+    # test, if they want to
+    tox.add_envconfigs(tox_cases)
 
     # Don't filter down or add to envlist if an environment has been
     # specified by the user
