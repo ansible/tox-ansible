@@ -41,6 +41,9 @@ class ToxCaseBase(object):
             dependencies.append("ansible=={}.*".format(self.ansible))
         else:
             dependencies.append("ansible")
+        # Drivers can have their own dependencies
+        if self.scenario.driver == "docker":
+            dependencies.append("molecule[docker]")
         return dependencies
 
     def get_name(self):

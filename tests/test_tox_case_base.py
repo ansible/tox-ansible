@@ -9,6 +9,9 @@ from tox_ansible_collection.ansible.scenario import Scenario
 from tox_ansible_collection.options import Options
 
 
+DOCKER_DRIVER = {"driver": {"name": "docker"}}
+
+
 class TestToxCaseBase(TestCase):
     @mock.patch.object(Options, "get_global_opts", return_value=[])
     def test_case_is_simple(self, opts_mock):
@@ -40,6 +43,12 @@ class TestToxCaseBase(TestCase):
         self.assertEqual(ts.python, "4.1")
         self.assertEqual(ts.get_name(), "py41-derp-my_test")
         self.assertEqual(ts.get_basepython(), "python4.1")
+
+    @mock.patch.object(Scenario, "_get_config", return_value=DOCKER_DRIVER)
+    def test_case_includes_docker_deps(self, config_mock):
+        s = Scenario("moelcule/my_test")
+        t = ToxCaseBase(self.role, s)
+        self.assertIn("molecule[docker]", t.get_dependencies())
 
     @classmethod
     @mock.patch.object(Scenario, "_get_config", return_value={})
