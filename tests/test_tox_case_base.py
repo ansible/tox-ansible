@@ -10,6 +10,7 @@ from tox_ansible_collection.options import Options
 
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
+OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
 
 
 class TestToxCaseBase(TestCase):
@@ -49,6 +50,12 @@ class TestToxCaseBase(TestCase):
         s = Scenario("moelcule/my_test")
         t = ToxCaseBase(self.role, s)
         self.assertIn("molecule[docker]", t.get_dependencies())
+
+    @mock.patch.object(Scenario, "_get_config", return_value=OPENSTACK_DRIVER)
+    def test_case_includes_openstack_deps(self, config_mock):
+        s = Scenario("molecule/osp_test")
+        t = ToxCaseBase(self.role, s)
+        self.assertIn("molecule[openstack]", t.get_dependencies())
 
     @classmethod
     @mock.patch.object(Scenario, "_get_config", return_value={})

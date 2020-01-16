@@ -1,3 +1,9 @@
+DRIVER_DEPENDENCIES = {
+    "docker": ["molecule[docker]"],
+    "openstack": ["molecule[openstack]"]
+}
+
+
 class ToxCaseBase(object):
     """Represents a generalized Test Case for an Ansible structure."""
     def __init__(self, role, scenario, name_parts=[]):
@@ -42,8 +48,9 @@ class ToxCaseBase(object):
         else:
             dependencies.append("ansible")
         # Drivers can have their own dependencies
-        if self.scenario.driver == "docker":
-            dependencies.append("molecule[docker]")
+        if self.scenario.driver is not None \
+           and self.scenario.driver in DRIVER_DEPENDENCIES.keys():
+            dependencies.extend(DRIVER_DEPENDENCIES[self.scenario.driver])
         return dependencies
 
     def get_name(self):
