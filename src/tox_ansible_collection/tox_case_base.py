@@ -1,6 +1,6 @@
 DRIVER_DEPENDENCIES = {
-    "docker": ["molecule[docker]"],
-    "openstack": ["molecule[openstack]"]
+    "docker": ["docker"],
+    "openstack": ["openstacksdk"]
 }
 
 

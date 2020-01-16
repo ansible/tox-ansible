@@ -49,13 +49,13 @@ class TestToxCaseBase(TestCase):
     def test_case_includes_docker_deps(self, config_mock):
         s = Scenario("moelcule/my_test")
         t = ToxCaseBase(self.role, s)
-        self.assertIn("molecule[docker]", t.get_dependencies())
+        self.assertIn("docker", t.get_dependencies())
 
     @mock.patch.object(Scenario, "_get_config", return_value=OPENSTACK_DRIVER)
     def test_case_includes_openstack_deps(self, config_mock):
         s = Scenario("molecule/osp_test")
         t = ToxCaseBase(self.role, s)
-        self.assertIn("molecule[openstack]", t.get_dependencies())
+        self.assertIn("openstacksdk", t.get_dependencies())
 
     @classmethod
     @mock.patch.object(Scenario, "_get_config", return_value={})
