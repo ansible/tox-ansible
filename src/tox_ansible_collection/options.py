@@ -69,7 +69,7 @@ class Options(object):
         return opts
 
     def _parse_opt(self, option, opt, env):
-        if option[opt] is not None:
+        if isinstance(option, dict) and option[opt] is not None:
             values = list(map(lambda a: a.split(','), option[opt]))
             values = list(chain.from_iterable(values))
             return values
