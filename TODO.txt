@@ -1,0 +1,14 @@
+* FINISH FILTERING:
+  Currently filtering is implemented inside of the Options object, but it mightb
+be smart to implement that in its own world. Then we can readily add new types
+of tests if we need to. Currently there should be at least the ability to filter
+by role name, scenario name, and Molecule driver type.
+
+* MORE TESTS
+  Currently there are no tests that test out the full functionality of the
+plugin by running an actual tox execution. Only unittests at the moment, no
+integration tests. We should implement a few basic integration tests so that
+we are sure things aren't going too crazy under the hood
+
+* AUTOMATED RELEASE
+  CI is in place. Time to get CD going
