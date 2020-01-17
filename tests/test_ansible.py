@@ -3,9 +3,9 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-from tox_ansible_collection.ansible import Ansible
-from tox_ansible_collection.ansible.collection import Collection
-from tox_ansible_collection.ansible.role import Role
+from tox_ansible.ansible import Ansible
+from tox_ansible.ansible.collection import Collection
+from tox_ansible.ansible.role import Role
 
 
 class TestAnsible(TestCase):

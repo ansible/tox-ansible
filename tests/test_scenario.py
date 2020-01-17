@@ -1,6 +1,6 @@
 from unittest import TestCase
 from testfixtures import TempDirectory
-from tox_ansible_collection.ansible.scenario import Scenario
+from tox_ansible.ansible.scenario import Scenario
 
 
 class TestScenarioDefaultName(TestCase):

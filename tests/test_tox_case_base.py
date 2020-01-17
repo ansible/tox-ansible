@@ -3,10 +3,10 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-from tox_ansible_collection.tox_case_base import ToxCaseBase
-from tox_ansible_collection.ansible.role import Role
-from tox_ansible_collection.ansible.scenario import Scenario
-from tox_ansible_collection.options import Options
+from tox_ansible.tox_case_base import ToxCaseBase
+from tox_ansible.ansible.role import Role
+from tox_ansible.ansible.scenario import Scenario
+from tox_ansible.options import Options
 
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}

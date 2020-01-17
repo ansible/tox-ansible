@@ -3,8 +3,8 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-from tox_ansible_collection.ansible.role import Role
-from tox_ansible_collection.ansible.scenario import Scenario
+from tox_ansible.ansible.role import Role
+from tox_ansible.ansible.scenario import Scenario
 
 
 class TestRole(TestCase):
@@ -15,8 +15,8 @@ class TestRole(TestCase):
         self.assertEqual(r.name, "directory")
         self.assertEqual(str(r), "directory")
 
-    @mock.patch("tox_ansible_collection.ansible.role.path.isdir")
-    @mock.patch("tox_ansible_collection.ansible.role.path.isfile")
+    @mock.patch("tox_ansible.ansible.role.path.isdir")
+    @mock.patch("tox_ansible.ansible.role.path.isfile")
     def test_role_is_valid(self, isfile_mock, isdir_mock):
         """Role should only know that it actually is a role when it is in a
         directory that contains a file at the subpath "tasks/main.yml".
@@ -32,7 +32,7 @@ class TestRole(TestCase):
         self.assertFalse(r.is_role())
 
     @mock.patch.object(Scenario, "_get_config")
-    @mock.patch("tox_ansible_collection.ansible.role.walk")
+    @mock.patch("tox_ansible.ansible.role.walk")
     def test_role_finds_scenarios(self, walk_mock, scenario_mock):
         """Tests that the role properly walks its subdirectories and finds all
         of the ones that are scenarios and not any that don't contain a

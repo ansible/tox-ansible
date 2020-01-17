@@ -5,7 +5,7 @@ import tempfile
 from textwrap import dedent
 from unittest import TestCase
 
-from tox_ansible_collection.compat import TOX_PARALLEL_ENV
+from tox_ansible.compat import TOX_PARALLEL_ENV
 
 
 class ToxAnsibleTestCase(TestCase):

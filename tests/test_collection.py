@@ -1,9 +1,9 @@
 import os
 from unittest import TestCase
-from tox_ansible_collection.ansible.collection import Collection
-from tox_ansible_collection.ansible.role import Role
-from tox_ansible_collection.ansible.scenario import Scenario
-from tox_ansible_collection.tox_case_base import ToxCaseBase
+from tox_ansible.ansible.collection import Collection
+from tox_ansible.ansible.role import Role
+from tox_ansible.ansible.scenario import Scenario
+from tox_ansible.tox_case_base import ToxCaseBase
 
 try:
     from unittest import mock
@@ -12,22 +12,22 @@ except ImportError:
 
 
 class TestCollection(TestCase):
-    @mock.patch("tox_ansible_collection.ansible.collection.path.isfile")
+    @mock.patch("tox_ansible.ansible.collection.path.isfile")
     def test_collection_works(self, isfile_mock):
         isfile_mock.return_value = True
         c = Collection()
         self.assertEqual(os.path.abspath(os.curdir), c.directory)
         self.assertTrue(c.is_collection())
 
-    @mock.patch("tox_ansible_collection.ansible.collection.path.isdir")
+    @mock.patch("tox_ansible.ansible.collection.path.isdir")
     def test_no_roles_dir(self, isdir_mock):
         isdir_mock.return_value = False
         c = Collection()
         roles = c.get_roles()
         self.assertEqual(len(roles), 0)
 
-    @mock.patch("tox_ansible_collection.ansible.collection.path.isdir")
-    @mock.patch("tox_ansible_collection.ansible.collection.listdir")
+    @mock.patch("tox_ansible.ansible.collection.path.isdir")
+    @mock.patch("tox_ansible.ansible.collection.listdir")
     @mock.patch.object(Role, "is_role")
     def test_get_roles_back(self, role_mock, listdir_mock, isdir_mock):
         isdir_mock.return_value = True
