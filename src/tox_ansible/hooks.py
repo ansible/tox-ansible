@@ -4,7 +4,7 @@ import os
 import sys
 from tox import hookimpl
 from .ansible import Ansible
-from .tox import Tox
+from .tox_helper import Tox
 from .compat import TOX_PARALLEL_ENV
 from .options import (
     ROLE_OPTION_NAME,
