@@ -47,22 +47,13 @@ class Options(object):
         values"""
         return self.matrix.expand(tox_cases)
 
-    def filter_envlist(self, envs):
-        """Filters a list of environments to match the arguments already
-        provided to this code."""
-        if self.role:
-            def filter_role(e):
-                if hasattr(e[1], 'scenario'):
-                    return e[1].scenario.role.folder in self.role
-                return False
-            envs = dict(filter(filter_role, envs.items()))
-        if self.scenario:
-            def filter_scenario(e):
-                if hasattr(e[1], 'scenario'):
-                    return e[1].scenario.name in self.scenario
-                return False
-            envs = dict(filter(filter_scenario, envs.items()))
-        return envs
+    def do_filter(self):
+        """Determine if we should be filtering or not. Only do so if there are
+        arguments to do the filtering around. Otherwise, we don't want to leave
+        no environments to execute against."""
+        return len(self.role) != 0 or \
+            len(self.scenario) != 0 or \
+            len(self.driver) != 0
 
     def get_global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
@@ -77,4 +68,4 @@ class Options(object):
         if env in os.environ:
             return os.environ[env].split(',')
 
-        return None
+        return []

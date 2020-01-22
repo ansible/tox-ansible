@@ -6,6 +6,7 @@ from tox import hookimpl
 from .ansible import Ansible
 from .tox_helper import Tox
 from .compat import TOX_PARALLEL_ENV
+from .filter import Filter
 from .options import (
     ROLE_OPTION_NAME,
     SCENARIO_OPTION_NAME,
@@ -69,9 +70,19 @@ def tox_configure(config):
     if config.envlist_explicit:
         return
 
-    # Add environments to the executing list
-    config.envlist = list(config.envconfigs.keys())
-    config.envlist = list(options.filter_envlist(config.envconfigs).keys())
+    # Add the items we generated to the envlist to be executed by default
+    # Set, because there might be dupes
+    config.envlist = list(set(config.envlist + config.ansible_envlist))
+
+    # Since the user hasn't been explicit about which environments to execute
+    # against, then we add the ones we've generated to the list, and then we
+    # filter it
+    if options.do_filter():
+        envfilter = Filter(options)
+        # Actually modify the envconfigs, because we don't care about ones we
+        # won't be executing
+        config.envconfigs = envfilter.filter(config.envconfigs)
+        config.envlist = list(config.envconfigs.keys())
     config.envlist_default = config.envlist
     if len(config.envlist) == 0:
         print("****** No environments matched. This is a problem.")

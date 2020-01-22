@@ -59,6 +59,8 @@ class Tox(object):
         # Python 2 fix
         make_envconfig = getattr(make_envconfig, '__func__', make_envconfig)
 
+        # Store the generated ansible envlist
+        self.config.ansible_envlist = []
         for tox_case in tox_cases:
             section = testenvprefix + tox_case.get_name()
             config = make_envconfig(self.config,
@@ -69,6 +71,7 @@ class Tox(object):
             config.tox_case = tox_case
             self.customize_envconfig(config, options)
             self.config.envconfigs[tox_case.get_name()] = config
+            self.config.ansible_envlist.append(tox_case.get_name())
 
     def customize_envconfig(self, config, options):
         """Writes the fields of the envconfig that need to be given default
