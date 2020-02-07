@@ -19,7 +19,7 @@ class TestAnsible(TestCase):
         tc_mock.return_value = tcs
         ansible = Ansible()
         self.assertTrue(ansible.is_ansible())
-        self.assertEqual(ansible.get_tox_cases(), tcs)
+        self.assertEqual(ansible.get_tox_cases()[:-1], tcs)
 
     @mock.patch.object(Collection, "get_tox_cases")
     @mock.patch.object(Role, "is_role")
@@ -31,7 +31,7 @@ class TestAnsible(TestCase):
         tc_mock.return_value = tcs
         ansible = Ansible()
         self.assertTrue(ansible.is_ansible())
-        self.assertEqual(ansible.get_tox_cases(), tcs)
+        self.assertEqual(ansible.get_tox_cases()[:-1], tcs)
 
     @mock.patch.object(Role, "is_role")
     @mock.patch.object(Collection, "is_collection")
@@ -40,4 +40,4 @@ class TestAnsible(TestCase):
         r_mock.return_value = False
         ansible = Ansible()
         self.assertFalse(ansible.is_ansible())
-        self.assertEqual(len(ansible.get_tox_cases()), 0)
+        self.assertEqual(len(ansible.get_tox_cases()), 1)

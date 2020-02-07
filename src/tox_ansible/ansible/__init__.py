@@ -1,6 +1,7 @@
 from os import path
 from .collection import Collection
 from .role import Role
+from ..tox_lint_case import ToxLintCase
 
 
 class Ansible(object):
@@ -30,8 +31,10 @@ class Ansible(object):
         the structure of a test environment.
 
         :return: List of TestCase objects"""
+        tox_cases = []
         if self.collection.is_collection():
-            return self.collection.get_tox_cases()
-        if self.role.is_role():
-            return self.role.get_tox_cases()
-        return []
+            tox_cases.extend(self.collection.get_tox_cases())
+        elif self.role.is_role():
+            tox_cases.extend(self.role.get_tox_cases())
+        tox_cases.append(ToxLintCase(tox_cases))
+        return tox_cases

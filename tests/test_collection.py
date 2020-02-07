@@ -3,7 +3,7 @@ from unittest import TestCase
 from tox_ansible.ansible.collection import Collection
 from tox_ansible.ansible.role import Role
 from tox_ansible.ansible.scenario import Scenario
-from tox_ansible.tox_case_base import ToxCaseBase
+from tox_ansible.tox_test_case import ToxTestCase
 
 try:
     from unittest import mock
@@ -51,7 +51,7 @@ class TestCollection(TestCase):
         scenario_mock.return_value = {}
         collection_mock.return_value = [r1, r2]
         # Yeah, both roles will pretend they're r1 for this. Big deal
-        role_mock.return_value = [ToxCaseBase(r1, s1), ToxCaseBase(r1, s2)]
+        role_mock.return_value = [ToxTestCase(r1, s1), ToxTestCase(r1, s2)]
         c = Collection()
         cases = c.get_tox_cases()
         self.assertEqual(len(cases), len(role_mock()) * len(collection_mock()))

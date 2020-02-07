@@ -1,5 +1,5 @@
 from os import path, walk, sep
-from ..tox_case_base import ToxCaseBase
+from ..tox_test_case import ToxTestCase
 from .scenario import Scenario
 
 
@@ -43,5 +43,5 @@ class Role(object):
         :return: A list of test cases"""
         tox_cases = []
         for scenario in self.get_scenarios():
-            tox_cases.append(ToxCaseBase(self, scenario))
+            tox_cases.append(ToxTestCase(self, scenario))
         return tox_cases
