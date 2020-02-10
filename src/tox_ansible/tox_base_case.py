@@ -27,7 +27,7 @@ class ToxBaseCase(object):
         if hasattr(self, 'role') and hasattr(self, 'scenario'):
             copy = self.__class__(self.role, self.scenario, [name])
         else:
-            copy = self.__class__(self._cases)
+            copy = self.__class__(self._cases, [name])
         copy.python = self.python
         copy.ansible = self.ansible
         return copy

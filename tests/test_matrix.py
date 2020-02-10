@@ -1,4 +1,4 @@
-from tox_ansible.matrix import Matrix
+from tox_ansible.matrix import Matrix, MatrixAxisBase
 from tox_ansible.matrix.axes import PythonAxis, AnsibleAxis
 from tox_ansible.tox_test_case import ToxTestCase
 from tox_ansible.tox_lint_case import ToxLintCase
@@ -29,3 +29,16 @@ class TestMatrix(TestCase):
         case = mock.Mock()
         axis.expand([case])
         case.expand_ansible.assert_called_once()
+
+    def test_matrix_calls_axis(self):
+        matrix = Matrix()
+        axis = mock.Mock()
+        matrix.add_axis(axis)
+        cases = [mock.Mock()]
+        matrix.expand(cases)
+        axis.expand.assert_called_once()
+
+    def test_base_has_abstract_method(self):
+        base = MatrixAxisBase([])
+        with self.assertRaises(NotImplementedError):
+            base.expand_one(0, 0)
