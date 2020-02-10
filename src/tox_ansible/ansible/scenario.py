@@ -29,7 +29,7 @@ class Scenario(object):
         self-evident. By default it is the name of the directory that the
         scenario file lives in, but if there is an entry in the molecule.yml
         definition, it can override that value."""
-        if "scenario" in self._config and \
+        if self._config and "scenario" in self._config and \
            "name" in self._config["scenario"]:
             return self._config["scenario"]["name"]
         return path.basename(self.directory)
@@ -38,7 +38,7 @@ class Scenario(object):
         """Reads the driver for this scenario, if one is defined.
 
         :return: Driver name defined in molecule.yml or None"""
-        if "driver" in self._config and \
+        if self._config and "driver" in self._config and \
            "name" in self._config["driver"]:
             return self._config["driver"]["name"]
         return None

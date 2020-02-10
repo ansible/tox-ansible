@@ -24,7 +24,10 @@ class ToxBaseCase(object):
 
         :param name: An additional field to be added to the name factors
         :return: A copy of this object with the additional name factor"""
-        copy = self.__class__(self.role, self.scenario, [name])
+        if hasattr(self, 'role') and hasattr(self, 'scenario'):
+            copy = self.__class__(self.role, self.scenario, [name])
+        else:
+            copy = self.__class__(self._cases)
         copy.python = self.python
         copy.ansible = self.ansible
         return copy

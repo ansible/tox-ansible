@@ -1,12 +1,15 @@
 from .tox_base_case import ToxBaseCase
+from copy import copy
 
 
 BASH = "cd {} && molecule {} lint -s {}"
 
 
 class ToxLintCase(ToxBaseCase):
-    def __init__(self, cases):
-        self._cases = cases
+    def __init__(self, cases, name_factors=[]):
+        self._cases = copy(cases)
+        self._name_factors = name_factors + ['lint_all']
+        super(ToxLintCase, self).__init__()
 
     def get_commands(self, options):
         cmds = []
@@ -27,4 +30,4 @@ class ToxLintCase(ToxBaseCase):
         return ["molecule"]
 
     def get_name(self):
-        return "lint-all"
+        return '-'.join(self._name_factors)
