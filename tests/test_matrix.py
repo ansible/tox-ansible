@@ -22,13 +22,13 @@ class TestMatrix(TestCase):
         axis = PythonAxis(["2.7"])
         case = mock.Mock()
         axis.expand([case])
-        case.expand_python.assert_called_once()
+        case.expand_python.assert_called_once_with("2.7")
 
     def test_ansible_axis(self):
         axis = AnsibleAxis(["2.10"])
         case = mock.Mock()
         axis.expand([case])
-        case.expand_ansible.assert_called_once()
+        case.expand_ansible.assert_called_once_with("2.10")
 
     def test_matrix_calls_axis(self):
         matrix = Matrix()
@@ -36,7 +36,7 @@ class TestMatrix(TestCase):
         matrix.add_axis(axis)
         cases = [mock.Mock()]
         matrix.expand(cases)
-        axis.expand.assert_called_once()
+        axis.expand.assert_called_once_with(cases)
 
     def test_base_has_abstract_method(self):
         base = MatrixAxisBase([])
