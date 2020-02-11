@@ -13,7 +13,10 @@ jobs:
 install:
   - pip install -U pip
   - pip --version
-  - pip install -U tox tox-travis
+  - pip install -U tox tox-travis coveralls
 
 script:
   - tox
+
+after_success:
+  - coveralls
