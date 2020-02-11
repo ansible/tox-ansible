@@ -5,6 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name='tox-ansible',
     description='Auto-generate environments for molecule role testing',
+    long_description_content_type="text/markdown",
     long_description=io.open('README.md', encoding='utf-8').read(),
     author='Greg Hellings',
     author_email='greg.hellings@gmail.com',
