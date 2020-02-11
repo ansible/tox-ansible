@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.com/greg-hellings/tox-ansible.svg?branch=master)](https://travis-ci.com/greg-hellings/tox-ansible)
+[![Coverage Status](https://coveralls.io/repos/github/greg-hellings/tox-ansible/badge.svg?branch=master)](https://coveralls.io/github/greg-hellings/tox-ansible?branch=master)
+[![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
+
 tox-ansible-collection
 ----------------------
 
