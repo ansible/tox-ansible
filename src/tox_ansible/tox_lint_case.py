@@ -14,7 +14,7 @@ class ToxLintCase(ToxBaseCase):
     def get_commands(self, options):
         cmds = []
         for case in self._cases:
-            if case == self:
+            if isinstance(case, ToxLintCase):
                 continue
             molecule_options = " ".join(options.get_global_opts())
             cmd = ["bash", "-c", BASH.format(case.role.directory,
