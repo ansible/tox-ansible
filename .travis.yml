@@ -6,10 +6,6 @@ python:
   - "3.5"
   - "2.7"
 
-jobs:
-  include:
-    - env: TOXENV=lint
-
 install:
   - pip install -U pip
   - pip --version
@@ -20,3 +16,16 @@ script:
 
 after_success:
   - coveralls
+
+jobs:
+  include:
+    - env: TOXENV=lint
+    - stage: PyPI release
+      deploy:
+        provider: pypi
+        user: "__token__"
+        password: "${PYPI_API_TOKEN}"
+        distributions: "sdist bdist_wheel"
+        skip_existing: true
+        on:
+          tags: true
