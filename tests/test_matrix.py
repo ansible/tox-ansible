@@ -42,3 +42,10 @@ class TestMatrix(TestCase):
         base = MatrixAxisBase([])
         with self.assertRaises(NotImplementedError):
             base.expand_one(0, 0)
+
+    def test_matrix_leaves_out_bare_lint_all(self):
+        matrix = Matrix()
+        matrix.add_axis(PythonAxis(["2.7", "3.8"]))
+        cases = [ToxLintCase([])]
+        expanded = matrix.expand(cases)
+        self.assertEqual(2, len(expanded))
