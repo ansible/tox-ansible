@@ -15,7 +15,7 @@ class ToxTestCase(ToxBaseCase):
         self.role = role
         self.scenario = scenario
         self._dependencies = ["molecule"]
-        self._name_parts = name_parts + [role.name, scenario.name]
+        self._name_parts = name_parts
         super(ToxTestCase, self).__init__()
 
     def get_commands(self, options):
@@ -57,4 +57,5 @@ class ToxTestCase(ToxBaseCase):
         the python version or ansible version.
 
         :return: The tox-friendly name of this test scenario"""
-        return '-'.join(self._name_parts)
+        return '-'.join(self._name_parts +
+                        [self.role.name, self.scenario.name])

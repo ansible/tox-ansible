@@ -49,3 +49,15 @@ class TestMatrix(TestCase):
         cases = [ToxLintCase([])]
         expanded = matrix.expand(cases)
         self.assertEqual(2, len(expanded))
+
+    def test_matrix_both_axes(self):
+        matrix = Matrix()
+        matrix.add_axis(PythonAxis(["2.7"]))
+        matrix.add_axis(AnsibleAxis(["2.8"]))
+        case = mock.Mock()
+        case.expand_python.return_value = case
+        case.expand_ansible.return_value = case
+        matrix.expand([case])
+        self.assertEqual(2, len(matrix.axes))
+        case.expand_python.assert_called_once_with("2.7")
+        case.expand_ansible.assert_called_once_with("2.8")

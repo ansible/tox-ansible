@@ -13,7 +13,7 @@ class ByRole(BaseFilter):
         self.names = names
 
         def _filter(e):
-            if hasattr(e[1], 'tox_case'):
+            if hasattr(e[1], 'tox_case') and hasattr(e[1].tox_case, 'role'):
                 # Can still reference "self" because of nesting
                 return e[1].tox_case.role.name in self.names
             return False
