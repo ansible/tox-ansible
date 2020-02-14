@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from py.io import StdCaptureFD
@@ -54,6 +55,11 @@ class TestEverything(TestCase):
         self.assertNotIn("simple", out)
         self.assertNotIn("lint_all", out)
 
+    def test_run_in_not_ansible(self):
+        out = self.run_tox(["-l"])
+        self.assertNotIn("-default", out)
+        self.assertNotIn("lint_all", out)
+
     def tearDown(self):
         os.chdir(self.cwd)
 
@@ -67,6 +73,6 @@ class TestEverything(TestCase):
             out, err = self.capture.reset()
             if s.code != 0:
                 print(err, file=sys.stderr)
-                raise s
+                raise
         finally:
             return out
