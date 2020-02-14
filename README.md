@@ -125,7 +125,7 @@ molecule_opts =
 To test with ansible versions 2.7.\*, 2.8.\*, and 2.9.\* across every role and scenario:
 ```ini
 [ansible]
-ansible = 2.7, 2.8, 2.9
+ansible = 2.7 2.8 2.9
 ```
 
 Now the output will look like this:
