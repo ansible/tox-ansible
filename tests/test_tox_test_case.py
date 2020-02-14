@@ -45,6 +45,12 @@ class TestToxTestCase(TestCase):
         self.assertEqual(ts.get_name(), "py41-derp-my_test")
         self.assertEqual(ts.get_basepython(), "python4.1")
 
+    def test_case_expand_twice(self):
+        t = ToxTestCase(self.role, self.scenario)
+        t1 = t.expand_python("4.1")
+        t2 = t1.expand_ansible("1.0")
+        self.assertEqual(t2.get_name(), "ansible10-py41-derp-my_test")
+
     @mock.patch.object(Scenario, "_get_config", return_value=DOCKER_DRIVER)
     def test_case_includes_docker_deps(self, config_mock):
         s = Scenario("moelcule/my_test")
