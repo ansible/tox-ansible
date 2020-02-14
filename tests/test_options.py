@@ -1,9 +1,9 @@
+from tox_ansible.options import Options
 from unittest import TestCase
 try:
     from unittest.mock import Mock
 except ImportError:
     from mock import Mock
-from tox_ansible.options import Options
 
 
 class TestOptions(TestCase):
@@ -34,3 +34,9 @@ class TestOptions(TestCase):
         opts.scenario = []
         opts.driver = []
         self.assertFalse(opts.do_filter())
+
+    def test_options_expand_matrix(self):
+        opts = Options(Mock())
+        opts.matrix = Mock()
+        opts.expand_matrix([])
+        opts.matrix.expand.assert_called_once_with([])
