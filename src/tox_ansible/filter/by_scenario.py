@@ -12,7 +12,8 @@ class ByScenario(BaseFilter):
         self.names = names
 
         def _filter(e):
-            if hasattr(e[1], 'tox_case'):
+            if hasattr(e[1], 'tox_case') and \
+               hasattr(e[1].tox_case, 'scenario'):
                 # Can still reference "self" because of nesting
                 return e[1].tox_case.scenario.name in self.names
             return False

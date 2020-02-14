@@ -37,6 +37,23 @@ class TestEverything(TestCase):
         self.assertIn("-simple-default", out)
         self.assertNotIn("lint_all", out)
 
+    def test_run_tox_scenario_filter(self):
+        os.chdir("tests/fixtures/collection")
+        out = self.run_tox(["-l", "--ansible-scenario", "default"])
+        self.assertIn("complex-default", out)
+        self.assertIn("simple-default", out)
+        self.assertNotIn("lint_all", out)
+        self.assertNotIn("no_tests", out)
+        self.assertNotIn("complex-openstack", out)
+
+    def test_run_tox_driver_filter(self):
+        os.chdir("tests/fixtures/collection")
+        out = self.run_tox(["-l", "--ansible-driver", "openstack"])
+        self.assertIn("complex-openstack", out)
+        self.assertNotIn("default", out)
+        self.assertNotIn("simple", out)
+        self.assertNotIn("lint_all", out)
+
     def tearDown(self):
         os.chdir(self.cwd)
 

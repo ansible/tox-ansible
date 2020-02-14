@@ -8,7 +8,8 @@ class ByDriver(BaseFilter):
         self.names = names
 
         def _filter(e):
-            if hasattr(e[1], 'tox_case'):
+            if hasattr(e[1], 'tox_case') and \
+               hasattr(e[1].tox_case, 'scenario'):
                 return e[1].tox_case.scenario.driver in self.names
             return False
         self._filter = _filter
