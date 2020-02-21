@@ -67,7 +67,7 @@ def tox_configure(config):
 
     # Don't filter down or add to envlist if an environment has been
     # specified by the user
-    if config.envlist_explicit:
+    if hasattr(config, 'envlist_explicit') and config.envlist_explicit:
         return
 
     # Add the items we generated to the envlist to be executed by default

@@ -75,6 +75,7 @@ class TestEverything(TestCase):
         _assert(out)
 
     def test_run_in_not_ansible(self):
+        os.chdir("tests/fixtures/not_collection")
         out = self.run_tox(["-l"])
         self.assertNotIn("-default", out)
         self.assertNotIn("lint_all", out)
@@ -83,7 +84,7 @@ class TestEverything(TestCase):
         os.chdir(self.cwd)
 
     def run_tox(self, args):
-        out, err = '', ''
+        out, err = "", ""
         try:
             self.capture = StdCaptureFD()
             from tox import cmdline
