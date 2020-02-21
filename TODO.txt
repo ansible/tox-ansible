@@ -1,8 +1,3 @@
-* MORE TESTS
-  Currently there are no tests that test out the full functionality of the
-plugin by running an actual tox execution. Only unittests at the moment, no
-integration tests. We should implement a few basic integration tests so that
-we are sure things aren't going too crazy under the hood
-
-* AUTOMATED RELEASE
-  CI is in place. Time to get CD going
+* Molecule 3.0 support
+  Now that Molecule 3.0 has been released, it's time to update this to handle
+the separation of non-Docker drivers from the core testing
