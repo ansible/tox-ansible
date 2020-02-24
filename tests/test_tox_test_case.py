@@ -11,7 +11,7 @@ from tox_ansible.options import Options
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
-BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8"]
+BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest"]
 
 
 class TestToxTestCase(TestCase):

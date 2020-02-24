@@ -14,7 +14,8 @@ class ToxTestCase(ToxBaseCase):
         :param scenario: The scenario that this test case should run"""
         self.role = role
         self.scenario = scenario
-        self._dependencies = ["molecule", "ansible-lint", "yamllint", "flake8"]
+        self._dependencies = ["molecule", "ansible-lint", "yamllint", "flake8",
+                              "pytest"]
         self._name_parts = name_parts
         super(ToxTestCase, self).__init__()
 
