@@ -11,7 +11,7 @@ setup(
     author_email='greg.hellings@gmail.com',
     url='https://github.com/greg-hellings/tox-ansible',
     license='GPLv3',
-    version='0.9.3',
+    version='0.9.4',
     package_dir={'': 'src'},
     packages=find_packages('src'),
     entry_points={
