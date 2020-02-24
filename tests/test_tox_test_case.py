@@ -11,6 +11,7 @@ from tox_ansible.options import Options
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
+BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8"]
 
 
 class TestToxTestCase(TestCase):
@@ -19,7 +20,7 @@ class TestToxTestCase(TestCase):
         t = ToxTestCase(self.role, self.scenario)
         self.assertEqual(t.get_name(), "derp-my_test")
         self.assertEqual(t.get_working_dir(), "roles/derp")
-        self.assertEqual(t.get_dependencies(), ["molecule", "ansible"])
+        self.assertEqual(t.get_dependencies(), BASE_DEPS + ["ansible"])
         cmds = [["molecule", "test", "-s", self.scenario.name]]
         self.assertEqual(t.get_commands(self.opts), cmds)
         self.assertIsNone(t.get_basepython())
@@ -35,7 +36,7 @@ class TestToxTestCase(TestCase):
         ts = t.expand_ansible("2.7")
         self.assertEqual(ts.ansible, "2.7")
         self.assertEqual(ts.get_name(), "ansible27-derp-my_test")
-        self.assertEqual(ts.get_dependencies(), ["molecule", "ansible==2.7.*"])
+        self.assertEqual(ts.get_dependencies(), BASE_DEPS + ["ansible==2.7.*"])
         self.assertIsNone(ts.get_basepython())
 
     def test_case_expand_python(self):
