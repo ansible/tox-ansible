@@ -27,7 +27,12 @@ class ToxLintCase(ToxBaseCase):
         return '{toxinidir}'
 
     def get_dependencies(self):
-        return ["molecule"]
+        deps = set(["molecule", "flake8", "ansible-lint", "yamllint"])
+        for case in self._cases:
+            if hasattr(case, 'scenario'):
+                if case.scenario.driver == "openstack":
+                    deps.add("molecule-openstack")
+        return deps
 
     def get_name(self):
         return '-'.join(self._name_parts + ['lint_all'])
