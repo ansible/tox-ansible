@@ -9,9 +9,10 @@ except ImportError:
 class TestToxLintCase(TestCase):
     def test_names_are_correct(self):
         tc = ToxLintCase([])
+        deps = set(["molecule", "ansible-lint", "flake8", "yamllint"])
         self.assertEqual(tc.get_name(), "lint_all")
         self.assertEqual(tc.get_working_dir(), "{toxinidir}")
-        self.assertEqual(tc.get_dependencies(), ["molecule"])
+        self.assertEqual(tc.get_dependencies(), deps)
 
     def test_expand_python(self):
         tc = ToxLintCase([])
