@@ -1,11 +1,9 @@
 """Tox hook implementations."""
 from __future__ import print_function
-import os
 import sys
 from tox import hookimpl
 from .ansible import Ansible
 from .tox_helper import Tox
-from .compat import TOX_PARALLEL_ENV
 from .filter import Filter
 from .options import (
     ROLE_OPTION_NAME,
@@ -43,10 +41,6 @@ def tox_configure(config):
     """If the current folder includes a file named `galaxy.yml`, then look for
     a roles directory and generate environments for every (role, scenario)
     combo that is discovered therein."""
-    # Don't run in subprocesses when executing in parallel mode
-    if TOX_PARALLEL_ENV in os.environ:
-        return
-
     ansible = Ansible()
     tox = Tox(config)
     options = Options(tox)
