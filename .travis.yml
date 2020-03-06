@@ -21,6 +21,8 @@ after_success:
 jobs:
   include:
     - env: TOXENV=lint
+      script:
+        - tox
     - stage: PyPI release
       deploy:
         provider: pypi
