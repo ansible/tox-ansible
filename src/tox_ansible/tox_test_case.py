@@ -1,7 +1,8 @@
 from .tox_base_case import ToxBaseCase
 DRIVER_DEPENDENCIES = {
     "docker": ["docker"],
-    "openstack": ["openstacksdk", "molecule-openstack", "os-client-config"]
+    "openstack": ["openstacksdk", "molecule-openstack", "os-client-config"],
+    "ec2": ["molecule-ec2", "boto", "boto3"]
 }
 
 
