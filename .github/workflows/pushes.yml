@@ -32,7 +32,7 @@ jobs:
       - name: run test
         run: |
           python -m pip install tox
-          tox -e py
+          tox -e py$(printf "${{ matrix.python }}" | tr -d '.')
         env:
           COVERAGE_FILE: .coverage.${{ matrix.python }}
       - name: upload artifacts
