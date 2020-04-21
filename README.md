@@ -1,4 +1,4 @@
-[![CI Builds](https://github.com/greg-hellings/tox-ansible/workflows/CI%20Builds/badge.svg)]
+[![CI Builds](https://github.com/greg-hellings/tox-ansible/workflows/CI%20Builds/badge.svg)](https://github.com/greg-hellings/tox-ansible/actions?query=workflow%3A"CI+Builds")
 [![codecov](https://codecov.io/gh/greg-hellings/tox-ansible/branch/master/graph/badge.svg)](https://codecov.io/gh/greg-hellings/tox-ansible)
 [![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
 
