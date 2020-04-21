@@ -29,7 +29,7 @@ jobs:
           name: Release ${{ steps.get_tag.outputs.TAG }}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: PyPI release
-        uses: pypa/gh-actions-pypi-publish@master
+        uses: pypa/pypi-publish@master
         with:
           user: __token__
           password: ${{ secrets.pypi_token }}
