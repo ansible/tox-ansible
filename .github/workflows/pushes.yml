@@ -1,6 +1,6 @@
 name: CI Builds
 
-on:
+"on":
   push:
   pull_request:
 
@@ -57,6 +57,6 @@ jobs:
           python -m pip install tox codecov
           mv coverage-results/.coverage.* .
           tox -e coverage
-          codecov -X pycov
+          codecov -X pycov -X gcov
         env:
           CODECOV_TOKEN: ${{ secrets.codecov_token }}
