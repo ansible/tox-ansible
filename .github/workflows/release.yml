@@ -1,0 +1,35 @@
+name: Release Time!
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.x"
+      - name: build
+        run: |
+          python -m pip install -U pip setuptools
+          pip install -U wheel
+          python setup.py build sdist bdist_wheel
+      - name: get tag name
+        id: get_tag
+        run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+      - name: GitHub Release
+        with: ncipollo/release-action@v1
+        with:
+          artifacts: dist/*.whl, dist/*.tar.gz
+          allowUpdates: true
+          name: Release ${{ steps.get_tag.outputs.TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: PyPI release
+        uses: pypa/gh-actions-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_token }}

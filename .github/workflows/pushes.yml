@@ -1,0 +1,61 @@
+name: CI Builds
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.x"
+      - name: run lint
+        run: |
+          python -m pip install -U tox
+          tox -e lint
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      python: ["2.7", "3.5", "3.6", "3.7", "3.8"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: ${{ matrix.python }}
+      - name: run test
+        run: |
+          python -m pip install tox
+          tox -e py
+        env:
+          COVERAGE_FILE: .coverage.${{ matrix.python }}
+      - name: upload artifacts
+        uses: actions/upload-artifact@master
+        with:
+          name: coverage-results
+          path: .coverage.${{ matrix.python }}
+
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.x"
+      - uses: actions/download-artifact@master
+        with:
+          name: coverage-results
+      - name: run coverage
+        run: |
+          python -m pip install tox codecov
+          mv coverage-results/.coverage.* .
+          tox -e coverage
+          codecov -X pycov
+        env:
+          CODECOV_TOKEN: ${{ secrets.codecov_token }}
