@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.com/greg-hellings/tox-ansible.svg?branch=master)](https://travis-ci.com/greg-hellings/tox-ansible)
-[![Coverage Status](https://coveralls.io/repos/github/greg-hellings/tox-ansible/badge.svg?branch=master)](https://coveralls.io/github/greg-hellings/tox-ansible?branch=master)
+[![CI Builds](https://github.com/greg-hellings/tox-ansible/workflows/CI%20Builds/badge.svg)]
+[![codecov](https://codecov.io/gh/greg-hellings/tox-ansible/branch/master/graph/badge.svg)](https://codecov.io/gh/greg-hellings/tox-ansible)
 [![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
 
 tox-ansible-collection
