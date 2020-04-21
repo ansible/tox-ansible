@@ -10,6 +10,7 @@ __pycache__
 .tox
 # Other generated files
 .coverage
+.coverage.*
 htmlcov
 build
 dist

@@ -31,13 +31,13 @@ class TestRole(TestCase):
         r = Role("roles/nope")
         self.assertFalse(r.is_role())
 
-    @mock.patch.object(Scenario, "_get_config")
+    @mock.patch.object(Scenario, "config")
     @mock.patch("tox_ansible.ansible.role.walk")
     def test_role_finds_scenarios(self, walk_mock, scenario_mock):
         """Tests that the role properly walks its subdirectories and finds all
         of the ones that are scenarios and not any that don't contain a
         scenario"""
-        # The _get_config method tries to read the non-existent filesystem
+        # The config method tries to read the non-existent filesystem
         scenario_mock.return_value = {}
         # Creates a directory structure that one might find in the role,
         # including both folders we won't care about, and some that we will

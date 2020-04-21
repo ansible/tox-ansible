@@ -50,6 +50,9 @@ class ToxTestCase(ToxBaseCase):
         if self.scenario.driver is not None \
            and self.scenario.driver in DRIVER_DEPENDENCIES.keys():
             dependencies.extend(DRIVER_DEPENDENCIES[self.scenario.driver])
+        # Scenarios can specify a requirements.txt
+        if self.scenario.requirements is not None:
+            dependencies.append("-r" + self.scenario.requirements)
         return dependencies
 
     def get_name(self):
