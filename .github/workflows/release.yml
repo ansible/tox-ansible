@@ -1,12 +1,12 @@
 name: Release Time!
 
-on:
+"on":
   push:
     tags:
       - '*'
 
 jobs:
-  public:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -22,7 +22,7 @@ jobs:
         id: get_tag
         run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
       - name: GitHub Release
-        with: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v1
         with:
           artifacts: dist/*.whl, dist/*.tar.gz
           allowUpdates: true
