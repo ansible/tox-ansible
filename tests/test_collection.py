@@ -28,7 +28,7 @@ class TestCollection(TestCase):
 
     @mock.patch("tox_ansible.ansible.collection.path.isdir")
     @mock.patch("tox_ansible.ansible.collection.listdir")
-    @mock.patch.object(Role, "is_role")
+    @mock.patch.object(Role, "is_role", new_callable=mock.PropertyMock)
     def test_get_roles_back(self, role_mock, listdir_mock, isdir_mock):
         isdir_mock.return_value = True
         dirs = ["one", "two", "three"]
@@ -42,7 +42,7 @@ class TestCollection(TestCase):
 
     @mock.patch.object(Scenario, "config")
     @mock.patch.object(Collection, "get_roles")
-    @mock.patch.object(Role, "get_tox_cases")
+    @mock.patch.object(Role, "tox_cases", new_callable=mock.PropertyMock)
     def test_get_tox_cases(self, role_mock, collection_mock, scenario_mock):
         s1 = Scenario("s1")
         s2 = Scenario("s2")

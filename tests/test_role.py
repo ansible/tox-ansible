@@ -24,12 +24,12 @@ class TestRole(TestCase):
         isfile_mock.return_value = True
         isdir_mock.return_value = True
         r = Role("roles/dummy")
-        self.assertTrue(r.is_role())
+        self.assertTrue(r.is_role)
 
     def test_role_is_invalid(self):
         """This is not a role, since that path doesn't actually exist"""
         r = Role("roles/nope")
-        self.assertFalse(r.is_role())
+        self.assertFalse(r.is_role)
 
     @mock.patch.object(Scenario, "config")
     @mock.patch("tox_ansible.ansible.role.walk")
@@ -51,9 +51,8 @@ class TestRole(TestCase):
             ("/home/derp/molecule/shared", [], ["requirements.yml"])
         ]
         r = Role("roles/has_scenarios")
-        scenarios = r.get_scenarios()
+        scenarios = r.scenarios
         self.assertEqual(len(scenarios), 2)
         self.assertEqual(scenarios[0].name, "one")
         self.assertEqual(scenarios[1].name, "two")
-        tox_cases = r.get_tox_cases()
-        self.assertEqual(len(tox_cases), 2)
+        self.assertEqual(len(r.tox_cases), 2)

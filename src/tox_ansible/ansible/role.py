@@ -18,6 +18,7 @@ class Role(object):
     def __str__(self):
         return self.name
 
+    @property
     def is_role(self):
         """Tells you if this folder is actually a role.
 
@@ -27,7 +28,8 @@ class Role(object):
         return path.isdir(self.directory) and \
             path.isfile(path.join(self.directory, "tasks", "main.yml"))
 
-    def get_scenarios(self):
+    @property
+    def scenarios(self):
         scenarios = []
         for folder, dirs, files in walk(self.directory):
             tree = folder.split(sep)
@@ -36,12 +38,13 @@ class Role(object):
                 scenarios.append(Scenario(path.join(self.directory, folder)))
         return scenarios
 
-    def get_tox_cases(self):
+    @property
+    def tox_cases(self):
         """Fetch back every test case for every scenario that is present
         in this role.
 
         :return: A list of test cases"""
         tox_cases = []
-        for scenario in self.get_scenarios():
+        for scenario in self.scenarios:
             tox_cases.append(ToxTestCase(self, scenario))
         return tox_cases

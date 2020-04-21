@@ -28,7 +28,7 @@ class Collection(object):
         # Not all folders in the "roles" directory are necessarily roles
         roles = [Role(path.join(self.directory, "roles", d))
                  for d in listdir(self.roles_dir)]
-        roles = list(filter(lambda r: r.is_role(), roles))
+        roles = list(filter(lambda r: r.is_role, roles))
 
         return roles
 
@@ -40,5 +40,5 @@ class Collection(object):
         configs"""
         tox_cases = []
         for role in self.get_roles():
-            tox_cases.extend(role.get_tox_cases())
+            tox_cases.extend(role.tox_cases)
         return tox_cases

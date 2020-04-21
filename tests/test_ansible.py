@@ -9,8 +9,8 @@ from tox_ansible.ansible.role import Role
 
 
 class TestAnsible(TestCase):
-    @mock.patch.object(Role, "get_tox_cases")
-    @mock.patch.object(Role, "is_role")
+    @mock.patch.object(Role, "tox_cases", new_callable=mock.PropertyMock)
+    @mock.patch.object(Role, "is_role", new_callable=mock.PropertyMock)
     @mock.patch.object(Collection, "is_collection")
     def test_collection_when_role(self, c_mock, r_mock, tc_mock):
         c_mock.return_value = False
@@ -22,7 +22,7 @@ class TestAnsible(TestCase):
         self.assertEqual(ansible.get_tox_cases()[:-1], tcs)
 
     @mock.patch.object(Collection, "get_tox_cases")
-    @mock.patch.object(Role, "is_role")
+    @mock.patch.object(Role, "is_role", new_callable=mock.PropertyMock)
     @mock.patch.object(Collection, "is_collection")
     def test_collection_when_collection(self, c_mock, r_mock, tc_mock):
         c_mock.return_value = True
@@ -33,7 +33,7 @@ class TestAnsible(TestCase):
         self.assertTrue(ansible.is_ansible())
         self.assertEqual(ansible.get_tox_cases()[:-1], tcs)
 
-    @mock.patch.object(Role, "is_role")
+    @mock.patch.object(Role, "is_role", new_callable=mock.PropertyMock)
     @mock.patch.object(Collection, "is_collection")
     def test_collection_when_is_collection(self, c_mock, r_mock):
         c_mock.return_value = False

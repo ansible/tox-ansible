@@ -24,7 +24,7 @@ class Ansible(object):
         """Determine if the specified directory is an Ansible structure or not
 
         :return: True if this is an Ansible structure. False, otherwise."""
-        return self.collection.is_collection() or self.role.is_role()
+        return self.collection.is_collection() or self.role.is_role
 
     def get_tox_cases(self):
         """Returns a list of TestCase objects that can be queried to create
@@ -34,7 +34,7 @@ class Ansible(object):
         tox_cases = []
         if self.collection.is_collection():
             tox_cases.extend(self.collection.get_tox_cases())
-        elif self.role.is_role():
-            tox_cases.extend(self.role.get_tox_cases())
+        elif self.role.is_role:
+            tox_cases.extend(self.role.tox_cases)
         tox_cases.append(ToxLintCase(tox_cases))
         return tox_cases
