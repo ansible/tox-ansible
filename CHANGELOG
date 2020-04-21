@@ -1,0 +1,3 @@
+0.10.0 - 21 April 2020
+* Add support for ec2 driver
+* Add requirements.txt support for each scenario to include its own support

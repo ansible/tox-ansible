@@ -53,6 +53,13 @@ section key "molecule\_opts".
 To test with the latest versions of Ansible 2.7, 2.8, AND 2.9, add a comma-delimited list to the
 "[ansible]" section key "ansible".
 
+requirements.txt
+================
+
+If a particular scenario requires a select set of Python packages to be installed in the virtualenv with
+molecule and the like, you can add a "requirements.txt" file to the molecule scenario directory, and that
+will be appended to the list of built-in scenario requirements.
+
 Examples
 --------
 
