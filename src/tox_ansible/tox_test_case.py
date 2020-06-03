@@ -1,8 +1,10 @@
+from .tox_helper import Tox
 from .tox_base_case import ToxBaseCase
 DRIVER_DEPENDENCIES = {
     "docker": ["docker"],
     "openstack": ["openstacksdk", "molecule-openstack", "os-client-config"],
-    "ec2": ["molecule-ec2", "boto", "boto3"]
+    "ec2": ["molecule-ec2", "boto", "boto3"],
+    "podman": []
 }
 
 
@@ -29,6 +31,8 @@ class ToxTestCase(ToxBaseCase):
         molecule = ['molecule']
         molecule.extend(options.get_global_opts())
         molecule.extend(['test', '-s', self.scenario.name])
+        tox = Tox()
+        molecule.extend(tox.posargs)
         return [molecule]
 
     def get_working_dir(self):

@@ -7,6 +7,7 @@ from tox_ansible.tox_test_case import ToxTestCase
 from tox_ansible.ansible.role import Role
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
+from tox_ansible.tox_helper import Tox
 
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
@@ -19,7 +20,9 @@ BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest",
                    return_value={})
 class TestToxTestCase(TestCase):
     @mock.patch.object(Options, "get_global_opts", return_value=[])
-    def test_case_is_simple(self, opts_mock, config_mock):
+    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock,
+                       return_value=[])
+    def test_case_is_simple(self, pos_mock, opts_mock, config_mock):
         t = ToxTestCase(self.role, self.scenario)
         self.assertEqual(t.get_name(), "derp-my_test")
         self.assertEqual(t.get_working_dir(), "roles/derp")
@@ -29,7 +32,9 @@ class TestToxTestCase(TestCase):
         self.assertIsNone(t.get_basepython())
 
     @mock.patch.object(Options, "get_global_opts", return_value=["-c", "derp"])
-    def test_case_has_global_opts(self, opts_mock, config_mock):
+    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock,
+                       return_value=[])
+    def test_case_has_global_opts(self, pos_mock, opts_mock, config_mock):
         t = ToxTestCase(self.role, self.scenario)
         cmds = [["molecule", "-c", "derp", "test", "-s", self.scenario.name]]
         self.assertEqual(t.get_commands(self.opts), cmds)

@@ -1,9 +1,9 @@
 """Tox hook implementations."""
 from __future__ import print_function
 import sys
+import tox_ansible.tox_helper as tox_helper
 from tox import hookimpl
 from .ansible import Ansible
-from .tox_helper import Tox
 from .filter import Filter
 from .options import (
     ROLE_OPTION_NAME,
@@ -42,7 +42,7 @@ def tox_configure(config):
     a roles directory and generate environments for every (role, scenario)
     combo that is discovered therein."""
     ansible = Ansible()
-    tox = Tox(config)
+    tox = tox_helper.Tox(config)
     options = Options(tox)
 
     # Only execute inside of a collection, otherwise we have nothing to do

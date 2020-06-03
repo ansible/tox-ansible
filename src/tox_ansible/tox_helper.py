@@ -1,3 +1,4 @@
+from os.path import join
 import py
 from tox.config import \
     (
@@ -12,13 +13,20 @@ except ImportError:
 
 
 class Tox(object):
+    instance = None
     """A class that handles interacting with the specific internals of the tox
     world for the plugin."""
-    def __init__(self, config):
+    def __new__(cls, *args):
+        if cls.instance is None:
+            cls.instance = super(Tox, cls).__new__(cls)
+        return cls.instance
+
+    def __init__(self, config=None):
         """Initialize this object
 
         :param config: the tox config object"""
-        self.config = config
+        if config is not None:
+            self.config = config
 
     def get_reader(self, section, prefix=None):
         """Creates a SectionReader and configures it with known and reasonable
@@ -28,15 +36,22 @@ class Tox(object):
         :param prefix: Any applicable prefix to the ini section name. Default
         None"""
         reader = SectionReader(section, self.config._cfg, prefix=prefix)
-        distshare_default = "{homedir}/.tox/distshare"
+        distshare_default = join(self.config.homedir, ".tox", "distshare")
         reader.addsubstitutions(toxinidir=self.config.toxinidir,
                                 homedir=self.config.homedir,
                                 toxworkdir=self.config.toxworkdir)
-        self.config.distdir = reader.getpath("distdir", "{toxworkdir}/dist")
+        self.config.distdir = reader.getpath("distdir",
+                                             join(self.config.toxworkdir,
+                                                  "dist"))
         reader.addsubstitutions(distdir=self.config.distdir)
         self.config.distshare = reader.getpath("distshare", distshare_default)
         reader.addsubstitutions(distshare=self.config.distshare)
         return reader
+
+    @property
+    def posargs(self):
+        """Returns any configured posargs from the tox world"""
+        return self.config.option.args
 
     def get_opts(self):
         """Return the options as a dictionary-style object.

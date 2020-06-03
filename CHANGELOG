@@ -1,3 +1,9 @@
+0.11.0 - 3 June 2020
+* Add support for podman driver
+* Fix support for config replacement values
+* Add {posargs} to the end of default molecule command
+* Continue refactoring from getters/setters to properties where appropriate
+
 0.10.0 - 21 April 2020
 * Add support for ec2 driver
 * Add requirements.txt support for each scenario to include its own support
