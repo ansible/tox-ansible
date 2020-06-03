@@ -36,12 +36,12 @@ class Tox(object):
         :param prefix: Any applicable prefix to the ini section name. Default
         None"""
         reader = SectionReader(section, self.config._cfg, prefix=prefix)
-        distshare_default = join(self.config.homedir, ".tox", "distshare")
+        distshare_default = join(str(self.config.homedir), ".tox", "distshare")
         reader.addsubstitutions(toxinidir=self.config.toxinidir,
                                 homedir=self.config.homedir,
                                 toxworkdir=self.config.toxworkdir)
         self.config.distdir = reader.getpath("distdir",
-                                             join(self.config.toxworkdir,
+                                             join(str(self.config.toxworkdir),
                                                   "dist"))
         reader.addsubstitutions(distdir=self.config.distdir)
         self.config.distshare = reader.getpath("distshare", distshare_default)
