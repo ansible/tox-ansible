@@ -1,4 +1,4 @@
-name: CI Builds
+name: CI/CD Builds
 
 "on":
   push:
@@ -60,3 +60,33 @@ jobs:
           codecov -X pycov -X gcov
         env:
           CODECOV_TOKEN: ${{ secrets.codecov_token }}
+
+  publish:
+    needs: coverage
+    if: startsWith(github.ref, 'refs/tags/')  # Only release during tags
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.x"
+      - name: build
+        run: |
+          python -m pip install -U pip setuptools
+          pip install -U wheel
+          python setup.py build sdist bdist_wheel
+      - name: get tag name
+        id: get_tag
+        run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
+      - name: GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: dist/*.whl, dist/*.tar.gz
+          allowUpdates: true
+          name: Release ${{ steps.get_tag.outputs.TAG }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: PyPI release
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_token }}
