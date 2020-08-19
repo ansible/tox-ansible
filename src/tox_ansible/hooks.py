@@ -77,6 +77,7 @@ def tox_configure(config):
         # won't be executing
         config.envconfigs = envfilter.filter(config.envconfigs)
         config.envlist = list(config.envconfigs.keys())
+    config.envlist.sort()
     config.envlist_default = config.envlist
     if len(config.envlist) == 0:
         print("****** No environments matched. This is a problem.")

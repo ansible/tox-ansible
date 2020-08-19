@@ -94,6 +94,8 @@ class Tox(object):
 
         :param config: the constructed envconfig for this to customize"""
         tox_case = config.tox_case
+        if not config.description:
+            config.description = tox_case.description
         # Default commands to run molecule
         if not config.commands:
             config.commands = tox_case.get_commands(options)
