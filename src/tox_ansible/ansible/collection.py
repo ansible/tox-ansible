@@ -5,6 +5,7 @@ from .role import Role
 class Collection(object):
     """Knows things about an Ansible collection. Can help traversing the folder
     structure and discovering paths within it."""
+
     def __init__(self, base=""):
         """Initializes the object with where the directory lives
 
@@ -26,8 +27,9 @@ class Collection(object):
             return []
 
         # Not all folders in the "roles" directory are necessarily roles
-        roles = [Role(path.join(self.directory, "roles", d))
-                 for d in listdir(self.roles_dir)]
+        roles = [
+            Role(path.join(self.directory, "roles", d)) for d in listdir(self.roles_dir)
+        ]
         roles = list(filter(lambda r: r.is_role, roles))
 
         return roles

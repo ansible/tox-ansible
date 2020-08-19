@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 try:
     from unittest import mock
 except ImportError:
@@ -48,7 +49,7 @@ class TestRole(TestCase):
             ("/home/derp/molecule", ["one", "two", "shared"], []),
             ("/home/derp/molecule/one", [], ["molecule.yml"]),
             ("/home/derp/molecule/two", [], ["molecule.yml", "playbook.yml"]),
-            ("/home/derp/molecule/shared", [], ["requirements.yml"])
+            ("/home/derp/molecule/shared", [], ["requirements.yml"]),
         ]
         r = Role("roles/has_scenarios")
         scenarios = r.scenarios

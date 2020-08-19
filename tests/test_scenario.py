@@ -6,7 +6,7 @@ from tox_ansible.ansible.scenario import Scenario
 class TestScenarioDefaultName(TestCase):
     scenarios = [
         {"dir": "default", "file": b"driver:\n  name: openstack"},
-        {"dir": "other", "file": b"scenario:\n  name: surprise"}
+        {"dir": "other", "file": b"scenario:\n  name: surprise"},
     ]
 
     def test_scenario_name_introspect(self):

@@ -5,11 +5,12 @@ from .by_driver import ByDriver
 
 class Filter(object):
     """Filters an envlist"""
+
     def __init__(self, options):
         self._filters = [
             ByRole(options.role),
             ByScenario(options.scenario),
-            ByDriver(options.driver)
+            ByDriver(options.driver),
         ]
 
     def filter(self, envlist):

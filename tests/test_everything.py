@@ -3,6 +3,7 @@ import os
 import sys
 from py.io import StdCaptureFD
 from unittest import TestCase
+
 try:
     from unittest.mock import patch
 except ImportError:
@@ -40,6 +41,7 @@ class TestEverything(TestCase):
         def _assert(out):
             self.assertIn("-simple-default", out)
             self.assertNotIn("lint_all", out)
+
         os.chdir("tests/fixtures/expand_collection")
         out = self.run_tox(["--ansible-role", "simple", "-l"])
         _assert(out)
@@ -54,6 +56,7 @@ class TestEverything(TestCase):
             self.assertNotIn("lint_all", out)
             self.assertNotIn("no_tests", out)
             self.assertNotIn("complex-openstack", out)
+
         os.chdir("tests/fixtures/collection")
         out = self.run_tox(["-l", "--ansible-scenario", "default"])
         _assert(out)
@@ -67,6 +70,7 @@ class TestEverything(TestCase):
             self.assertNotIn("default", out)
             self.assertNotIn("simple", out)
             self.assertNotIn("lint_all", out)
+
         os.chdir("tests/fixtures/collection")
         out = self.run_tox(["-l", "--ansible-driver", "openstack"])
         _assert(out)
@@ -88,6 +92,7 @@ class TestEverything(TestCase):
         try:
             self.capture = StdCaptureFD()
             from tox import cmdline
+
             cmdline(args)
         except SystemExit as s:
             out, err = self.capture.reset()

@@ -1,0 +1,9 @@
+repos:
+  - repo: https://github.com/python/black.git
+    rev: 19.10b0
+    hooks:
+      - id: black
+  - repo: https://gitlab.com/pycqa/flake8.git
+    rev: 3.7.9
+    hooks:
+      - id: flake8

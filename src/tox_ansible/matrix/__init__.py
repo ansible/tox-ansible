@@ -20,6 +20,7 @@ class MatrixAxisBase(object):
     appropriately named factors and replacing the base case.
 
     ***THIS IS AN ABSTRACT BASE CLASS***"""
+
     def __init__(self, versions):
         """Initialize a matrix to expand a particular version.
 

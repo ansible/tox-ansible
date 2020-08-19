@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 try:
     from unittest import mock
 except ImportError:
@@ -12,16 +13,13 @@ from tox_ansible.tox_helper import Tox
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
-BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest",
-             "testinfra"]
+BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest", "testinfra"]
 
 
-@mock.patch.object(Scenario, "config", new_callable=mock.PropertyMock,
-                   return_value={})
+@mock.patch.object(Scenario, "config", new_callable=mock.PropertyMock, return_value={})
 class TestToxTestCase(TestCase):
     @mock.patch.object(Options, "get_global_opts", return_value=[])
-    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock,
-                       return_value=[])
+    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
     def test_case_is_simple(self, pos_mock, opts_mock, config_mock):
         t = ToxTestCase(self.role, self.scenario)
         self.assertEqual(t.get_name(), "derp-my_test")
@@ -32,8 +30,7 @@ class TestToxTestCase(TestCase):
         self.assertIsNone(t.get_basepython())
 
     @mock.patch.object(Options, "get_global_opts", return_value=["-c", "derp"])
-    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock,
-                       return_value=[])
+    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
     def test_case_has_global_opts(self, pos_mock, opts_mock, config_mock):
         t = ToxTestCase(self.role, self.scenario)
         cmds = [["molecule", "-c", "derp", "test", "-s", self.scenario.name]]
@@ -60,15 +57,17 @@ class TestToxTestCase(TestCase):
         t2 = t1.expand_ansible("1.0")
         self.assertEqual(t2.get_name(), "ansible10-py41-derp-my_test")
 
-    @mock.patch.object(Scenario, "driver", new_callable=mock.PropertyMock,
-                       return_value="docker")
+    @mock.patch.object(
+        Scenario, "driver", new_callable=mock.PropertyMock, return_value="docker"
+    )
     def test_case_includes_docker_deps(self, driver_mock, config_mock):
         s = Scenario("moelcule/my_test")
         t = ToxTestCase(self.role, s)
         self.assertIn("docker", t.get_dependencies())
 
-    @mock.patch.object(Scenario, "driver", new_callable=mock.PropertyMock,
-                       return_value="openstack")
+    @mock.patch.object(
+        Scenario, "driver", new_callable=mock.PropertyMock, return_value="openstack"
+    )
     def test_case_includes_openstack_deps(self, driver_mock, config_mock):
         s = Scenario("molecule/osp_test")
         t = ToxTestCase(self.role, s)
