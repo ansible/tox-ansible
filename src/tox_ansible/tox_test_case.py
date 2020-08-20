@@ -80,10 +80,10 @@ class ToxTestCase(ToxBaseCase):
         the python version or ansible version.
 
         :return: The tox-friendly name of this test scenario"""
-        return "-".join(self._name_parts +
-                        [self.role.name, self.scenario.name])
+        return "-".join(self._name_parts + [self.role.name, self.scenario.name])
 
     @property
     def description(self):
-        return DEFAULT_DESCRIPTION.format(role_name=self.role.name,
-                                          scenario_name=self.scenario.name)
+        return DEFAULT_DESCRIPTION.format(
+            role_name=self.role.name, scenario_name=self.scenario.name
+        )
