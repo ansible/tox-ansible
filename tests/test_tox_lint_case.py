@@ -1,5 +1,6 @@
 from tox_ansible.tox_lint_case import ToxLintCase
 from unittest import TestCase
+
 try:
     from unittest.mock import Mock
 except ImportError:
@@ -34,11 +35,26 @@ class TestToxLintCase(TestCase):
         tc = ToxLintCase([case1, case2, case3, bummer])
         cmds = tc.get_commands(options)
         expected = [
-            ["bash", "-c", "cd {} && molecule  lint -s {}"
-             .format(case1.role.directory, case1.scenario.name)],
-            ["bash", "-c", "cd {} && molecule  lint -s {}"
-             .format(case2.role.directory, case2.scenario.name)],
-            ["bash", "-c", "cd {} && molecule  lint -s {}"
-             .format(case3.role.directory, case3.scenario.name)],
+            [
+                "bash",
+                "-c",
+                "cd {} && molecule  lint -s {}".format(
+                    case1.role.directory, case1.scenario.name
+                ),
+            ],
+            [
+                "bash",
+                "-c",
+                "cd {} && molecule  lint -s {}".format(
+                    case2.role.directory, case2.scenario.name
+                ),
+            ],
+            [
+                "bash",
+                "-c",
+                "cd {} && molecule  lint -s {}".format(
+                    case3.role.directory, case3.scenario.name
+                ),
+            ],
         ]
         self.assertEqual(expected, cmds)

@@ -24,9 +24,8 @@ class ToxBaseCase(object):
 
         :param name: An additional field to be added to the name factors
         :return: A copy of this object with the additional name factor"""
-        if hasattr(self, 'role') and hasattr(self, 'scenario'):
-            copy = self.__class__(self.role, self.scenario,
-                                  [name] + self._name_parts)
+        if hasattr(self, "role") and hasattr(self, "scenario"):
+            copy = self.__class__(self.role, self.scenario, [name] + self._name_parts)
         else:
             copy = self.__class__(self._cases, [name] + self._name_parts)
         copy.python = self.python
@@ -40,7 +39,7 @@ class ToxBaseCase(object):
         :param version: String representation of Python version (e.g. '2.7')
         :return: A copy of this test case expanded to specify the given version
         of python"""
-        copy = self._expand('py' + version.replace('.', ''))
+        copy = self._expand("py" + version.replace(".", ""))
         copy.python = version
 
         return copy
@@ -52,7 +51,7 @@ class ToxBaseCase(object):
         :param version: String representation of Ansible version (e.g. 2.8)
         :return: A copy of this test case expanded to specify the given version
         of Ansible"""
-        copy = self._expand('ansible' + version.replace('.', ''))
+        copy = self._expand("ansible" + version.replace(".", ""))
         copy.ansible = version
 
         return copy

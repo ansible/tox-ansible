@@ -1,5 +1,6 @@
 from os import path
 from yaml import load
+
 try:
     from yaml import CLoader as Loader
 except ImportError:  # pragma: no cover
@@ -8,6 +9,7 @@ except ImportError:  # pragma: no cover
 
 class Scenario(object):
     """Knows about scenarios."""
+
     def __init__(self, directory):
         self.directory = directory
         self.scenario_file = path.join(self.directory, "molecule.yml")
@@ -29,8 +31,11 @@ class Scenario(object):
         self-evident. By default it is the name of the directory that the
         scenario file lives in, but if there is an entry in the molecule.yml
         definition, it can override that value."""
-        if self.config and "scenario" in self.config and \
-           "name" in self.config["scenario"]:
+        if (
+            self.config
+            and "scenario" in self.config
+            and "name" in self.config["scenario"]
+        ):
             return self.config["scenario"]["name"]
         return path.basename(self.directory)
 
@@ -39,8 +44,7 @@ class Scenario(object):
         """Reads the driver for this scenario, if one is defined.
 
         :return: Driver name defined in molecule.yml or None"""
-        if self.config and "driver" in self.config and \
-           "name" in self.config["driver"]:
+        if self.config and "driver" in self.config and "name" in self.config["driver"]:
             return self.config["driver"]["name"]
         return None
 

@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 try:
     from unittest.mock import Mock
 except ImportError:
@@ -9,14 +10,11 @@ from collections import namedtuple
 
 class TestByScenario(TestCase):
     def test_by_scenario(self):
-        Scenario = namedtuple('Scenario', 'name')
-        scenario = Scenario(name='affirmative')
-        envlist = {
-            'yes': Mock(tox_case=Mock(scenario=scenario)),
-            'no': Mock(spec=[])
-        }
-        scenarios = ['affirmative', 'other']
+        Scenario = namedtuple("Scenario", "name")
+        scenario = Scenario(name="affirmative")
+        envlist = {"yes": Mock(tox_case=Mock(scenario=scenario)), "no": Mock(spec=[])}
+        scenarios = ["affirmative", "other"]
         by_scenario = ByScenario(scenarios)
         filtered = by_scenario.filter(envlist)
-        self.assertIn('yes', filtered)
-        self.assertNotIn('no', filtered)
+        self.assertIn("yes", filtered)
+        self.assertNotIn("no", filtered)

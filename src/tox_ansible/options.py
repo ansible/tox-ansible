@@ -4,13 +4,13 @@ from .matrix import Matrix
 from .matrix.axes import AnsibleAxis, PythonAxis
 
 
-ROLE_OPTION_NAME = 'ansible_role'
-SCENARIO_OPTION_NAME = 'ansible_scenario'
-DRIVER_OPTION_NAME = 'ansible_driver'
+ROLE_OPTION_NAME = "ansible_role"
+SCENARIO_OPTION_NAME = "ansible_scenario"
+DRIVER_OPTION_NAME = "ansible_driver"
 
-ROLE_ENV_NAME = 'TOX_' + ROLE_OPTION_NAME.upper()
-SCENARIO_ENV_NAME = 'TOX_' + SCENARIO_OPTION_NAME.upper()
-DRIVER_ENV_NAME = 'TOX_' + DRIVER_OPTION_NAME.upper()
+ROLE_ENV_NAME = "TOX_" + ROLE_OPTION_NAME.upper()
+SCENARIO_ENV_NAME = "TOX_" + SCENARIO_OPTION_NAME.upper()
+DRIVER_ENV_NAME = "TOX_" + DRIVER_OPTION_NAME.upper()
 
 INI_SECTION = "ansible"
 INI_PYTHON_VERSIONS = "python"
@@ -20,15 +20,14 @@ INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 
 class Options(object):
     """Represents the options, and performs the logic around them."""
+
     def __init__(self, tox):
         self.tox = tox
         self.reader = tox.get_reader(INI_SECTION)
         opts = tox.get_opts()
         self.role = self._parse_opt(opts, ROLE_OPTION_NAME, ROLE_ENV_NAME)
-        self.scenario = self._parse_opt(opts, SCENARIO_OPTION_NAME,
-                                        SCENARIO_ENV_NAME)
-        self.driver = self._parse_opt(opts, DRIVER_OPTION_NAME,
-                                      DRIVER_ENV_NAME)
+        self.scenario = self._parse_opt(opts, SCENARIO_OPTION_NAME, SCENARIO_ENV_NAME)
+        self.driver = self._parse_opt(opts, DRIVER_OPTION_NAME, DRIVER_ENV_NAME)
         self.matrix = Matrix()
 
         ansible = self.reader.getlist(INI_ANSIBLE_VERSIONS, sep=" ")
@@ -51,9 +50,7 @@ class Options(object):
         """Determine if we should be filtering or not. Only do so if there are
         arguments to do the filtering around. Otherwise, we don't want to leave
         no environments to execute against."""
-        return len(self.role) != 0 or \
-            len(self.scenario) != 0 or \
-            len(self.driver) != 0
+        return len(self.role) != 0 or len(self.scenario) != 0 or len(self.driver) != 0
 
     def get_global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
@@ -61,11 +58,11 @@ class Options(object):
 
     def _parse_opt(self, option, opt, env):
         if isinstance(option, dict) and option[opt] is not None:
-            values = list(map(lambda a: a.split(','), option[opt]))
+            values = list(map(lambda a: a.split(","), option[opt]))
             values = list(chain.from_iterable(values))
             return values
 
         if env in os.environ:
-            return os.environ[env].split(',')
+            return os.environ[env].split(",")
 
         return []

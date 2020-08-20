@@ -30,43 +30,43 @@ class ToxAnsibleTestCase(TestCase):
     """
 
     ini_contents = None
-    ini_filename = 'tox.ini'
+    ini_filename = "tox.ini"
     roles = []
 
     @classmethod
     def setUpClass(cls):
         super(ToxAnsibleTestCase, cls).setUpClass()
 
-        assert cls.ini_contents is not None, (
-            '`{cls.__module__}.{cls.__name__}.ini_contents` has not been set'
-            .format(cls=cls))
+        assert (
+            cls.ini_contents is not None
+        ), "`{cls.__module__}.{cls.__name__}.ini_contents` has not been set".format(
+            cls=cls
+        )
 
         # Create a tmpdir so that we aren't working somewhere that matters
         cls._temp_dir = tempfile.mkdtemp()
         cls.ini_filepath = os.path.join(cls._temp_dir, cls.ini_filename)
 
         # Write out the tox.ini file
-        with open(cls.ini_filepath, 'w') as ini_file:
+        with open(cls.ini_filepath, "w") as ini_file:
             ini_file.write(dedent(cls.ini_contents))
 
         # Write the galaxy.yml file - blank for now
-        with open(os.path.join(cls._temp_dir, "galaxy.yml"), 'w') as \
-                galaxy_yml:
-            galaxy_yml.write('')
+        with open(os.path.join(cls._temp_dir, "galaxy.yml"), "w") as galaxy_yml:
+            galaxy_yml.write("")
 
         # Create role and scenario dirs
         for role, scenarios in cls.roles:
             tasks = os.path.join(cls._temp_dir, "roles", role, "tasks")
             os.makedirs(tasks)
             # It's not a role if it doesn't have a tasks/main.yml
-            with open(os.path.join(tasks, "main.yml"), 'w') as tasks:
-                tasks.write('')
+            with open(os.path.join(tasks, "main.yml"), "w") as tasks:
+                tasks.write("")
             # Create the molecule scenarios
             for scenario, molecule in scenarios:
-                d = os.path.join(cls._temp_dir, "roles", role,
-                                 "molecule", scenario)
+                d = os.path.join(cls._temp_dir, "roles", role, "molecule", scenario)
                 os.makedirs(d)
-                with open(os.path.join(d, "molecule.yml"), 'w') as mol_file:
+                with open(os.path.join(d, "molecule.yml"), "w") as mol_file:
                     mol_file.write(dedent(molecule))
 
     @classmethod
@@ -81,18 +81,19 @@ class ToxAnsibleTestCase(TestCase):
         env.pop(TOX_PARALLEL_ENV, None)
 
         proc = subprocess.Popen(
-            arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+            arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
+        )
         stdout, stderr = proc.communicate()
 
-        return proc.returncode, stdout.decode('utf-8'), stderr.decode('utf-8')
+        return proc.returncode, stdout.decode("utf-8"), stderr.decode("utf-8")
 
     def tox_call(self, arguments):
-        base = ['tox', '-c', self.ini_filepath]
+        base = ["tox", "-c", self.ini_filepath]
         return self._tox_call(base + arguments)
 
     def tox_envlist(self, arguments=None):
         arguments = arguments if arguments else []
-        returncode, stdout, stderr = self.tox_call(['-l'] + arguments)
+        returncode, stdout, stderr = self.tox_call(["-l"] + arguments)
 
         self.assertEqual(returncode, 0, stderr)
 

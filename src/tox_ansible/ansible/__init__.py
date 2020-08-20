@@ -9,6 +9,7 @@ class Ansible(object):
     Ansible structures. It will determine if we are in an Ansible folder
     structure, what kind, and fetch the relevant information back from the
     filesystem for the caller."""
+
     def __init__(self, base=""):
         """Create an Ansible object to introspect on whether the given
         directory is an Ansible structure or not. Currently aware of a
