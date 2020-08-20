@@ -1,10 +1,11 @@
 from .tox_helper import Tox
 from .tox_base_case import ToxBaseCase
+
 DRIVER_DEPENDENCIES = {
     "docker": ["docker"],
     "openstack": ["openstacksdk", "molecule-openstack", "os-client-config"],
     "ec2": ["molecule-ec2", "boto", "boto3"],
-    "podman": []
+    "podman": [],
 }
 
 
@@ -14,6 +15,7 @@ DEFAULT_DESCRIPTION = "Auto-generated environment for Ansible role {role_name}"
 
 class ToxTestCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
+
     def __init__(self, role, scenario, name_parts=[]):
         """Create the base test case.
 
@@ -21,8 +23,14 @@ class ToxTestCase(ToxBaseCase):
         :param scenario: The scenario that this test case should run"""
         self.role = role
         self.scenario = scenario
-        self._dependencies = ["molecule", "ansible-lint", "yamllint", "flake8",
-                              "pytest", "testinfra"]
+        self._dependencies = [
+            "molecule",
+            "ansible-lint",
+            "yamllint",
+            "flake8",
+            "pytest",
+            "testinfra",
+        ]
         self._name_parts = name_parts
         super(ToxTestCase, self).__init__()
 
@@ -32,9 +40,9 @@ class ToxTestCase(ToxBaseCase):
         :param options: The options object for this plugin
         :return: the default commands to run to execute this test case, if the
         user does not configure them explicitly"""
-        molecule = ['molecule']
+        molecule = ["molecule"]
         molecule.extend(options.get_global_opts())
-        molecule.extend(['test', '-s', self.scenario.name])
+        molecule.extend(["test", "-s", self.scenario.name])
         tox = Tox()
         molecule.extend(tox.posargs)
         return [molecule]
@@ -55,8 +63,10 @@ class ToxTestCase(ToxBaseCase):
         else:
             dependencies.append("ansible")
         # Drivers can have their own dependencies
-        if self.scenario.driver is not None \
-           and self.scenario.driver in DRIVER_DEPENDENCIES.keys():
+        if (
+            self.scenario.driver is not None
+            and self.scenario.driver in DRIVER_DEPENDENCIES.keys()
+        ):
             dependencies.extend(DRIVER_DEPENDENCIES[self.scenario.driver])
         # Scenarios can specify a requirements.txt
         if self.scenario.requirements is not None:
@@ -70,7 +80,7 @@ class ToxTestCase(ToxBaseCase):
         the python version or ansible version.
 
         :return: The tox-friendly name of this test scenario"""
-        return '-'.join(self._name_parts +
+        return "-".join(self._name_parts +
                         [self.role.name, self.scenario.name])
 
     @property

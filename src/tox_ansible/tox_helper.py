@@ -1,11 +1,7 @@
 from os.path import join
 import py
-from tox.config import \
-    (
-        testenvprefix,
-        SectionReader,
-        DepOption
-    )
+from tox.config import testenvprefix, SectionReader, DepOption
+
 try:
     from tox.config import ParseIni  # tox 3.4.0+
 except ImportError:
@@ -16,6 +12,7 @@ class Tox(object):
     instance = None
     """A class that handles interacting with the specific internals of the tox
     world for the plugin."""
+
     def __new__(cls, *args):
         if cls.instance is None:
             cls.instance = super(Tox, cls).__new__(cls)
@@ -37,12 +34,14 @@ class Tox(object):
         None"""
         reader = SectionReader(section, self.config._cfg, prefix=prefix)
         distshare_default = join(str(self.config.homedir), ".tox", "distshare")
-        reader.addsubstitutions(toxinidir=self.config.toxinidir,
-                                homedir=self.config.homedir,
-                                toxworkdir=self.config.toxworkdir)
-        self.config.distdir = reader.getpath("distdir",
-                                             join(str(self.config.toxworkdir),
-                                                  "dist"))
+        reader.addsubstitutions(
+            toxinidir=self.config.toxinidir,
+            homedir=self.config.homedir,
+            toxworkdir=self.config.toxworkdir,
+        )
+        self.config.distdir = reader.getpath(
+            "distdir", join(str(self.config.toxworkdir), "dist")
+        )
         reader.addsubstitutions(distdir=self.config.distdir)
         self.config.distshare = reader.getpath("distshare", distshare_default)
         reader.addsubstitutions(distshare=self.config.distshare)
@@ -67,22 +66,19 @@ class Tox(object):
         from"""
         # Stripped down version of parseini.__init__ for making a generated
         # envconfig
-        prefix = 'tox' if self.config.toxinipath.basename == 'setup.cfg' \
-            else None
+        prefix = "tox" if self.config.toxinipath.basename == "setup.cfg" else None
         reader = self.get_reader("tox", prefix=prefix)
         make_envconfig = ParseIni.make_envconfig
         # Python 2 fix
-        make_envconfig = getattr(make_envconfig, '__func__', make_envconfig)
+        make_envconfig = getattr(make_envconfig, "__func__", make_envconfig)
 
         # Store the generated ansible envlist
         self.config.ansible_envlist = []
         for tox_case in tox_cases:
             section = testenvprefix + tox_case.get_name()
-            config = make_envconfig(self.config,
-                                    tox_case.get_name(),
-                                    section,
-                                    reader._subs,
-                                    self.config)
+            config = make_envconfig(
+                self.config, tox_case.get_name(), section, reader._subs, self.config
+            )
             config.tox_case = tox_case
             self.customize_envconfig(config, options)
             self.config.envconfigs[tox_case.get_name()] = config
@@ -107,8 +103,7 @@ class Tox(object):
         if not config.envdir or config.envdir == self.config.toxinidir:
             config.envdir = self.config.toxworkdir.join("ansible")
         # Need to run molecule from the role directory
-        if not config.changedir or \
-                config.changedir == self.config.toxinidir:
+        if not config.changedir or config.changedir == self.config.toxinidir:
             config.changedir = py.path.local(tox_case.get_working_dir())
         if not config.basepython and tox_case.python is not None:
             config.basepython = tox_case.get_basepython()

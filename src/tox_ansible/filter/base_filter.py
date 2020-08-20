@@ -4,6 +4,7 @@ class BaseFilter(object):
     a member method of any baseclasses. That is, you should define it to not
     require the "self" keyword. See one of the existing implementation classes
     that exists herein to see exactly how that happens."""
+
     def filter(self, envlist):
         """
         Calling this method without properly defining the _filter method will
@@ -21,6 +22,6 @@ class BaseFilter(object):
         # By default we're going to add the list of names we're looking for to
         # the self.names attribute. If that is an empty string, then we should
         # not filter on that value
-        if hasattr(self, 'names') and len(self.names) == 0:
+        if hasattr(self, "names") and len(self.names) == 0:
             return envlist
         return dict(filter(self._filter, envlist.items()))

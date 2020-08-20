@@ -17,25 +17,27 @@ class ToxLintCase(ToxBaseCase):
             if isinstance(case, ToxLintCase):
                 continue
             molecule_options = " ".join(options.get_global_opts())
-            cmd = ["bash", "-c", BASH.format(case.role.directory,
-                                             molecule_options,
-                                             case.scenario.name)]
+            cmd = [
+                "bash",
+                "-c",
+                BASH.format(case.role.directory, molecule_options, case.scenario.name),
+            ]
             cmds.append(cmd)
         return cmds
 
     def get_working_dir(self):
-        return '{toxinidir}'
+        return "{toxinidir}"
 
     def get_dependencies(self):
         deps = set(["molecule", "flake8", "ansible-lint", "yamllint"])
         for case in self._cases:
-            if hasattr(case, 'scenario'):
+            if hasattr(case, "scenario"):
                 if case.scenario.driver == "openstack":
                     deps.add("molecule-openstack")
         return deps
 
     def get_name(self):
-        return '-'.join(self._name_parts + ['lint_all'])
+        return "-".join(self._name_parts + ["lint_all"])
 
     @property
     def description(self):

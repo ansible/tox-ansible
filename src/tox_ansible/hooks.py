@@ -9,12 +9,10 @@ from .options import (
     ROLE_OPTION_NAME,
     SCENARIO_OPTION_NAME,
     DRIVER_OPTION_NAME,
-
     ROLE_ENV_NAME,
     SCENARIO_ENV_NAME,
     DRIVER_ENV_NAME,
-
-    Options
+    Options,
 )
 
 
@@ -23,17 +21,27 @@ def tox_addoption(parser):
     """Add options to filter down to only executing the given roles and
     scenarios."""
     parser.add_argument(
-        '--ansible-role', dest=ROLE_OPTION_NAME, action='append',
-        help='Only execute molecule in the given roles (env {})'
-        .format(ROLE_ENV_NAME))
+        "--ansible-role",
+        dest=ROLE_OPTION_NAME,
+        action="append",
+        help="Only execute molecule in the given roles (env {})".format(ROLE_ENV_NAME),
+    )
     parser.add_argument(
-        '--ansible-scenario', dest=SCENARIO_OPTION_NAME, action='append',
-        help='Only execute scenarios with the given names (env {})'
-        .format(SCENARIO_ENV_NAME))
+        "--ansible-scenario",
+        dest=SCENARIO_OPTION_NAME,
+        action="append",
+        help="Only execute scenarios with the given names (env {})".format(
+            SCENARIO_ENV_NAME
+        ),
+    )
     parser.add_argument(
-        '--ansible-driver', dest=DRIVER_OPTION_NAME, action='append',
-        help='Only execute scenarios with the given driver (env {})'
-        .format(DRIVER_ENV_NAME))
+        "--ansible-driver",
+        dest=DRIVER_OPTION_NAME,
+        action="append",
+        help="Only execute scenarios with the given driver (env {})".format(
+            DRIVER_ENV_NAME
+        ),
+    )
 
 
 @hookimpl
@@ -61,7 +69,7 @@ def tox_configure(config):
 
     # Don't filter down or add to envlist if an environment has been
     # specified by the user
-    if hasattr(config, 'envlist_explicit') and config.envlist_explicit:
+    if hasattr(config, "envlist_explicit") and config.envlist_explicit:
         return
 
     # Add the items we generated to the envlist to be executed by default

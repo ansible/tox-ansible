@@ -4,6 +4,7 @@ from tox_ansible.tox_test_case import ToxTestCase
 from tox_ansible.tox_lint_case import ToxLintCase
 from unittest import TestCase
 from copy import copy
+
 try:
     from unittest import mock
 except ImportError:

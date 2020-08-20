@@ -1,5 +1,6 @@
 from tox_ansible.options import Options
 from unittest import TestCase
+
 try:
     from unittest.mock import Mock
 except ImportError:
@@ -9,7 +10,7 @@ except ImportError:
 class TestOptions(TestCase):
     def test_do_filter_role(self):
         opts = Options(Mock())
-        opts.role = ['one']
+        opts.role = ["one"]
         opts.scenario = []
         opts.driver = []
         self.assertTrue(opts.do_filter())
@@ -17,7 +18,7 @@ class TestOptions(TestCase):
     def test_do_filter_scenario(self):
         opts = Options(Mock())
         opts.role = []
-        opts.scenario = ['default']
+        opts.scenario = ["default"]
         opts.driver = []
         self.assertTrue(opts.do_filter())
 
@@ -25,7 +26,7 @@ class TestOptions(TestCase):
         opts = Options(Mock())
         opts.role = []
         opts.scenario = []
-        opts.driver = ['openstack']
+        opts.driver = ["openstack"]
         self.assertTrue(opts.do_filter())
 
     def test_do_filter_none_is_false(self):

@@ -5,6 +5,7 @@ from .scenario import Scenario
 
 class Role(object):
     """Knows things about an Ansible role and how it is stored."""
+
     def __init__(self, directory):
         """Initialize a potential role candidate.
 
@@ -25,16 +26,16 @@ class Role(object):
         :return: True if the path is an Ansible role. False otherwise"""
         # Only the tasks/main.yml file is required for a role, although
         # there is often much more to it
-        return path.isdir(self.directory) and \
-            path.isfile(path.join(self.directory, "tasks", "main.yml"))
+        return path.isdir(self.directory) and path.isfile(
+            path.join(self.directory, "tasks", "main.yml")
+        )
 
     @property
     def scenarios(self):
         scenarios = []
         for folder, dirs, files in walk(self.directory):
             tree = folder.split(sep)
-            if len(tree) >= 2 and tree[-2] == "molecule" \
-               and 'molecule.yml' in files:
+            if len(tree) >= 2 and tree[-2] == "molecule" and "molecule.yml" in files:
                 scenarios.append(Scenario(path.join(self.directory, folder)))
         return scenarios
 
