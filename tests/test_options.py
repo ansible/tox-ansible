@@ -1,5 +1,6 @@
-from tox_ansible.options import Options
 from unittest import TestCase
+
+from tox_ansible.options import Options
 
 try:
     from unittest.mock import Mock

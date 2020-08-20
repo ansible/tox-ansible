@@ -1,5 +1,7 @@
 from unittest import TestCase
+
 from testfixtures import TempDirectory
+
 from tox_ansible.ansible.scenario import Scenario
 
 

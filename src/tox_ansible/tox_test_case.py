@@ -1,5 +1,5 @@
-from .tox_helper import Tox
 from .tox_base_case import ToxBaseCase
+from .tox_helper import Tox
 
 DRIVER_DEPENDENCIES = {
     "docker": ["docker"],

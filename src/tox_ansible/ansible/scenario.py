@@ -1,4 +1,5 @@
 from os import path
+
 from yaml import load
 
 try:

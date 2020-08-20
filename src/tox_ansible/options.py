@@ -1,8 +1,8 @@
 import os
 from itertools import chain
+
 from .matrix import Matrix
 from .matrix.axes import AnsibleAxis, PythonAxis
-
 
 ROLE_OPTION_NAME = "ansible_role"
 SCENARIO_OPTION_NAME = "ansible_scenario"

@@ -1,6 +1,7 @@
 from os.path import join
+
 import py
-from tox.config import testenvprefix, SectionReader, DepOption
+from tox.config import DepOption, SectionReader, testenvprefix
 
 try:
     from tox.config import ParseIni  # tox 3.4.0+

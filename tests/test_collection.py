@@ -1,5 +1,6 @@
 import os
 from unittest import TestCase
+
 from tox_ansible.ansible.collection import Collection
 from tox_ansible.ansible.role import Role
 from tox_ansible.ansible.scenario import Scenario

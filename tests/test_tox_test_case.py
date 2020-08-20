@@ -4,12 +4,12 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-from tox_ansible.tox_test_case import ToxTestCase
+
 from tox_ansible.ansible.role import Role
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
 from tox_ansible.tox_helper import Tox
-
+from tox_ansible.tox_test_case import ToxTestCase
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}

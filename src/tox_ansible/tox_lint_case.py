@@ -1,6 +1,6 @@
-from .tox_base_case import ToxBaseCase
 from copy import copy
 
+from .tox_base_case import ToxBaseCase
 
 BASH = "cd {} && molecule {} lint -s {}"
 

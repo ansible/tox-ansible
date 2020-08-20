@@ -1,0 +1,5 @@
+[tool.black]
+skip-string-normalization = false
+
+[tool.isort]
+profile = "black"

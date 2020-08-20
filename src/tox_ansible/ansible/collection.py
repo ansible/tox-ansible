@@ -1,4 +1,5 @@
-from os import path, listdir
+from os import listdir, path
+
 from .role import Role
 
 
