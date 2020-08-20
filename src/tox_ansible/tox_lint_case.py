@@ -38,3 +38,8 @@ class ToxLintCase(ToxBaseCase):
 
     def get_name(self):
         return "-".join(self._name_parts + ["lint_all"])
+
+    @property
+    def description(self):
+        return "Auto-generated environment to run molecule lint on all "
+        "scenarios"
