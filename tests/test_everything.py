@@ -1,8 +1,10 @@
 from __future__ import print_function
+
 import os
 import sys
-from py.io import StdCaptureFD
 from unittest import TestCase
+
+from py.io import StdCaptureFD
 
 try:
     from unittest.mock import patch

@@ -1,7 +1,8 @@
 from os import path
+
+from ..tox_lint_case import ToxLintCase
 from .collection import Collection
 from .role import Role
-from ..tox_lint_case import ToxLintCase
 
 
 class Ansible(object):

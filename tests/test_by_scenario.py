@@ -4,8 +4,10 @@ try:
     from unittest.mock import Mock
 except ImportError:
     from mock import Mock
-from tox_ansible.filter.by_scenario import ByScenario
+
 from collections import namedtuple
+
+from tox_ansible.filter.by_scenario import ByScenario
 
 
 class TestByScenario(TestCase):

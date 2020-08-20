@@ -1,9 +1,10 @@
-from tox_ansible.matrix import Matrix, MatrixAxisBase
-from tox_ansible.matrix.axes import PythonAxis, AnsibleAxis
-from tox_ansible.tox_test_case import ToxTestCase
-from tox_ansible.tox_lint_case import ToxLintCase
-from unittest import TestCase
 from copy import copy
+from unittest import TestCase
+
+from tox_ansible.matrix import Matrix, MatrixAxisBase
+from tox_ansible.matrix.axes import AnsibleAxis, PythonAxis
+from tox_ansible.tox_lint_case import ToxLintCase
+from tox_ansible.tox_test_case import ToxTestCase
 
 try:
     from unittest import mock

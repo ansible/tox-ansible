@@ -1,6 +1,6 @@
+from .by_driver import ByDriver
 from .by_role import ByRole
 from .by_scenario import ByScenario
-from .by_driver import ByDriver
 
 
 class Filter(object):

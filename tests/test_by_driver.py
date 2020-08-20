@@ -1,5 +1,6 @@
-from tox_ansible.filter.by_driver import ByDriver
 from unittest import TestCase
+
+from tox_ansible.filter.by_driver import ByDriver
 
 try:
     from unittest.mock import Mock

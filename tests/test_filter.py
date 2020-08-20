@@ -1,13 +1,16 @@
 # For rennamed/moved assert(Count|Item)Equal
-import six
 from unittest import TestCase
+
+import six
 
 try:
     from unittest.mock import Mock
 except ImportError:
     from mock import Mock
-from tox_ansible.filter import Filter
+
 from collections import namedtuple
+
+from tox_ansible.filter import Filter
 
 
 class TestFilter(TestCase):

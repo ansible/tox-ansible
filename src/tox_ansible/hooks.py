@@ -1,17 +1,21 @@
 """Tox hook implementations."""
 from __future__ import print_function
+
 import sys
-import tox_ansible.tox_helper as tox_helper
+
 from tox import hookimpl
+
+from tox_ansible import tox_helper as tox_helper
+
 from .ansible import Ansible
 from .filter import Filter
 from .options import (
-    ROLE_OPTION_NAME,
-    SCENARIO_OPTION_NAME,
+    DRIVER_ENV_NAME,
     DRIVER_OPTION_NAME,
     ROLE_ENV_NAME,
+    ROLE_OPTION_NAME,
     SCENARIO_ENV_NAME,
-    DRIVER_ENV_NAME,
+    SCENARIO_OPTION_NAME,
     Options,
 )
 

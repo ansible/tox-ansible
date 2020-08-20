@@ -1,4 +1,5 @@
-from os import path, walk, sep
+from os import path, sep, walk
+
 from ..tox_test_case import ToxTestCase
 from .scenario import Scenario
 

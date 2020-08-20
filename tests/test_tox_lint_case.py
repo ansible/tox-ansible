@@ -1,5 +1,6 @@
-from tox_ansible.tox_lint_case import ToxLintCase
 from unittest import TestCase
+
+from tox_ansible.tox_lint_case import ToxLintCase
 
 try:
     from unittest.mock import Mock
