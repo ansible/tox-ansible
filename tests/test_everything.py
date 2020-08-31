@@ -1,10 +1,10 @@
 from __future__ import print_function
 
+import contextlib
 import os
-import sys
-from unittest import TestCase
+import subprocess
 
-from py.io import StdCaptureFD
+import pytest
 
 try:
     from unittest.mock import patch
@@ -12,94 +12,104 @@ except ImportError:
     from mock import patch
 
 
-class TestEverything(TestCase):
-    def setUp(self):
-        self.cwd = os.getcwd()
+EXPECTED = {
+    "tests/fixtures/collection": "\n".join(
+        [
+            "complex-default",
+            "complex-openstack",
+            "complex-real_name",
+            "lint_all",
+            "simple-default",
+        ]
+    ),
+    "tests/fixtures/expand_collection": "\n".join(
+        [
+            "derp",
+            "py27-ansible28-lint_all",
+            "py27-ansible28-simple-default",
+            "py27-ansible29-lint_all",
+            "py27-ansible29-simple-default",
+            "py38-ansible28-lint_all",
+            "py38-ansible28-simple-default",
+            "py38-ansible29-lint_all",
+            "py38-ansible29-simple-default",
+        ]
+    ),
+    "tests/fixtures/not_collection": "\n".join(
+        [
+            "py27",
+            "py35",
+            "py36",
+            "py37",
+            "py38",
+            "py27-tox20",
+            "py27-tox30",
+            "py38-tox20",
+            "py38-tox30",
+            "lint",
+            "coverage",
+        ]
+    ),
+}
 
-    def test_run_tox(self):
-        os.chdir("tests/fixtures/collection")
-        out = self.run_tox(["-l"])
-        self.assertIn("complex-default", out)
-        self.assertIn("complex-openstack", out)
-        self.assertIn("complex-real_name", out)
-        self.assertIn("simple-default", out)
-        self.assertIn("lint_all", out)
-        self.assertNotIn("no_tests", out)
-        self.assertNotIn("not_a_role", out)
+EXPECTED_ARGS = {
+    "default": """complex-default
+simple-default""",
+    "openstack": "complex-openstack",
+    "simple": "simple-default",
+}
 
-    def test_run_tox_expansion(self):
-        os.chdir("tests/fixtures/expand_collection")
-        out = self.run_tox(["-l"])
-        self.assertIn("py27-ansible28-simple-default", out)
-        self.assertIn("py27-ansible29-simple-default", out)
-        self.assertIn("py38-ansible28-simple-default", out)
-        self.assertIn("py38-ansible29-simple-default", out)
-        self.assertIn("py27-ansible28-lint_all", out)
-        self.assertIn("py27-ansible29-lint_all", out)
-        self.assertIn("py38-ansible28-lint_all", out)
-        self.assertIn("py38-ansible29-lint_all", out)
 
-    def test_run_tox_expansion_role_filter(self):
-        def _assert(out):
-            self.assertIn("-simple-default", out)
-            self.assertNotIn("lint_all", out)
+@contextlib.contextmanager
+def cd(directory):
+    cwd = os.getcwd()
+    os.chdir(directory)
+    try:
+        yield
+    except Exception:
+        raise
+    finally:
+        os.chdir(cwd)
 
-        os.chdir("tests/fixtures/expand_collection")
-        out = self.run_tox(["--ansible-role", "simple", "-l"])
-        _assert(out)
-        with patch.dict("os.environ", {"TOX_ANSIBLE_ROLE": "simple"}):
-            out = self.run_tox(["-l"])
-        _assert(out)
 
-    def test_run_tox_scenario_filter(self):
-        def _assert(out):
-            self.assertIn("complex-default", out)
-            self.assertIn("simple-default", out)
-            self.assertNotIn("lint_all", out)
-            self.assertNotIn("no_tests", out)
-            self.assertNotIn("complex-openstack", out)
+def run_tox(args, capture):
+    tox = ["tox"]
+    tox.extend(args)
+    try:
+        subprocess.run(tox)
+    except SystemExit as s:
+        if s.code != 0:
+            raise
+    finally:
+        outs = capture.readouterr()
+        return outs.out.strip()
 
-        os.chdir("tests/fixtures/collection")
-        out = self.run_tox(["-l", "--ansible-scenario", "default"])
-        _assert(out)
-        with patch.dict("os.environ", {"TOX_ANSIBLE_SCENARIO": "default"}):
-            out = self.run_tox(["-l"])
-        _assert(out)
 
-    def test_run_tox_driver_filter(self):
-        def _assert(out):
-            self.assertIn("complex-openstack", out)
-            self.assertNotIn("default", out)
-            self.assertNotIn("simple", out)
-            self.assertNotIn("lint_all", out)
+@pytest.mark.parametrize(
+    "directory",
+    [
+        ("tests/fixtures/collection"),
+        ("tests/fixtures/expand_collection"),
+        ("tests/fixtures/not_collection"),
+    ],
+)
+def test_run_tox(directory, capfd):
+    with cd(directory):
+        out = run_tox(["-l"], capfd)
+    assert out == EXPECTED[directory]
 
-        os.chdir("tests/fixtures/collection")
-        out = self.run_tox(["-l", "--ansible-driver", "openstack"])
-        _assert(out)
-        with patch.dict("os.environ", {"TOX_ANSIBLE_DRIVER": "openstack"}):
-            out = self.run_tox(["-l"])
-        _assert(out)
 
-    def test_run_in_not_ansible(self):
-        os.chdir("tests/fixtures/not_collection")
-        out = self.run_tox(["-l"])
-        self.assertNotIn("-default", out)
-        self.assertNotIn("lint_all", out)
-
-    def tearDown(self):
-        os.chdir(self.cwd)
-
-    def run_tox(self, args):
-        out, err = "", ""
-        try:
-            self.capture = StdCaptureFD()
-            from tox import cmdline
-
-            cmdline(args)
-        except SystemExit as s:
-            out, err = self.capture.reset()
-            if s.code != 0:
-                print(err, file=sys.stderr)
-                raise
-        finally:
-            return out
+@pytest.mark.parametrize(
+    "target,value",
+    [("scenario", "default"), ("driver", "openstack"), ("role", "simple")],
+)
+def test_run_tox_with_args(target, value, capfd):
+    args = ["-l"]
+    args.append("--ansible-{}".format(target))
+    args.append(value)
+    with cd("tests/fixtures/collection"):
+        cli = run_tox(args, capfd)
+        with patch.dict("os.environ", {"TOX_ANSIBLE_{}".format(target.upper()): value}):
+            env = run_tox(["-l"], capfd)
+    assert cli == EXPECTED_ARGS[value]
+    assert env == EXPECTED_ARGS[value]

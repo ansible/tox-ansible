@@ -1,8 +1,6 @@
 # For rennamed/moved assert(Count|Item)Equal
 from unittest import TestCase
 
-import six
-
 try:
     from unittest.mock import Mock
 except ImportError:
@@ -34,7 +32,7 @@ class TestFilter(TestCase):
 
         f = Filter(opts)
         results = f.filter(envlist)
-        six.assertCountEqual(self, results.keys(), expected)
+        self.assertCountEqual(results.keys(), expected)
 
     def test_filter_role_only(self):
         opts = Mock(role=["one"], scenario=[], driver=[])
@@ -49,4 +47,4 @@ class TestFilter(TestCase):
 
         f = Filter(opts)
         results = f.filter(envlist)
-        six.assertCountEqual(self, results.keys(), expected)
+        self.assertCountEqual(results.keys(), expected)
