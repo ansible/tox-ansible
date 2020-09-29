@@ -1,6 +1,7 @@
 from copy import copy
 
 from .tox_base_case import ToxBaseCase
+from .tox_helper import Tox
 
 BASH = "cd {} && molecule {} lint -s {}"
 
@@ -9,6 +10,7 @@ class ToxLintCase(ToxBaseCase):
     def __init__(self, cases, name_parts=[]):
         self._cases = copy(cases)
         self._name_parts = name_parts
+        self._config = Tox()
         super(ToxLintCase, self).__init__()
 
     def get_commands(self, options):
@@ -28,7 +30,7 @@ class ToxLintCase(ToxBaseCase):
         return cmds
 
     def get_working_dir(self):
-        return "{toxinidir}"
+        return self._config.toxinidir
 
     def get_dependencies(self):
         deps = set(["molecule", "flake8", "ansible-lint", "yamllint"])

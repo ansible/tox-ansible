@@ -53,6 +53,11 @@ class Tox(object):
         """Returns any configured posargs from the tox world"""
         return self.config.option.args
 
+    @property
+    def toxinidir(self):
+        """Returns the configured toxinidir for working with base directory paths"""
+        return self.config.homedir
+
     def get_opts(self):
         """Return the options as a dictionary-style object.
 
