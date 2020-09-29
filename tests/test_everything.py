@@ -105,7 +105,8 @@ def test_run_tox(directory, capfd):
 
 
 @pytest.mark.parametrize(
-    "target,value", [("scenario", "default"), ("driver", "openstack")],
+    "target,value",
+    [("scenario", "default"), ("driver", "openstack")],
 )
 def test_run_tox_with_args(target, value, capfd):
     args = ["-l", "--ansible-{}".format(target), value]
