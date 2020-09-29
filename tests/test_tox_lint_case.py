@@ -7,11 +7,16 @@ except ImportError:
     from mock import Mock
 
 
-def test_names_are_correct():
+def test_names_are_correct(mocker):
     tc = ToxLintCase([])
     deps = set(["molecule", "ansible-lint", "flake8", "yamllint"])
+    mocker.patch(
+        "tox_ansible.tox_lint_case.Tox.toxinidir",
+        new_callable=mocker.PropertyMock,
+        return_value="/home",
+    )
     assert tc.get_name() == "lint_all"
-    assert tc.get_working_dir() == "{toxinidir}"
+    assert tc.get_working_dir() == "/home"
     assert tc.get_dependencies() == deps
 
 
