@@ -139,7 +139,7 @@ ignore_path =
 ```
 This field is very simple, and should list folder names, anywhere in the tree, to ignore.
 It does not do specialized glob matching or sub-path matching at this time. Anything living under
-any folder whose name appears in this list will be ignored. 
+any folder whose name appears in this list will be ignored.
 
 To test with ansible versions 2.7.\*, 2.8.\*, and 2.9.\* across every role and scenario:
 ```ini
