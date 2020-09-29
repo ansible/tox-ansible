@@ -1,5 +1,5 @@
-[![CI/CD Builds](https://github.com/greg-hellings/tox-ansible/workflows/CI/CD%20Builds/badge.svg)](https://github.com/greg-hellings/tox-ansible/actions?query=workflow%3A%22CI%2FCD+Builds%22)
-[![codecov](https://codecov.io/gh/greg-hellings/tox-ansible/branch/master/graph/badge.svg)](https://codecov.io/gh/greg-hellings/tox-ansible)
+[![CI/CD Builds](https://github.com/ansible-community/tox-ansible/workflows/tox/badge.svg)](https://github.com/greg-hellings/tox-ansible/actions?query=workflow%3A%22CI%2FCD+Builds%22)
+[![codecov](https://codecov.io/gh/ansible-community/tox-ansible/branch/master/graph/badge.svg)](https://codecov.io/gh/greg-hellings/tox-ansible)
 [![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
 
 tox-ansible-collection
