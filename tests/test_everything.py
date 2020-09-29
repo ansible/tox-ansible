@@ -15,48 +15,53 @@ except ImportError:
 EXPECTED = {
     "tests/fixtures/collection": "\n".join(
         [
-            "complex-default",
-            "complex-openstack",
-            "complex-real_name",
             "lint_all",
-            "simple-default",
+            "one",
+            "roles-complex-default",
+            "roles-complex-name_mismatch",
+            "roles-complex-openstack",
+            "roles-simple-default",
+            "two",
         ]
     ),
     "tests/fixtures/expand_collection": "\n".join(
         [
             "derp",
             "py27-ansible28-lint_all",
-            "py27-ansible28-simple-default",
+            "py27-ansible28-roles-simple-default",
             "py27-ansible29-lint_all",
-            "py27-ansible29-simple-default",
+            "py27-ansible29-roles-simple-default",
             "py38-ansible28-lint_all",
-            "py38-ansible28-simple-default",
+            "py38-ansible28-roles-simple-default",
             "py38-ansible29-lint_all",
-            "py38-ansible29-simple-default",
+            "py38-ansible29-roles-simple-default",
         ]
     ),
     "tests/fixtures/not_collection": "\n".join(
         [
+            "coverage",
+            "lint",
+            "lint_all",
+            "one",
             "py27",
+            "py27-tox20",
+            "py27-tox30",
             "py35",
             "py36",
             "py37",
             "py38",
-            "py27-tox20",
-            "py27-tox30",
             "py38-tox20",
             "py38-tox30",
-            "lint",
-            "coverage",
+            "two",
         ]
     ),
 }
 
 EXPECTED_ARGS = {
-    "default": """complex-default
-simple-default""",
-    "openstack": "complex-openstack",
-    "simple": "simple-default",
+    "default": """roles-complex-default
+roles-simple-default""",
+    "openstack": "roles-complex-openstack",
+    "simple": "roles-simple-default",
 }
 
 
@@ -100,13 +105,10 @@ def test_run_tox(directory, capfd):
 
 
 @pytest.mark.parametrize(
-    "target,value",
-    [("scenario", "default"), ("driver", "openstack"), ("role", "simple")],
+    "target,value", [("scenario", "default"), ("driver", "openstack")],
 )
 def test_run_tox_with_args(target, value, capfd):
-    args = ["-l"]
-    args.append("--ansible-{}".format(target))
-    args.append(value)
+    args = ["-l", "--ansible-{}".format(target), value]
     with cd("tests/fixtures/collection"):
         cli = run_tox(args, capfd)
         with patch.dict("os.environ", {"TOX_ANSIBLE_{}".format(target.upper()): value}):

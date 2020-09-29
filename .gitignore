@@ -14,3 +14,4 @@ __pycache__
 htmlcov
 build
 dist
+.idea

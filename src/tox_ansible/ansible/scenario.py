@@ -19,6 +19,11 @@ class Scenario(object):
         return "{}".format(self.name)
 
     @property
+    def run_dir(self):
+        """The directory this scenario should be run from"""
+        return path.dirname(path.dirname(self.directory))
+
+    @property
     def config(self):
         """Reads the molecule.yml file. Adds it to the self.config
         field."""
@@ -28,16 +33,7 @@ class Scenario(object):
 
     @property
     def name(self):
-        """Determines the name of the scenario, which is not always
-        self-evident. By default it is the name of the directory that the
-        scenario file lives in, but if there is an entry in the molecule.yml
-        definition, it can override that value."""
-        if (
-            self.config
-            and "scenario" in self.config
-            and "name" in self.config["scenario"]
-        ):
-            return self.config["scenario"]["name"]
+        """Determines the name of the scenario."""
         return path.basename(self.directory)
 
     @property

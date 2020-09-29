@@ -12,8 +12,6 @@ from .filter import Filter
 from .options import (
     DRIVER_ENV_NAME,
     DRIVER_OPTION_NAME,
-    ROLE_ENV_NAME,
-    ROLE_OPTION_NAME,
     SCENARIO_ENV_NAME,
     SCENARIO_OPTION_NAME,
     Options,
@@ -24,12 +22,6 @@ from .options import (
 def tox_addoption(parser):
     """Add options to filter down to only executing the given roles and
     scenarios."""
-    parser.add_argument(
-        "--ansible-role",
-        dest=ROLE_OPTION_NAME,
-        action="append",
-        help="Only execute molecule in the given roles (env {})".format(ROLE_ENV_NAME),
-    )
     parser.add_argument(
         "--ansible-scenario",
         dest=SCENARIO_OPTION_NAME,
@@ -53,17 +45,17 @@ def tox_configure(config):
     """If the current folder includes a file named `galaxy.yml`, then look for
     a roles directory and generate environments for every (role, scenario)
     combo that is discovered therein."""
-    ansible = Ansible()
     tox = tox_helper.Tox(config)
     options = Options(tox)
+    ansible = Ansible(options=options)
 
     # Only execute inside of a collection, otherwise we have nothing to do
-    if not ansible.is_ansible():
+    if not ansible.is_ansible:
         return
 
     # Create any test cases that are discovered in the directory structure and
     # expand them per any configured matrix axes in the config file
-    tox_cases = ansible.get_tox_cases()
+    tox_cases = ansible.tox_cases
     tox_cases = options.expand_matrix(tox_cases)
 
     # Add them to the envconfig list before testing for explicit calls, because

@@ -9,13 +9,6 @@ except ImportError:
 
 
 class TestOptions(TestCase):
-    def test_do_filter_role(self):
-        opts = Options(Mock())
-        opts.role = ["one"]
-        opts.scenario = []
-        opts.driver = []
-        self.assertTrue(opts.do_filter())
-
     def test_do_filter_scenario(self):
         opts = Options(Mock())
         opts.role = []
