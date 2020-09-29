@@ -1,5 +1,4 @@
 from .by_driver import ByDriver
-from .by_role import ByRole
 from .by_scenario import ByScenario
 
 
@@ -8,7 +7,6 @@ class Filter(object):
 
     def __init__(self, options):
         self._filters = [
-            ByRole(options.role),
             ByScenario(options.scenario),
             ByDriver(options.driver),
         ]

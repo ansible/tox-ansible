@@ -1,3 +1,5 @@
+import os
+
 from .tox_base_case import ToxBaseCase
 from .tox_helper import Tox
 
@@ -9,19 +11,18 @@ DRIVER_DEPENDENCIES = {
 }
 
 
-DEFAULT_DESCRIPTION = "Auto-generated environment for Ansible role {role_name}"
-", scenario {scenario_name}"
+DEFAULT_DESCRIPTION = (
+    "Auto-generated environment for Ansible role scenario {scenario_name}"
+)
 
 
 class ToxTestCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
 
-    def __init__(self, role, scenario, name_parts=[]):
+    def __init__(self, scenario, name_parts=[]):
         """Create the base test case.
 
-        :param role: The role that this test case lives in
         :param scenario: The scenario that this test case should run"""
-        self.role = role
         self.scenario = scenario
         self._dependencies = [
             "molecule",
@@ -51,7 +52,7 @@ class ToxTestCase(ToxBaseCase):
         """Get the directory where the test should be executed.
 
         :return: Path where the test case should be executed from"""
-        return self.role.directory
+        return os.path.dirname(os.path.dirname(self.scenario.directory))
 
     def get_dependencies(self):
         """The dependencies for this particular test case.
@@ -80,10 +81,12 @@ class ToxTestCase(ToxBaseCase):
         the python version or ansible version.
 
         :return: The tox-friendly name of this test scenario"""
-        return "-".join(self._name_parts + [self.role.name, self.scenario.name])
+        scenario_path = self.scenario.directory.split(os.path.sep)
+        name_path = list(
+            filter(lambda x: x != "molecule" and "." not in x, scenario_path)
+        )
+        return "-".join(self._name_parts + name_path)
 
     @property
     def description(self):
-        return DEFAULT_DESCRIPTION.format(
-            role_name=self.role.name, scenario_name=self.scenario.name
-        )
+        return DEFAULT_DESCRIPTION.format(scenario_name=self.scenario.name)

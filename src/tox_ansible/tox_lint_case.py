@@ -20,7 +20,9 @@ class ToxLintCase(ToxBaseCase):
             cmd = [
                 "bash",
                 "-c",
-                BASH.format(case.role.directory, molecule_options, case.scenario.name),
+                BASH.format(
+                    case.scenario.run_dir, molecule_options, case.scenario.name
+                ),
             ]
             cmds.append(cmd)
         return cmds

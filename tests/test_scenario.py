@@ -1,36 +1,35 @@
-from unittest import TestCase
-
-from testfixtures import TempDirectory
+import pytest
 
 from tox_ansible.ansible.scenario import Scenario
 
 
-class TestScenarioDefaultName(TestCase):
-    scenarios = [
-        {"dir": "default", "file": b"driver:\n  name: openstack"},
-        {"dir": "other", "file": b"scenario:\n  name: surprise"},
-    ]
+@pytest.fixture
+def openstack(tmp_path):
+    d = tmp_path / "default"
+    d.mkdir()
+    f = d / "molecule.yml"
+    f.write_text("driver:\n  name: openstack")
+    return d
 
-    def test_scenario_name_introspect(self):
-        s = Scenario(self.d.getpath("default"))
-        self.assertEqual(s.name, "default")
-        self.assertEqual(str(s), "default")
 
-    def test_scenario_driver_correct(self):
-        s = Scenario(self.d.getpath("default"))
-        self.assertEqual(s.driver, "openstack")
+@pytest.fixture
+def surprise(tmp_path):
+    d = tmp_path / "surprise"
+    d.mkdir()
+    f = d / "molecule.yml"
+    f.write_text("driver:\n  name: surprise")
+    return d
 
-    def test_scenario_name_explicit(self):
-        s = Scenario(self.d.getpath("other"))
-        self.assertEqual(s.name, "surprise")
-        self.assertEqual(str(s), "surprise")
 
-    @classmethod
-    def setUp(cls):
-        cls.d = TempDirectory()
-        for scenario in cls.scenarios:
-            cls.d.write((scenario["dir"], "molecule.yml"), scenario["file"])
+def test_scenario_name_introspect(openstack):
+    s = Scenario(openstack)
+    assert s.name == "default"
+    assert str(s) == "default"
+    assert s.driver == "openstack"
 
-    @classmethod
-    def tearDown(cls):
-        cls.d.cleanup()
+
+def test_scenario_name_explicit(surprise):
+    s = Scenario(surprise)
+    assert s.name == "surprise"
+    assert str(s) == "surprise"
+    assert s.driver == "surprise"

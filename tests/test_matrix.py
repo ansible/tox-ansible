@@ -14,7 +14,7 @@ except ImportError:
 
 class TestMatrix(TestCase):
     def test_empty_matrix(self):
-        cases = [ToxTestCase(mock.Mock(), mock.Mock()), ToxLintCase([])]
+        cases = [ToxTestCase(mock.Mock()), ToxLintCase([])]
         original = copy(cases)
         matrix = Matrix()
         after_cases = matrix.expand(cases)
