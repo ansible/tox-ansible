@@ -126,14 +126,12 @@ molecule_opts =
     --debug
 ```
 
-Once you've run the tests in your local directory a few times you'll find that the plugin
-might begin picking up code that lives inside of the Tox working directory, typically called
-`.tox`. To prevent the plugin from finding scenarios inside that directory, or anywhere else,
-you can add elements to the ignore list:
+Sometimes there are paths you will want to ignore running tests in. Particularly if you
+install other roles or collections underneath of your source tree. You can ignore these paths
+with the following tox.ini bit:
 ```ini
 [ansible]
 ignore_path =
-    .tox
     dist
     generated_paths_to_ignore
 ```
@@ -208,7 +206,7 @@ python
 Under the hood
 --------------
 
-The plugin will walk the current directory and look for any files matching the glob pattern
+The plugin will glob the current directory and look for any files matching the glob pattern
 `molecule/*/molecule.yml` and make the assumption that these represent Molecule scenarios.
 
 It then generates new environments for any discovered scenarios that do not already exist
