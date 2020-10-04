@@ -1,4 +1,5 @@
-from os import path, walk
+import glob
+from os import path
 
 from ..tox_lint_case import ToxLintCase
 from ..tox_test_case import ToxTestCase
@@ -39,20 +40,20 @@ class Ansible(object):
         if self._scenarios is not None:
             return self._scenarios
         self._scenarios = []
-        for folder, dirs, files in walk(self.directory):
-            tree = folder.split(path.sep)
+        files = glob.glob(
+            f"{self.directory}/**/molecule/*/molecule.yml", recursive=True
+        )
+        for file in files:
+            # Check scenario path
+            base_dir = path.dirname(file)
             # Find if it's anywhere in the ignore list
+            tree = base_dir.split("/")
             ignored = False
             for branch in tree:
                 if branch in self.options.ignore_paths:
                     ignored = True
-            if (
-                not ignored
-                and len(tree) >= 2
-                and tree[-2] == "molecule"
-                and "molecule.yml" in files
-            ):
-                self._scenarios.append(Scenario(path.relpath(folder, self.directory)))
+            if not ignored:
+                self._scenarios.append(Scenario(path.relpath(base_dir, self.directory)))
         return self._scenarios
 
     @property
