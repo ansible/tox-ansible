@@ -4,7 +4,7 @@ from .tox_base_case import ToxBaseCase
 from .tox_helper import Tox
 
 DRIVER_DEPENDENCIES = {
-    # Because of the close relatoinship of these two, it's not uncommon to run one
+    # Because of the close relationship of these two, it's not uncommon to run one
     # scenario using the other driver if your system does not support one or the
     # other. So we'll choose to install only one of them
     "docker": ["molecule-docker", "molecule-podman"],
