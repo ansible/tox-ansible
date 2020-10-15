@@ -60,9 +60,9 @@ class TestToxTestCase(TestCase):
         Scenario, "driver", new_callable=mock.PropertyMock, return_value="docker"
     )
     def test_case_includes_docker_deps(self, driver_mock, config_mock):
-        s = Scenario("moelcule/my_test")
+        s = Scenario("molecule/my_test")
         t = ToxTestCase(s)
-        self.assertIn("docker", t.get_dependencies())
+        self.assertIn("molecule-docker", t.get_dependencies())
 
     @mock.patch.object(
         Scenario, "driver", new_callable=mock.PropertyMock, return_value="openstack"
