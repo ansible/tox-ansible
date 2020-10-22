@@ -39,6 +39,7 @@ def test_commands_are_correct(mocker):
     case2 = Mock(scenario=Scenario("something/roles/r1/molecule/s2"))
     case3 = Mock(scenario=Scenario("roles/r2/molecule/s3"))
     bummer = ToxLintCase([])
+    mocker.patch("tox_ansible.tox_lint_case.Tox.toxinidir", "")
     tc = ToxLintCase([case1, case2, case3, bummer])
     cmds = tc.get_commands(options)
     expected = [
