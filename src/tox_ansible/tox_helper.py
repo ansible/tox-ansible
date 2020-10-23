@@ -56,7 +56,7 @@ class Tox(object):
     @property
     def toxinidir(self):
         """Returns the configured toxinidir for working with base directory paths"""
-        return self.config.homedir
+        return self.config.toxinidir
 
     def get_opts(self):
         """Return the options as a dictionary-style object.
