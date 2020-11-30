@@ -11,6 +11,7 @@ on:
   release:
     types:
       - published  # It seems that you can publish directly without creating
+      - prereleased
   schedule:
     - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
