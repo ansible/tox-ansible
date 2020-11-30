@@ -3,12 +3,14 @@ name: tox
 on:
   create:  # is used for publishing to PyPI and TestPyPI
     tags:  # any tag regardless of its name, no branches
+      - "**"
   push:  # only publishes pushes to the main branch to TestPyPI
     branches:  # any integration branch but not tag
       - "master"
-    tags-ignore:
-      - "**"
   pull_request:
+  release:
+    types:
+      - published  # It seems that you can publish directly without creating
   schedule:
     - cron: 1 0 * * *  # Run daily at 0:01 UTC
 
@@ -24,7 +26,17 @@ jobs:
         run: |
           python -m pip install -U tox
           tox -e lint
-
+  packaging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.x"
+      - name: run packaging
+        run: |
+          python -m pip install -U tox
+          tox -e packaging
   test:
     needs: lint
     runs-on: ubuntu-latest
@@ -72,26 +84,50 @@ jobs:
     needs: coverage
     if: startsWith(github.ref, 'refs/tags/')  # Only release during tags
     runs-on: ubuntu-latest
+
+    env:
+      PY_COLORS: 1
+      TOXENV: packaging
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
+      - name: Switch to using Python 3.6 by default
+        uses: actions/setup-python@v2
         with:
-          python-version: "3.x"
-      - name: build
-        run: |
-          python -m pip install -U pip setuptools
-          pip install -U wheel
-          python setup.py build sdist bdist_wheel
-      - name: get tag name
-        id: get_tag
-        run: echo ::set-output name=TAG::${GITHUB_REF#refs/tags/}
-      - name: GitHub Release
-        uses: ncipollo/release-action@v1
+          python-version: 3.6
+      - name: Install tox
+        run: python -m pip install --user tox
+      - name: Check out src from Git
+        uses: actions/checkout@v2
         with:
-          artifacts: dist/*.whl, dist/*.tar.gz
-          allowUpdates: true
-          name: Release ${{ steps.get_tag.outputs.TAG }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Get shallow Git history (default) for release events
+          # but have a complete clone for any other workflows.
+          # Both options fetch tags but since we're going to remove
+          # one from HEAD in non-create-tag workflows, we need full
+          # history for them.
+          fetch-depth: >-
+            ${{
+              (
+                (
+                  github.event_name == 'create' &&
+                  github.event.ref_type == 'tag'
+                ) ||
+                github.event_name == 'release'
+              ) &&
+              1 || 0
+            }}
+      - name: Drop Git tags from HEAD for non-tag-create and non-release events
+        if: >-
+          (
+            github.event_name != 'create' ||
+            github.event.ref_type != 'tag'
+          ) &&
+          github.event_name != 'release'
+        run: >-
+          git tag --points-at HEAD
+          |
+          xargs git tag --delete
+      - name: Build dists
+        run: python -m tox
       - name: Publish to test.pypi.org
         if: >-
           (
@@ -110,8 +146,7 @@ jobs:
           repository_url: https://test.pypi.org/legacy/
       - name: Publish to pypi.org
         if: >-  # "create" workflows run separately from "push" & "pull_request"
-          github.event_name == 'create' &&
-          github.event.ref_type == 'tag'
+          github.event_name == 'release'
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.pypi_password }}
