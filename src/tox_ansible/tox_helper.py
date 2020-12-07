@@ -1,4 +1,4 @@
-from os.path import join
+from os.path import isfile, join
 
 import py
 from tox.config import DepOption, SectionReader, testenvprefix
@@ -75,8 +75,14 @@ class Tox(object):
         prefix = "tox" if self.config.toxinipath.basename == "setup.cfg" else None
         reader = self.get_reader("tox", prefix=prefix)
         make_envconfig = ParseIni.make_envconfig
+        skip_install = False
         # Python 2 fix
         make_envconfig = getattr(make_envconfig, "__func__", make_envconfig)
+
+        if not isfile(join(self.config.toxinidir, "setup.py")) and not isfile(
+            join(self.config.toxinidir, "pyproject.toml")
+        ):
+            skip_install = True
 
         # Store the generated ansible envlist
         self.config.ansible_envlist = []
@@ -86,6 +92,9 @@ class Tox(object):
                 self.config, tox_case.get_name(), section, reader._subs, self.config
             )
             config.tox_case = tox_case
+
+            if skip_install:
+                config.skip_install = skip_install
             self.customize_envconfig(config, options)
             self.config.envconfigs[tox_case.get_name()] = config
             self.config.ansible_envlist.append(tox_case.get_name())
