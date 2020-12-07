@@ -122,5 +122,10 @@ class Tox(object):
             config.changedir = py.path.local(tox_case.get_working_dir())
         if not config.basepython and tox_case.python is not None:
             config.basepython = tox_case.get_basepython()
-        if not config.allowlist_externals:
+
+        if hasattr(config, "whitelist_externals"):
+            allowlist = "whitelist_externals"
+        else:
+            allowlist = "allowlist_externals"
+        if not getattr(config, allowlist):
             config.allowlist_externals = ["bash"]
