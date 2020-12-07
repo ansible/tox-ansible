@@ -2,7 +2,7 @@ import glob
 from os import path
 
 from ..tox_lint_case import ToxLintCase
-from ..tox_test_case import ToxTestCase
+from ..tox_molecule_case import ToxMoleculeCase
 from .scenario import Scenario
 
 
@@ -64,6 +64,6 @@ class Ansible(object):
         :return: List of TestCase objects"""
         tox_cases = []
         for scenario in self.scenarios:
-            tox_cases.append(ToxTestCase(scenario))
+            tox_cases.append(ToxMoleculeCase(scenario))
         tox_cases.append(ToxLintCase(tox_cases))
         return tox_cases
