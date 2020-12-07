@@ -47,7 +47,7 @@ def tox_configure(config):
     combo that is discovered therein."""
     tox = tox_helper.Tox(config)
     options = Options(tox)
-    ansible = Ansible(options=options)
+    ansible = Ansible(options=options, base=tox.toxinidir)
 
     # Only execute inside of a collection, otherwise we have nothing to do
     if not ansible.is_ansible:
