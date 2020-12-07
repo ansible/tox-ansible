@@ -16,11 +16,11 @@ DRIVER_DEPENDENCIES = {
 
 
 DEFAULT_DESCRIPTION = (
-    "Auto-generated environment for Ansible role scenario {scenario_name}"
+    "Auto-generated environment to run: molecule test -s {scenario_name}"
 )
 
 
-class ToxTestCase(ToxBaseCase):
+class ToxMoleculeCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
 
     def __init__(self, scenario, name_parts=[]):
@@ -37,7 +37,7 @@ class ToxTestCase(ToxBaseCase):
             "testinfra",
         ]
         self._name_parts = name_parts
-        super(ToxTestCase, self).__init__()
+        super(ToxMoleculeCase, self).__init__()
 
     def get_commands(self, options):
         """Get the commands that this scenario should execute.

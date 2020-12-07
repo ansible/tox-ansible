@@ -8,7 +8,7 @@ except ImportError:
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
 from tox_ansible.tox_helper import Tox
-from tox_ansible.tox_test_case import ToxTestCase
+from tox_ansible.tox_molecule_case import ToxMoleculeCase
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
@@ -16,11 +16,11 @@ BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest", "testin
 
 
 @mock.patch.object(Scenario, "config", new_callable=mock.PropertyMock, return_value={})
-class TestToxTestCase(TestCase):
+class TestToxMoleculeCase(TestCase):
     @mock.patch.object(Options, "get_global_opts", return_value=[])
     @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
     def test_case_is_simple(self, pos_mock, opts_mock, config_mock):
-        t = ToxTestCase(self.scenario)
+        t = ToxMoleculeCase(self.scenario)
         self.assertEqual(t.get_name(), "my_test")
         self.assertEqual(t.get_working_dir(), "")
         self.assertEqual(t.get_dependencies(), BASE_DEPS + ["ansible"])
@@ -31,12 +31,12 @@ class TestToxTestCase(TestCase):
     @mock.patch.object(Options, "get_global_opts", return_value=["-c", "derp"])
     @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
     def test_case_has_global_opts(self, pos_mock, opts_mock, config_mock):
-        t = ToxTestCase(self.scenario)
+        t = ToxMoleculeCase(self.scenario)
         cmds = [["molecule", "-c", "derp", "test", "-s", self.scenario.name]]
         self.assertEqual(t.get_commands(self.opts), cmds)
 
     def test_case_expand_ansible(self, config_mock):
-        t = ToxTestCase(self.scenario)
+        t = ToxMoleculeCase(self.scenario)
         ts = t.expand_ansible("2.7")
         self.assertEqual(ts.ansible, "2.7")
         self.assertEqual(ts.get_name(), "ansible27-my_test")
@@ -44,14 +44,14 @@ class TestToxTestCase(TestCase):
         self.assertIsNone(ts.get_basepython())
 
     def test_case_expand_python(self, config_mock):
-        t = ToxTestCase(self.scenario)
+        t = ToxMoleculeCase(self.scenario)
         ts = t.expand_python("4.1")
         self.assertEqual(ts.python, "4.1")
         self.assertEqual(ts.get_name(), "py41-my_test")
         self.assertEqual(ts.get_basepython(), "python4.1")
 
     def test_case_expand_twice(self, config_mock):
-        t = ToxTestCase(self.scenario)
+        t = ToxMoleculeCase(self.scenario)
         t1 = t.expand_python("4.1")
         t2 = t1.expand_ansible("1.0")
         self.assertEqual(t2.get_name(), "ansible10-py41-my_test")
@@ -61,7 +61,7 @@ class TestToxTestCase(TestCase):
     )
     def test_case_includes_docker_deps(self, driver_mock, config_mock):
         s = Scenario("molecule/my_test")
-        t = ToxTestCase(s)
+        t = ToxMoleculeCase(s)
         self.assertIn("molecule-docker", t.get_dependencies())
 
     @mock.patch.object(
@@ -69,7 +69,7 @@ class TestToxTestCase(TestCase):
     )
     def test_case_includes_openstack_deps(self, driver_mock, config_mock):
         s = Scenario("molecule/osp_test")
-        t = ToxTestCase(s)
+        t = ToxMoleculeCase(s)
         self.assertIn("openstacksdk", t.get_dependencies())
 
     @classmethod

@@ -4,7 +4,7 @@ from unittest import TestCase
 from tox_ansible.matrix import Matrix, MatrixAxisBase
 from tox_ansible.matrix.axes import AnsibleAxis, PythonAxis
 from tox_ansible.tox_lint_case import ToxLintCase
-from tox_ansible.tox_test_case import ToxTestCase
+from tox_ansible.tox_molecule_case import ToxMoleculeCase
 
 try:
     from unittest import mock
@@ -14,7 +14,7 @@ except ImportError:
 
 class TestMatrix(TestCase):
     def test_empty_matrix(self):
-        cases = [ToxTestCase(mock.Mock()), ToxLintCase([])]
+        cases = [ToxMoleculeCase(mock.Mock()), ToxLintCase([])]
         original = copy(cases)
         matrix = Matrix()
         after_cases = matrix.expand(cases)
