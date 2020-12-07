@@ -17,9 +17,12 @@ class Ansible(object):
         directory is an Ansible structure or not. Currently aware of a
         collection and a role.
 
-        :param base: Path to the folder. Defaluts to being relative to
+        :param base: Path to the folder. Defaults to being relative to
         os.path.curdir, but can be absolute"""
-        self.directory = path.abspath(path.join(path.curdir, base))
+        if path.isabs(base):
+            self.directory = base
+        else:
+            self.directory = path.abspath(path.join(path.curdir, base))
         self._scenarios = None
         self.options = options
 
