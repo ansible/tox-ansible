@@ -1,4 +1,4 @@
-from os.path import isfile, join
+from os.path import abspath, isfile, join
 
 import py
 from tox.config import DepOption, SectionReader, testenvprefix
@@ -94,6 +94,8 @@ class Tox(object):
                 self.config, tox_case.get_name(), section, reader._subs, self.config
             )
             config.tox_case = tox_case
+            # We do not want to create new environments for each command we run
+            config.envdir = py._path.local.LocalPath(abspath(join(".tox", "ansible")))
 
             if skip_install:
                 config.skip_install = skip_install
