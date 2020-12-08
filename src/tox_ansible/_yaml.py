@@ -3,7 +3,7 @@ from yaml import load
 try:
     from yaml import CLoader as Loader
 except ImportError:  # pragma: no cover
-    from yaml import Loader
+    from yaml import Loader  # type: ignore
 
 
 def load_yaml(filename: str):
