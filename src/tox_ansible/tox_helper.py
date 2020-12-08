@@ -109,9 +109,10 @@ class Tox(object):
         tox_case = config.tox_case
         if not config.description:
             config.description = tox_case.description
-        # Default commands to run molecule
-        if not config.commands:
-            config.commands = tox_case.get_commands(options)
+        # We do not want to use commands from existing default environment
+        # as these may likely be others tests. Generated environments will
+        # have their own internal commands.
+        config.commands = tox_case.get_commands(options)
         # Default deps to install molecule, etc
         if not config.deps:
             do = DepOption()

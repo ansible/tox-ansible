@@ -1,3 +1,8 @@
+import copy
+
+from .tox_helper import Tox
+
+
 class ToxBaseCase(object):
     def __init__(self):
         # Some of the matrix fields we might care about later. They should be
@@ -5,6 +10,7 @@ class ToxBaseCase(object):
         # area in the future
         self.python = None
         self.ansible = None
+        self._config = Tox()
 
     def get_basepython(self):
         """The python version that should be used to execute this, if a
@@ -24,16 +30,11 @@ class ToxBaseCase(object):
 
         :param name: An additional field to be added to the name factors
         :return: A copy of this object with the additional name factor"""
-        if hasattr(self, "scenario"):
-            # pylint: disable=too-many-function-args
-            copy = self.__class__(self.scenario, [name] + self._name_parts)
-        else:
-            copy = self.__class__(  # pylint: disable=too-many-function-args
-                self._cases, [name] + self._name_parts
-            )
-        copy.python = self.python
-        copy.ansible = self.ansible
-        return copy
+        clone = copy.copy(self)
+        clone._name_parts.insert(0, name)  # pylint: disable=protected-access
+        clone.python = self.python
+        clone.ansible = self.ansible
+        return clone
 
     def expand_python(self, version):
         """Create a copy of this Test Case, but add a factor to the name to
@@ -58,3 +59,12 @@ class ToxBaseCase(object):
         copy.ansible = version
 
         return copy
+
+    def __copy__(self):
+        obj = type(self).__new__(self.__class__)
+        for k, v in self.__dict__.items():
+            if k in ("scenario", "_config"):
+                obj.__dict__[k] = v
+            else:
+                obj.__dict__[k] = copy.copy(v)
+        return obj

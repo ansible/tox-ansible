@@ -7,9 +7,15 @@ from unittest import TestCase
 
 from tox_ansible.compat import TOX_PARALLEL_ENV
 
+GALAXY_SAMPLE = """
+namespace: example
+name: foo
+version: 0.0.1
+"""
 
-class ToxAnsibleTestCase(TestCase):
-    """A TestCAse for testing tox configs.
+
+class ToxAnsible_TestCase(TestCase):
+    """A TestCase for testing tox configs.
 
     This class creates a temporary directory, writing the provided contents to
     the tox config file and any scenario files.
@@ -35,7 +41,7 @@ class ToxAnsibleTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(ToxAnsibleTestCase, cls).setUpClass()
+        super().setUpClass()
 
         assert (
             cls.ini_contents is not None
@@ -53,7 +59,7 @@ class ToxAnsibleTestCase(TestCase):
 
         # Write the galaxy.yml file - blank for now
         with open(os.path.join(cls._temp_dir, "galaxy.yml"), "w") as galaxy_yml:
-            galaxy_yml.write("")
+            galaxy_yml.write(GALAXY_SAMPLE)
 
         # Create role and scenario dirs
         for role, scenarios in cls.roles:
@@ -72,7 +78,7 @@ class ToxAnsibleTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls._temp_dir)
-        super(ToxAnsibleTestCase, cls).tearDownClass()
+        super().tearDownClass()
 
     def _tox_call(self, arguments):
         # Remove TOX_PARALLEL_ENV from the subprocess environment variables

@@ -16,7 +16,8 @@ class ToxLintCase(ToxBaseCase):
     def get_commands(self, options):
         cmds = []
         for case in self._cases:
-            if isinstance(case, ToxLintCase):
+            # Cases not supporting scenario are to be ignored
+            if not hasattr(case, "scenario"):
                 continue
             molecule_options = " ".join(options.get_global_opts())
             cmd = [
