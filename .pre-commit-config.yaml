@@ -1,6 +1,6 @@
 repos:
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.5.3
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.6.4
     hooks:
       - id: isort
   - repo: https://github.com/python/black.git
@@ -9,7 +9,7 @@ repos:
       - id: black
         language_version: python3
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v3.2.0
+    rev: v3.3.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -19,7 +19,7 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
   - repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.8.3
+    rev: 3.8.4
     hooks:
       - id: flake8
   - repo: https://github.com/adrienverge/yamllint.git
@@ -29,3 +29,11 @@ repos:
         files: \.(yaml|yml)$
         types: [file, yaml]
         entry: yamllint --strict
+  - repo: https://github.com/pre-commit/mirrors-pylint
+    rev: v2.6.0
+    hooks:
+      - id: pylint
+        additional_dependencies:
+          - pytest
+          - pyyaml
+          - tox

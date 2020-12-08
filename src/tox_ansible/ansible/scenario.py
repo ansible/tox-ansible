@@ -48,5 +48,4 @@ class Scenario(object):
         requirements_txt = path.join(self.directory, "requirements.txt")
         if path.isfile(requirements_txt):
             return requirements_txt
-        else:
-            return None
+        return None

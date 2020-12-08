@@ -1,10 +1,7 @@
+from unittest.mock import Mock
+
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.tox_lint_case import ToxLintCase
-
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
 
 
 def test_names_are_correct(mocker):

@@ -97,4 +97,4 @@ class ToxAnsibleTestCase(TestCase):
 
         self.assertEqual(returncode, 0, stderr)
 
-        return [env for env in stdout.strip().splitlines()]
+        return stdout.strip().splitlines()

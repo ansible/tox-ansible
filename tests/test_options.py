@@ -1,11 +1,7 @@
 from unittest import TestCase
+from unittest.mock import Mock
 
 from tox_ansible.options import Options
-
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
 
 
 class TestOptions(TestCase):

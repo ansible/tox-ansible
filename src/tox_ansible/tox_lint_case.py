@@ -7,11 +7,11 @@ BASH = "cd {} && molecule {} lint -s {}"
 
 
 class ToxLintCase(ToxBaseCase):
-    def __init__(self, cases, name_parts=[]):
+    def __init__(self, cases, name_parts=None):
         self._cases = copy(cases)
-        self._name_parts = name_parts
+        self._name_parts = name_parts or []
         self._config = Tox()
-        super(ToxLintCase, self).__init__()
+        super().__init__()
 
     def get_commands(self, options):
         cmds = []
@@ -47,4 +47,3 @@ class ToxLintCase(ToxBaseCase):
     @property
     def description(self):
         return "Auto-generated environment to run: molecule lint on all scenarios"
-        "scenarios"

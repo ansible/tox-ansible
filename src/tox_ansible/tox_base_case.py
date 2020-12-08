@@ -25,9 +25,12 @@ class ToxBaseCase(object):
         :param name: An additional field to be added to the name factors
         :return: A copy of this object with the additional name factor"""
         if hasattr(self, "scenario"):
+            # pylint: disable=too-many-function-args
             copy = self.__class__(self.scenario, [name] + self._name_parts)
         else:
-            copy = self.__class__(self._cases, [name] + self._name_parts)
+            copy = self.__class__(  # pylint: disable=too-many-function-args
+                self._cases, [name] + self._name_parts
+            )
         copy.python = self.python
         copy.ansible = self.ansible
         return copy
