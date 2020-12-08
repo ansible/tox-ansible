@@ -33,6 +33,7 @@ class Tox(object):
         :param section: Config section name to read from
         :param prefix: Any applicable prefix to the ini section name. Default
         None"""
+        # pylint: disable=protected-access
         reader = SectionReader(section, self.config._cfg, prefix=prefix)
         distshare_default = join(str(self.config.homedir), ".tox", "distshare")
         reader.addsubstitutions(
@@ -88,6 +89,7 @@ class Tox(object):
         self.config.ansible_envlist = []
         for tox_case in tox_cases:
             section = testenvprefix + tox_case.get_name()
+            # pylint: disable=protected-access
             config = make_envconfig(
                 self.config, tox_case.get_name(), section, reader._subs, self.config
             )

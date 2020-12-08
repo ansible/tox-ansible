@@ -5,11 +5,10 @@ import sys
 
 from tox import hookimpl
 
-from tox_ansible import tox_helper as tox_helper
-
-from .ansible import Ansible
-from .filter import Filter
-from .options import (
+from tox_ansible import tox_helper
+from tox_ansible.ansible import Ansible
+from tox_ansible.filter import Filter
+from tox_ansible.options import (
     DRIVER_ENV_NAME,
     DRIVER_OPTION_NAME,
     SCENARIO_ENV_NAME,

@@ -3,7 +3,7 @@ class Matrix(object):
         self.axes = []
 
     def add_axis(self, axis):
-        """Add an exansion axis to this matrix. Axes can be found in the
+        """Add an extension axis to this matrix. Axes can be found in the
         axes.py file and are subclasses of the MatrixAxisBase class.
 
         :param axis: An expansion axis to add to this matrix."""

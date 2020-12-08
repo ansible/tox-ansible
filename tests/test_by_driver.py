@@ -1,11 +1,7 @@
 from unittest import TestCase
+from unittest.mock import Mock
 
 from tox_ansible.filter.by_driver import ByDriver
-
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
 
 
 class TestByDriver(TestCase):

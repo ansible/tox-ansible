@@ -23,7 +23,7 @@ DEFAULT_DESCRIPTION = (
 class ToxMoleculeCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
 
-    def __init__(self, scenario, name_parts=[]):
+    def __init__(self, scenario, name_parts=None):
         """Create the base test case.
 
         :param scenario: The scenario that this test case should run"""
@@ -36,8 +36,8 @@ class ToxMoleculeCase(ToxBaseCase):
             "pytest",
             "testinfra",
         ]
-        self._name_parts = name_parts
-        super(ToxMoleculeCase, self).__init__()
+        self._name_parts = name_parts or []
+        super().__init__()
 
     def get_commands(self, options):
         """Get the commands that this scenario should execute.

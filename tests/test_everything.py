@@ -3,14 +3,9 @@ from __future__ import print_function
 import contextlib
 import os
 import subprocess
+from unittest.mock import patch
 
 import pytest
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
-
 
 EXPECTED = {
     "tests/fixtures/collection": "\n".join(
@@ -71,8 +66,6 @@ def cd(directory):
     os.chdir(directory)
     try:
         yield
-    except Exception:
-        raise
     finally:
         os.chdir(cwd)
 
@@ -81,13 +74,12 @@ def run_tox(args, capture):
     tox = ["tox"]
     tox.extend(args)
     try:
-        subprocess.run(tox)
+        subprocess.run(tox, check=True)
     except SystemExit as s:
         if s.code != 0:
             raise
-    finally:
-        outs = capture.readouterr()
-        return outs.out.strip()
+    outs = capture.readouterr()
+    return outs.out.strip()
 
 
 @pytest.mark.parametrize(
