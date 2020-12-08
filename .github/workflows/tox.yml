@@ -17,7 +17,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@master
@@ -28,7 +28,7 @@ jobs:
           python -m pip install -U tox
           tox -e lint
   packaging:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@master
@@ -40,7 +40,7 @@ jobs:
           tox -e packaging
   test:
     needs: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
@@ -64,7 +64,7 @@ jobs:
 
   coverage:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@master
@@ -84,7 +84,7 @@ jobs:
   publish:
     needs: coverage
     if: startsWith(github.ref, 'refs/tags/')  # Only release during tags
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     env:
       PY_COLORS: 1
