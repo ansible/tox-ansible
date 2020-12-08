@@ -1,11 +1,6 @@
 from os import path
 
-from yaml import load
-
-try:
-    from yaml import CLoader as Loader
-except ImportError:  # pragma: no cover
-    from yaml import Loader
+from tox_ansible._yaml import load_yaml
 
 
 class Scenario(object):
@@ -27,9 +22,7 @@ class Scenario(object):
     def config(self):
         """Reads the molecule.yml file. Adds it to the self.config
         field."""
-        with open(self.scenario_file, "r") as c:
-            return load(c.read(), Loader=Loader)
-        return None
+        return load_yaml(self.scenario_file)
 
     @property
     def name(self):
