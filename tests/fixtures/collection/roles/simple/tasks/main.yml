@@ -1,2 +1,2 @@
 - name: say hello
-  debug: msg=hi
+  debug: msg='tox-ansible is the best'

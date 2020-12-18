@@ -117,4 +117,4 @@ def test_run_with_test_command(capfd):
     with cd("tests/fixtures/collection"):
         shutil.rmtree(".tox")
         cli = run_tox(["-e", "roles-simple-default"], capfd)
-    assert cli != ""
+    assert "tox-ansible is the best" in cli
