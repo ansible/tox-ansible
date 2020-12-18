@@ -12,7 +12,24 @@ from tox_ansible.tox_molecule_case import ToxMoleculeCase
 
 DOCKER_DRIVER = {"driver": {"name": "docker"}}
 OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
-BASE_DEPS = ["molecule", "ansible-lint", "yamllint", "flake8", "pytest", "testinfra"]
+BASE_DEPS = [
+    "ansible-lint",
+    "flake8",
+    "pytest",
+    "testinfra",
+    "yamllint",
+    "boto",
+    "boto3",
+    "molecule",
+    "molecule-containers",
+    "molecule-docker",
+    "molecule-ec2",
+    "molecule-openstack",
+    "molecule-podman",
+    "molecule-vagrant",
+    "openstacksdk",
+    "os-client-config",
+]
 
 
 @mock.patch.object(Scenario, "config", new_callable=mock.PropertyMock, return_value={})
@@ -23,7 +40,7 @@ class TestToxMoleculeCase(TestCase):
         t = ToxMoleculeCase(self.scenario)
         self.assertEqual(t.get_name(), "my_test")
         self.assertEqual(t.get_working_dir(), "")
-        self.assertEqual(t.get_dependencies(), BASE_DEPS + ["ansible"])
+        self.assertEqual(sorted(t.get_dependencies()), sorted(BASE_DEPS + ["ansible"]))
         cmds = [["molecule", "test", "-s", self.scenario.name]]
         self.assertEqual(t.get_commands(self.opts), cmds)
         self.assertIsNone(t.get_basepython())
@@ -40,7 +57,9 @@ class TestToxMoleculeCase(TestCase):
         ts = t.expand_ansible("2.7")
         self.assertEqual(ts.ansible, "2.7")
         self.assertEqual(ts.get_name(), "ansible27-my_test")
-        self.assertEqual(ts.get_dependencies(), BASE_DEPS + ["ansible==2.7.*"])
+        self.assertEqual(
+            sorted(ts.get_dependencies()), sorted(BASE_DEPS + ["ansible==2.7.*"])
+        )
         self.assertIsNone(ts.get_basepython())
 
     def test_case_expand_python(self, config_mock):

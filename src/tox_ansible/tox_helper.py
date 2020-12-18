@@ -116,9 +116,8 @@ class Tox(object):
         # have their own internal commands.
         config.commands = tox_case.get_commands(options)
         # Default deps to install molecule, etc
-        if not config.deps:
-            do = DepOption()
-            config.deps = do.postprocess(config, tox_case.get_dependencies())
+        do = DepOption()
+        config.deps = do.postprocess(config, tox_case.get_dependencies())
         # Cannot run in {toxinidir}, which is default
         if not config.envdir or config.envdir == self.config.toxinidir:
             config.envdir = self.config.toxworkdir.join("ansible")
