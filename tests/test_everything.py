@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import contextlib
 import os
+import shutil
 import subprocess
 from unittest.mock import patch
 
@@ -110,3 +111,10 @@ def test_run_tox_with_args(target, value, capfd):
             env = run_tox(["-l"], capfd)
     assert cli == EXPECTED_ARGS[value]
     assert env == EXPECTED_ARGS[value]
+
+
+def test_run_with_test_command(capfd):
+    with cd("tests/fixtures/collection"):
+        shutil.rmtree(".tox")
+        cli = run_tox(["-e", "roles-simple-default"], capfd)
+    assert "tox-ansible is the best" in cli
