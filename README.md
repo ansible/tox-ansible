@@ -5,10 +5,36 @@
 tox-ansible-collection
 ======================
 
-This plugin for tox auto-generates tox environments for running Molecule scenarios. Optionally, you can
+This plugin for tox auto-generates tox environments for running Ansible
+quality assurance tools like ansible-test or molecule. Optionally, you can
 then elect to filter the environments down to only a subset of them.
 The tool is rather tightly integrated for the official [Molecule](https://github.com/ansible/molecule)
 testing tool that integrates with [Ansible](https://github.com/ansible/ansible).
+
+ansible-test
+------------
+
+As you probably already know, ansible-test cannot be just run on a cloned
+repository because it requires the current collection to be already installed
+and the current directory is already the installed location.
+
+This plugin saves you this trouble by allowing you the freedom to run
+these commands tranparently. For example you can run `tox -e sanity` which
+will install the collection, change current directory and execute
+`ansible-test sanity`. You can even add posargs that endup being passed to
+the executed command, like `tox -e sanity -- --help`.
+
+To see all dynamically generated environments, just run `tox -va`, the
+description field will tell you what they do:
+
+```shell
+$ tox -va
+default environments:
+sanity       -> Auto-generated environment to run: ansible-test sanity
+```
+
+Only those enviroments that are detected will be listed. At least sanity will
+always be visible as it does not require adding new files.
 
 More details
 ------------
