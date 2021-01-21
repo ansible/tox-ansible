@@ -1,7 +1,9 @@
 import glob
 from os import path
+from typing import Any, Dict
 
 from tox_ansible._yaml import load_yaml
+from tox_ansible.tox_helper import Tox
 
 from ..tox_ansible_test_case import ToxAnsibleTestCase
 from ..tox_lint_case import ToxLintCase
@@ -28,6 +30,7 @@ class Ansible(object):
             self.directory = path.abspath(path.join(path.curdir, base))
         self._scenarios = None
         self.options = options
+        self.tox = Tox()
 
     @property
     def is_ansible(self):
@@ -72,7 +75,7 @@ class Ansible(object):
         # pylint: disable=fixme
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
-        ANSIBLE_TEST_COMMANDS = {
+        ANSIBLE_TEST_COMMANDS: Dict[str, Dict[str, Any]] = {
             # "coverage",
             "integration": {},
             "network-integration": {},
@@ -81,6 +84,13 @@ class Ansible(object):
             # "units": {},
             "windows-integration": {},
         }
+        # Append posargs if any to each command
+        if self.tox.posargs:
+            for value in ANSIBLE_TEST_COMMANDS.values():
+                if "args" not in value:
+                    value["args"] = self.tox.posargs
+                else:
+                    value["args"].extend(self.tox.posargs)
 
         tox_cases = []
         for scenario in self.scenarios:
