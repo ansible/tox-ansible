@@ -2,30 +2,26 @@
 [![codecov](https://codecov.io/gh/ansible-community/tox-ansible/branch/master/graph/badge.svg)](https://codecov.io/gh/greg-hellings/tox-ansible)
 [![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
 
-tox-ansible-collection
-======================
+tox-ansible
+===========
 
-This plugin for tox auto-generates tox environments for running Ansible
+This plugin for tox auto-generates tox environments for running
 quality assurance tools like ansible-test or molecule. Optionally, you can
-then elect to filter the environments down to only a subset of them.
+decide to filter the environments down to only a subset of them.
 The tool is rather tightly integrated for the official [Molecule](https://github.com/ansible/molecule)
 testing tool that integrates with [Ansible](https://github.com/ansible/ansible).
 
 ansible-test
 ------------
 
-As you probably already know, ansible-test cannot be just run on a cloned
-repository because it requires the current collection to be already installed
-and the current directory is already the installed location.
-
 This plugin saves you this trouble by allowing you the freedom to run
 these commands tranparently. For example you can run `tox -e sanity` which
 will install the collection, change current directory and execute
-`ansible-test sanity`. You can even add posargs that endup being passed to
-the executed command, like `tox -e sanity -- --help`.
+`ansible-test sanity --python X.Y`. You can even add posargs that endup being
+passed to the executed command, like `tox -e sanity -- --help`.
 
-To see all dynamically generated environments, just run `tox -va`, the
-description field will tell you what they do:
+By default tox-ansible will also limit execution of ansible-test to the
+current python version used by tox.
 
 ```shell
 $ tox -va

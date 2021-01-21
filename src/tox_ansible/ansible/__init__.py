@@ -1,4 +1,6 @@
+import copy
 import glob
+import sys
 from os import path
 from typing import Any, Dict
 
@@ -81,16 +83,20 @@ class Ansible(object):
             "network-integration": {},
             "sanity": {"args": ["--requirements"]},
             "shell": {},
-            # "units": {},
+            "units": {},
             "windows-integration": {},
         }
+
         # Append posargs if any to each command
-        if self.tox.posargs:
-            for value in ANSIBLE_TEST_COMMANDS.values():
-                if "args" not in value:
-                    value["args"] = self.tox.posargs
-                else:
-                    value["args"].extend(self.tox.posargs)
+        for value in ANSIBLE_TEST_COMMANDS.values():
+            if "args" not in value:
+                value["args"] = copy.deepcopy(self.tox.posargs)
+            else:
+                value["args"].extend(self.tox.posargs)
+            if "--python" not in self.tox.posargs:
+                value["args"].extend(
+                    ["--python", f"{sys.version_info[0]}.{sys.version_info[1]}"]
+                )
 
         tox_cases = []
         for scenario in self.scenarios:
