@@ -51,9 +51,16 @@ class Ansible(object):
         if self._scenarios is not None:
             return self._scenarios
         self._scenarios = []
-        files = glob.glob(
-            f"{self.directory}/**/molecule/*/molecule.yml", recursive=True
-        )
+
+        # we resolve symlinks and use a set in order to avoid duplicating
+        # scenarios when symlinks are used.
+        files = {
+            path.realpath(f)
+            for f in glob.glob(
+                f"{self.directory}/**/molecule/*/molecule.yml", recursive=True
+            )
+        }
+
         for file in files:
             # Check scenario path
             base_dir = path.dirname(file)
