@@ -85,13 +85,15 @@ class Ansible(object):
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
         ANSIBLE_TEST_COMMANDS: Dict[str, Dict[str, Any]] = {
-            # "coverage",
-            "integration": {},
-            "network-integration": {},
+            "integration": {"args": ["--requirements"]},
+            "network-integration": {"args": ["--requirements"]},
             "sanity": {"args": ["--requirements"]},
-            "shell": {},
-            "units": {},
-            "windows-integration": {},
+            "shell": {"args": ["--requirements"]},
+            "units": {"args": ["--requirements"]},
+            "windows-integration": {"args": ["--requirements"]},
+            # special commands (not supported by us yet)
+            "coverage": {},
+            "env": {},
         }
 
         # Append posargs if any to each command
