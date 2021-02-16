@@ -1,0 +1,27 @@
+---
+# Used only for testing in order to make the plugin believe we are inside
+# a collection repository (so it adds the extra test environments).
+name: foo
+namespace: bar
+version: 0.0.1
+authors:
+  - Red Hat
+readme: README.md
+
+build_ignore:
+  - .ansible
+  - .cache
+  - .github
+  - .gitignore
+  - .pytest_cache
+  - .vscode
+  - .tox
+  - dist
+  - tox.ini
+  - .eggs
+  - .mypy_cache
+  - "*.egg-info"
+  - modules
+  - module_utils
+  - infrared_plugin
+  - scripts
