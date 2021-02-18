@@ -11,19 +11,21 @@ import pytest
 EXPECTED = {
     "tests/fixtures/collection": "\n".join(
         [
+            "env",
             "lint_all",
             "one",
             "roles-complex-default",
             "roles-complex-name_mismatch",
             "roles-complex-openstack",
             "roles-simple-default",
-            "sanity",
+            "shell",
             "two",
         ]
     ),
     "tests/fixtures/expand_collection": "\n".join(
         [
             "derp",
+            "env",
             "py27-ansible28-lint_all",
             "py27-ansible28-roles-simple-default",
             "py27-ansible29-lint_all",
@@ -32,7 +34,7 @@ EXPECTED = {
             "py38-ansible28-roles-simple-default",
             "py38-ansible29-lint_all",
             "py38-ansible29-roles-simple-default",
-            "sanity",
+            "shell",
         ]
     ),
     "tests/fixtures/not_collection": "\n".join(

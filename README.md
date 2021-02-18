@@ -26,7 +26,7 @@ current python version used by tox.
 ```shell
 $ tox -va
 default environments:
-sanity       -> Auto-generated environment to run: ansible-test sanity
+sanity       -> Auto-generated for: ansible-test sanity
 ```
 
 Only those enviroments that are detected will be listed. At least sanity will

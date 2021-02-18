@@ -47,4 +47,4 @@ class ToxLintCase(ToxBaseCase):
 
     @property
     def description(self):
-        return "Auto-generated environment to run: molecule lint on all scenarios"
+        return "Auto-generated for: molecule lint on all scenarios"

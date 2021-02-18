@@ -17,9 +17,7 @@ DRIVER_DEPENDENCIES = {
 }
 
 
-DEFAULT_DESCRIPTION = (
-    "Auto-generated environment to run: molecule test -s {scenario_name}"
-)
+DEFAULT_DESCRIPTION = "Auto-generated for: molecule test -s {scenario_name}"
 
 
 class ToxMoleculeCase(ToxBaseCase):
