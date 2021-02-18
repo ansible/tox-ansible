@@ -1,5 +1,5 @@
 driver:
-  name: podman
+  name: delegated
 platforms:
-  - name: simple
-    image: fedora:latest
+  - name: localhost
+    hostname: localhost
