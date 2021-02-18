@@ -3,9 +3,7 @@ import sys
 
 from .tox_base_case import ToxBaseCase
 
-DEFAULT_DESCRIPTION = (
-    "Auto-generated environment to run: molecule test -s {scenario_name}"
-)
+DEFAULT_DESCRIPTION = "Auto-generated for: molecule test -s {scenario_name}"
 
 
 # pylint: disable=too-many-instance-attributes
@@ -53,7 +51,7 @@ class ToxAnsibleTestCase(ToxBaseCase):
 
     @property
     def description(self):
-        return f"Auto-generated environment to run: ansible-test {self.command}"
+        return f"Auto-generated for: ansible-test {self.command} {' '.join(self.args)}"
 
     def get_dependencies(self):
         return self._dependencies

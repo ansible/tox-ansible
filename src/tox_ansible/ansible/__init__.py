@@ -85,14 +85,26 @@ class Ansible(object):
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
         ANSIBLE_TEST_COMMANDS: Dict[str, Dict[str, Any]] = {
-            "integration": {"args": ["--requirements"]},
-            "network-integration": {"args": ["--requirements"]},
-            "sanity": {"args": ["--requirements"]},
+            "integration": {
+                "args": ["--requirements"],
+                "requires": "tests/integration",
+            },
+            "network-integration": {
+                "args": ["--requirements"],
+                "requires": "tests/network-integration",
+            },
+            "sanity": {"args": ["--requirements"], "requires": "tests/sanity"},
             "shell": {"args": ["--requirements"]},
-            "units": {"args": ["--requirements"]},
-            "windows-integration": {"args": ["--requirements"]},
+            "units": {
+                "args": ["--requirements"],
+                "requires": "tests/unit",
+            },
+            "windows-integration": {
+                "args": ["--requirements"],
+                "requires": "tests/windows-integration",
+            },
             # special commands (not supported by us yet)
-            "coverage": {},
+            "coverage": {"requires": "tests/unit"},
             "env": {},
         }
 
@@ -116,23 +128,20 @@ class Ansible(object):
         if path.isfile(galaxy_file):
             galaxy_config = load_yaml(galaxy_file)
             for command in ANSIBLE_TEST_COMMANDS:
+                if not path.exists(
+                    path.join(
+                        self.directory,
+                        ANSIBLE_TEST_COMMANDS[command].get("requires", ""),
+                    )
+                ):
+                    continue
                 tox_cases.append(
                     ToxAnsibleTestCase(
-                        "sanity",
-                        args=ANSIBLE_TEST_COMMANDS["sanity"]["args"],
+                        command,
+                        args=ANSIBLE_TEST_COMMANDS[command]["args"],
                         galaxy_config=galaxy_config,
                     )
                 )
-            if path.isdir(path.join(self.directory, "tests", "unit")):
-                for command in ["units", "coverage"]:
-                    tox_cases.append(
-                        ToxAnsibleTestCase(command, galaxy_config=galaxy_config)
-                    )
-            if path.isdir(path.join(self.directory, "tests", "integration")):
-                for command in ["units", "coverage"]:
-                    tox_cases.append(
-                        ToxAnsibleTestCase(command, galaxy_config=galaxy_config)
-                    )
 
         tox_cases.append(ToxLintCase(tox_cases))
         return tox_cases
