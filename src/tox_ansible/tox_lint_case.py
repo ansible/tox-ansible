@@ -7,6 +7,9 @@ BASH = "cd {} && molecule {} lint -s {}"
 
 
 class ToxLintCase(ToxBaseCase):
+
+    description = "Auto-generated lint for ansible cases"
+
     def __init__(self, cases, name_parts=None):
         self._cases = copy(cases)
         self._name_parts = name_parts or []
@@ -40,14 +43,7 @@ class ToxLintCase(ToxBaseCase):
 
     def get_dependencies(self):
         deps = set(["flake8", "ansible-lint", "yamllint", "ansible"])
-        for case in self._cases:
-            if hasattr(case, "scenario") and case.scenario.driver != "delegated":
-                deps.add("molecule-{}".format(case.scenario.driver))
         return deps
 
     def get_name(self):
         return "-".join(self._name_parts + ["lint_all"])
-
-    @property
-    def description(self):
-        return "Auto-generated for: molecule lint on all scenarios"
