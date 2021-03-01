@@ -5,3 +5,4 @@ relative_files = True
 [report]
 omit =
   src/tox_ansible/hooks.py
+  src/tox_ansible/tox_helper.py
