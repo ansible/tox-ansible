@@ -15,28 +15,31 @@ class ToxLintCase(ToxBaseCase):
 
     def get_commands(self, options):
         cmds = []
-        for case in self._cases:
-            # Cases not supporting scenario are to be ignored
-            if not hasattr(case, "scenario"):
-                continue
-            molecule_options = " ".join(options.get_global_opts())
-            cmd = [
-                "bash",
-                "-c",
-                BASH.format(
-                    self._config.toxinidir.join(case.scenario.run_dir),
-                    molecule_options,
-                    case.scenario.name,
-                ),
-            ]
-            cmds.append(cmd)
+        # Construct the ansible-lint command
+        ansible_lint = ["ansible-lint", "-R"]
+        if options.ansible_lint:
+            ansible_lint.append("-c")
+            ansible_lint.append(options.ansible_lint)
+
+        # Construct the yamllint command
+        yamllint = ["yamllint"]
+        if options.yamllint:
+            yamllint.append("-c")
+            yamllint.append(options.yamllint)
+        yamllint.append(".")
+
+        # Construct the flake8 invocation
+        flake8 = ["flake8", "."]
+        cmds.append(ansible_lint)
+        cmds.append(yamllint)
+        cmds.append(flake8)
         return cmds
 
     def get_working_dir(self):
         return self._config.toxinidir
 
     def get_dependencies(self):
-        deps = set(["molecule", "flake8", "ansible-lint", "yamllint"])
+        deps = set(["flake8", "ansible-lint", "yamllint", "ansible"])
         for case in self._cases:
             if hasattr(case, "scenario") and case.scenario.driver != "delegated":
                 deps.add("molecule-{}".format(case.scenario.driver))

@@ -72,6 +72,12 @@ section key "molecule\_opts".
 To test with the latest versions of Ansible 2.7, 2.8, AND 2.9, add a comma-delimited list to the
 "[ansible]" section key "ansible".
 
+To pass a configuration file to "[ansible-lint](https://github.com/ansible-community/ansible-lint)",
+add the option "ansible\_lint\_config". Similarly to pass a config file option to
+"[yamllint](https://github.com/adrienverge/yamllint)", set the option "yamllint\_config" in
+the "[ansible]" section. Flake8 can be configured per its normal segment in your tox.ini file. All
+three of these commands are run as part of the "lint\_all" environment that this plugin creates.
+
 requirements.txt
 ----------------
 

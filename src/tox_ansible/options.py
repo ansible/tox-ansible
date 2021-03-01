@@ -15,6 +15,8 @@ INI_PYTHON_VERSIONS = "python"
 INI_ANSIBLE_VERSIONS = "ansible"
 INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 INI_IGNORE_PATHS = "ignore_path"
+INI_ANSIBLE_LINT_CONFIG = "ansible_lint_config"
+INI_YAMLLINT_CONFIG = "yamllint_config"
 
 
 class Options(object):
@@ -27,6 +29,8 @@ class Options(object):
         self.scenario = self._parse_opt(opts, SCENARIO_OPTION_NAME, SCENARIO_ENV_NAME)
         self.driver = self._parse_opt(opts, DRIVER_OPTION_NAME, DRIVER_ENV_NAME)
         self.matrix = Matrix()
+        self.ansible_lint = self.reader.getstring(INI_ANSIBLE_LINT_CONFIG)
+        self.yamllint = self.reader.getstring(INI_YAMLLINT_CONFIG)
 
         ansible = self.reader.getlist(INI_ANSIBLE_VERSIONS, sep=" ")
         if ansible:
