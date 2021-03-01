@@ -5,7 +5,7 @@ import tempfile
 from textwrap import dedent
 from unittest import TestCase
 
-from tox_ansible.compat import TOX_PARALLEL_ENV
+from tox.config import PARALLEL_ENV_VAR_KEY_PUBLIC as TOX_PARALLEL_ENV
 
 GALAXY_SAMPLE = """
 namespace: example

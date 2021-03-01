@@ -1,5 +1,6 @@
-import pytest
 import os
+
+import pytest
 
 from tox_ansible.ansible import Ansible
 
@@ -21,4 +22,4 @@ def test_scenarios_correct(mocker):
     ansible = Ansible("tests/fixtures/collection")
     ansible.options = mocker.Mock()
     ansible.options.ignore_paths = []
-    assert len(ansible.scenarios) ==  6
+    assert len(ansible.scenarios) == 6
