@@ -6,7 +6,7 @@ from tox_ansible.tox_lint_case import ToxLintCase
 
 def test_names_are_correct(mocker):
     tc = ToxLintCase([])
-    deps = set(["molecule", "ansible-lint", "flake8", "yamllint"])
+    deps = set(["ansible-lint", "flake8", "yamllint", "ansible"])
     mocker.patch(
         "tox_ansible.tox_lint_case.Tox.toxinidir",
         new_callable=mocker.PropertyMock,
@@ -32,6 +32,8 @@ def test_expand_ansible():
 def test_commands_are_correct(mocker):
     options = Mock()
     options.get_global_opts.return_value = []
+    options.ansible_lint = None
+    options.yamllint = None
     case1 = Mock(scenario=Scenario("molecule/s1"))
     case2 = Mock(scenario=Scenario("something/roles/r1/molecule/s2"))
     case3 = Mock(scenario=Scenario("roles/r2/molecule/s3"))
@@ -39,13 +41,22 @@ def test_commands_are_correct(mocker):
     mocker.patch("tox_ansible.tox_lint_case.Tox.toxinidir", "")
     tc = ToxLintCase([case1, case2, case3, bummer])
     cmds = tc.get_commands(options)
+    expected = [["ansible-lint", "-R"], ["yamllint", "."], ["flake8", "."]]
+    assert expected == cmds
+
+
+def test_lint_options_correct(mocker):
+    options = mocker.Mock()
+    options.get_global_opts.return_value = []
+    options.ansible_lint = "some/path"
+    options.yamllint = "some/yaml.path"
+    bummer = ToxLintCase([])
+    mocker.patch("tox_ansible.tox_lint_case.Tox.toxinidir", "")
+    tc = ToxLintCase([bummer])
+    cmds = tc.get_commands(options)
     expected = [
-        ["bash", "-c", "cd {} && molecule  lint -s {}".format("", "s1")],
-        [
-            "bash",
-            "-c",
-            "cd {} && molecule  lint -s {}".format("something/roles/r1", "s2"),
-        ],
-        ["bash", "-c", "cd {} && molecule  lint -s {}".format("roles/r2", "s3")],
+        ["ansible-lint", "-R", "-c", "some/path"],
+        ["yamllint", "-c", "some/yaml.path", "."],
+        ["flake8", "."],
     ]
     assert expected == cmds
