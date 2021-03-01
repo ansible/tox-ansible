@@ -61,6 +61,7 @@ class TestToxMoleculeCase(TestCase):
             sorted(ts.get_dependencies()), sorted(BASE_DEPS + ["ansible==2.7.*"])
         )
         self.assertIsNone(ts.get_basepython())
+        self.assertEqual("Auto-generated for: molecule test -s my_test", ts.description)
 
     def test_case_expand_python(self, config_mock):
         t = ToxMoleculeCase(self.scenario)

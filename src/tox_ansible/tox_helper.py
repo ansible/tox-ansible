@@ -1,12 +1,7 @@
 from os.path import abspath, isfile, join
 
 import py
-from tox.config import DepOption, SectionReader, testenvprefix
-
-try:
-    from tox.config import ParseIni  # tox 3.4.0+
-except ImportError:
-    from tox.config import parseini as ParseIni
+from tox.config import DepOption, ParseIni, SectionReader, testenvprefix
 
 
 class Tox(object):
