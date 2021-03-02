@@ -69,8 +69,17 @@ in the tox.ini file.
 To add global options to the molecule commands, add the arguments in a line list to the "[ansible]"
 section key "molecule\_opts".
 
-To test with the latest versions of Ansible 2.7, 2.8, AND 2.9, add a comma-delimited list to the
-"[ansible]" section key "ansible".
+To test each scenario with specified versions of either Ansible or Python, you can add version
+numbers to the keys `ansible` and `python` under the `[ansible]` section of the ini. These versions
+take the same format as the `envlist` version familiar to Python users. So, if you want to test on
+Ansible 2.9, 2.10, and 3.0 as well as with Python 2.7 and 3.8 then you can add this snippet (values can
+be separated by a mix of commas and newlines):
+
+```ini
+[ansible]
+ansible = 2.{9,10},3.0
+python = 2.7,3.8
+```
 
 To pass a configuration file to "[ansible-lint](https://github.com/ansible-community/ansible-lint)",
 add the option "ansible\_lint\_config". Similarly to pass a config file option to
@@ -170,7 +179,7 @@ any folder whose name appears in this list will be ignored.
 To test with ansible versions 2.7.\*, 2.8.\*, and 2.9.\* across every role and scenario:
 ```ini
 [ansible]
-ansible = 2.7 2.8 2.9
+ansible = 2.{7,8,9}
 ```
 
 Now the output will look like this:
@@ -207,7 +216,7 @@ If you want multiple Python versions, you can also specify that:
 
 ```ini
 [ansible]
-python = 2.7 3.8
+python = 2.7,3.8
 ```
 
 ```bash

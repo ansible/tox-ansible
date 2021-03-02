@@ -56,6 +56,12 @@ EXPECTED = {
         ]
     ),
 }
+EXPECTED["tests/fixtures/expand_collection_comma"] = EXPECTED[
+    "tests/fixtures/expand_collection"
+]
+EXPECTED["tests/fixtures/expand_collection_newlines"] = EXPECTED[
+    "tests/fixtures/expand_collection"
+]
 
 EXPECTED_ARGS = {
     "default": """roles-complex-default
@@ -92,6 +98,8 @@ def run_tox(args, capture):
     [
         ("tests/fixtures/collection"),
         ("tests/fixtures/expand_collection"),
+        ("tests/fixtures/expand_collection_comma"),
+        ("tests/fixtures/expand_collection_newlines"),
         ("tests/fixtures/not_collection"),
     ],
 )

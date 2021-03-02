@@ -1,9 +1,4 @@
-from unittest import TestCase
-
-try:
-    from unittest import mock
-except ImportError:
-    import mock
+import pytest
 
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
@@ -32,67 +27,88 @@ BASE_DEPS = [
 ]
 
 
-@mock.patch.object(Scenario, "config", new_callable=mock.PropertyMock, return_value={})
-class TestToxMoleculeCase(TestCase):
-    @mock.patch.object(Options, "get_global_opts", return_value=[])
-    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
-    def test_case_is_simple(self, pos_mock, opts_mock, config_mock):
-        t = ToxMoleculeCase(self.scenario)
-        self.assertEqual(t.get_name(), "my_test")
-        self.assertEqual(t.get_working_dir(), "")
-        self.assertEqual(sorted(t.get_dependencies()), sorted(BASE_DEPS + ["ansible"]))
-        cmds = [["molecule", "test", "-s", self.scenario.name]]
-        self.assertEqual(t.get_commands(self.opts), cmds)
-        self.assertIsNone(t.get_basepython())
+@pytest.fixture
+def config(mocker):
+    return mocker.PropertyMock(return_value={})
 
-    @mock.patch.object(Options, "get_global_opts", return_value=["-c", "derp"])
-    @mock.patch.object(Tox, "posargs", new_callable=mock.PropertyMock, return_value=[])
-    def test_case_has_global_opts(self, pos_mock, opts_mock, config_mock):
-        t = ToxMoleculeCase(self.scenario)
-        cmds = [["molecule", "-c", "derp", "test", "-s", self.scenario.name]]
-        self.assertEqual(t.get_commands(self.opts), cmds)
 
-    def test_case_expand_ansible(self, config_mock):
-        t = ToxMoleculeCase(self.scenario)
-        ts = t.expand_ansible("2.7")
-        self.assertEqual(ts.ansible, "2.7")
-        self.assertEqual(ts.get_name(), "ansible27-my_test")
-        self.assertEqual(
-            sorted(ts.get_dependencies()), sorted(BASE_DEPS + ["ansible==2.7.*"])
-        )
-        self.assertIsNone(ts.get_basepython())
-        self.assertEqual("Auto-generated for: molecule test -s my_test", ts.description)
+@pytest.fixture
+def scenario():
+    return Scenario("molecule/my_test")
 
-    def test_case_expand_python(self, config_mock):
-        t = ToxMoleculeCase(self.scenario)
-        ts = t.expand_python("4.1")
-        self.assertEqual(ts.python, "4.1")
-        self.assertEqual(ts.get_name(), "py41-my_test")
-        self.assertEqual(ts.get_basepython(), "python4.1")
 
-    def test_case_expand_twice(self, config_mock):
-        t = ToxMoleculeCase(self.scenario)
-        t1 = t.expand_python("4.1")
-        t2 = t1.expand_ansible("1.0")
-        self.assertEqual(t2.get_name(), "ansible10-py41-my_test")
+@pytest.fixture
+def opts(mocker):
+    config = mocker.Mock()
+    reader = mocker.Mock()
+    config.get_reader.return_value = reader
+    reader.getlist.return_value = ["2.10", "3.9"]
+    return Options(config)
 
-    @mock.patch.object(
-        Scenario, "driver", new_callable=mock.PropertyMock, return_value="docker"
+
+def test_case_is_simple(config, opts, scenario, mocker):
+    mocker.patch.object(Options, "get_global_opts", return_value=[])
+    mocker.patch.object(
+        Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
-    def test_case_includes_docker_deps(self, driver_mock, config_mock):
-        s = Scenario("molecule/my_test")
-        t = ToxMoleculeCase(s)
-        self.assertIn("molecule-docker", t.get_dependencies())
+    t = ToxMoleculeCase(scenario)
+    assert t.get_name() == "my_test"
+    assert t.get_working_dir() == ""
+    assert sorted(t.get_dependencies()) == sorted(BASE_DEPS + ["ansible"])
+    cmds = [["molecule", "test", "-s", scenario.name]]
+    assert t.get_commands(opts) == cmds
+    assert t.get_basepython() is None
 
-    @mock.patch.object(
-        Scenario, "driver", new_callable=mock.PropertyMock, return_value="openstack"
+
+def test_case_has_global_opts(mocker, scenario, opts, config):
+    mocker.patch.object(Options, "get_global_opts", return_value=["-c", "derp"])
+    mocker.patch.object(
+        Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
-    def test_case_includes_openstack_deps(self, driver_mock, config_mock):
-        s = Scenario("molecule/osp_test")
-        t = ToxMoleculeCase(s)
-        self.assertIn("openstacksdk", t.get_dependencies())
+    t = ToxMoleculeCase(scenario)
+    cmds = [["molecule", "-c", "derp", "test", "-s", scenario.name]]
+    assert t.get_commands(opts) == cmds
 
-    @classmethod
-    def setUp(cls):
-        cls.scenario = Scenario("molecule/my_test")
-        cls.opts = Options(mock.Mock())
+
+def test_case_expand_ansible(scenario):
+    # pylint: disable=misplaced-comparison-constant
+    t = ToxMoleculeCase(scenario)
+    ts = t.expand_ansible("2.7")
+    assert ts.ansible == "2.7"
+    assert ts.get_name() == "ansible27-my_test"
+    assert sorted(ts.get_dependencies()) == sorted(BASE_DEPS + ["ansible==2.7.*"])
+    assert ts.get_basepython() is None
+    assert "Auto-generated for: molecule test -s my_test" == ts.description
+
+
+def test_case_expand_python(scenario):
+    t = ToxMoleculeCase(scenario)
+    ts = t.expand_python("4.1")
+    assert ts.python == "4.1"
+    assert ts.get_name() == "py41-my_test"
+    assert ts.get_basepython() == "python4.1"
+
+
+def test_case_expand_twice(scenario):
+    t = ToxMoleculeCase(scenario)
+    t1 = t.expand_python("4.1")
+    t2 = t1.expand_ansible("1.0")
+    assert t2.get_name() == "ansible10-py41-my_test"
+
+
+def test_case_includes_docker_deps(mocker):
+    mocker.patch.object(
+        Scenario, "driver", new_callable=mocker.PropertyMock, return_value="docker"
+    )
+    s = Scenario("molecule/my_test")
+    t = ToxMoleculeCase(s)
+    assert "molecule-docker" in t.get_dependencies()
+
+
+def test_case_includes_openstack_deps(mocker):
+    mocker.patch.object(
+        Scenario, "driver", new_callable=mocker.PropertyMock, return_value="openstack"
+    )
+    s = Scenario("molecule/osp_test")
+    t = ToxMoleculeCase(s)
+    assert "openstacksdk" in t.get_dependencies()

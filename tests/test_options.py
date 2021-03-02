@@ -1,33 +1,40 @@
-from unittest import TestCase
-from unittest.mock import Mock
+import pytest
 
 from tox_ansible.options import Options
 
 
-class TestOptions(TestCase):
-    def test_do_filter_scenario(self):
-        opts = Options(Mock())
-        opts.role = []
-        opts.scenario = ["default"]
-        opts.driver = []
-        self.assertTrue(opts.do_filter())
+@pytest.fixture
+def opts(mocker):
+    c = mocker.Mock()
+    reader = mocker.Mock()
+    c.get_reader.return_value = reader
+    reader.getlist.return_value = ["2.10", "3.9"]
+    opts = Options(c)
+    return opts
 
-    def test_do_filter_driver(self):
-        opts = Options(Mock())
-        opts.role = []
-        opts.scenario = []
-        opts.driver = ["openstack"]
-        self.assertTrue(opts.do_filter())
 
-    def test_do_filter_none_is_false(self):
-        opts = Options(Mock())
-        opts.role = []
-        opts.scenario = []
-        opts.driver = []
-        self.assertFalse(opts.do_filter())
+def test_do_filter_scenario(opts):
+    opts.role = []
+    opts.scenario = ["default"]
+    opts.driver = []
+    assert opts.do_filter()
 
-    def test_options_expand_matrix(self):
-        opts = Options(Mock())
-        opts.matrix = Mock()
-        opts.expand_matrix([])
-        opts.matrix.expand.assert_called_once_with([])
+
+def test_do_filter_driver(opts):
+    opts.role = []
+    opts.scenario = []
+    opts.driver = ["openstack"]
+    assert opts.do_filter()
+
+
+def test_do_filter_none_is_false(opts):
+    opts.role = []
+    opts.scenario = []
+    opts.driver = []
+    assert not opts.do_filter()
+
+
+def test_options_expand_matrix(opts, mocker):
+    opts.matrix = mocker.Mock()
+    opts.expand_matrix([])
+    opts.matrix.expand.assert_called_once_with([])

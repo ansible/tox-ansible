@@ -1,6 +1,8 @@
 import os
 from itertools import chain
 
+from tox.config import _split_env
+
 from .matrix import Matrix
 from .matrix.axes import AnsibleAxis, PythonAxis
 
@@ -32,10 +34,12 @@ class Options(object):
         self.ansible_lint = self.reader.getstring(INI_ANSIBLE_LINT_CONFIG)
         self.yamllint = self.reader.getstring(INI_YAMLLINT_CONFIG)
 
-        ansible = self.reader.getlist(INI_ANSIBLE_VERSIONS, sep=" ")
+        ansible = self.reader.getlist(INI_ANSIBLE_VERSIONS)
+        ansible = _split_env(ansible)
         if ansible:
             self.matrix.add_axis(AnsibleAxis(ansible))
-        pythons = self.reader.getlist(INI_PYTHON_VERSIONS, sep=" ")
+        pythons = self.reader.getlist(INI_PYTHON_VERSIONS)
+        pythons = _split_env(pythons)
         if pythons:
             self.matrix.add_axis(PythonAxis(pythons))
 
