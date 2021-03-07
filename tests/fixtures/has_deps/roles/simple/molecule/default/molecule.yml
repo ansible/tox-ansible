@@ -1,0 +1,5 @@
+driver:
+  name: podman
+platforms:
+  - name: simple
+    image: fedora:latest

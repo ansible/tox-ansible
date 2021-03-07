@@ -109,6 +109,16 @@ def test_run_tox(directory, capfd):
     assert out == EXPECTED[directory]
 
 
+def test_tox_ini_deps_preserved(capfd):
+    with cd("tests/fixtures/has_deps"):
+        lint_out = run_tox(["--showconfig", "-e", "lint_all"], capfd)
+        simple_out = run_tox(["--showconfig", "-e", "roles-simple-default"], capfd)
+    deps = [m for m in lint_out.split("\n") if m.startswith("deps = ")][0]
+    assert "notadep==1" in deps
+    deps = [m for m in simple_out.split("\n") if m.startswith("deps = ")][0]
+    assert "otherdep" in deps
+
+
 @pytest.mark.parametrize(
     "target,value",
     [("scenario", "default"), ("driver", "openstack")],
