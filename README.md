@@ -52,9 +52,11 @@ of the two options. Of course, tox can still be used to execute only one environ
 name directly via e.g. `tox -e roles-myrole-scenario`.
 
 If an environment already exists that matches the generated environment name, then this plugin
-will not settings specified directly in the tox.ini for that environment. Thus, if you need to customize
+will not override settings specified directly in the tox.ini for that environment. Thus, if you need to customize
 a particular run, then you can do so, but still take advantage of the filtering options and
-auto-generation of the environments for other scenarios and options.
+auto-generation of the environments for other scenarios and options. Dependencies defined in the standard
+way in tox.ini for any name collision environments will be augmented with the ones needed for
+running Molecule and lint.
 
 Configuration
 =============
