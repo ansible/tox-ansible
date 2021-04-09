@@ -39,7 +39,9 @@ class Ansible(object):
         """Determine if the specified directory is an Ansible structure or not
 
         :return: True if this is an Ansible structure. False, otherwise."""
-        return len(self.scenarios) > 0
+        return len(self.scenarios) > 0 or path.isfile(
+            path.join(self.directory, "galaxy.yml")
+        )
 
     @property
     def scenarios(self):
@@ -93,7 +95,9 @@ class Ansible(object):
                 "args": ["--requirements"],
                 "requires": "tests/network-integration",
             },
-            "sanity": {"args": ["--requirements"], "requires": "tests/sanity"},
+            # sanity tests do not need presence of sanity check or even tests
+            # folder
+            "sanity": {"args": ["--requirements"], "requires": ""},
             "shell": {"args": ["--requirements"]},
             "units": {
                 "args": ["--requirements"],

@@ -18,6 +18,7 @@ EXPECTED = {
             "roles-complex-name_mismatch",
             "roles-complex-openstack",
             "roles-simple-default",
+            "sanity",
             "shell",
             "two",
         ]
@@ -34,6 +35,7 @@ EXPECTED = {
             "py38-ansible28-roles-simple-default",
             "py38-ansible29-lint_all",
             "py38-ansible29-roles-simple-default",
+            "sanity",
             "shell",
         ]
     ),
