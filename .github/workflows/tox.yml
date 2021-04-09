@@ -62,22 +62,23 @@ jobs:
           name: coverage-results
           path: .coverage.${{ matrix.python }}
 
-  test-devel:
-    needs: lint
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python: ["3.6"]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
-        with:
-          python-version: ${{ matrix.python }}
-      - name: run test (devel)
-        run: |
-          python -m pip install tox
-          tox -e py$(printf "${{ matrix.python }}" | tr -d '.')-devel
+  # Disabled until we can really start working on adding support for tox4
+  # test-devel:
+  #   needs: lint
+  #   runs-on: ubuntu-20.04
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       python: ["3.6"]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@master
+  #       with:
+  #         python-version: ${{ matrix.python }}
+  #     - name: run test (devel)
+  #       run: |
+  #         python -m pip install tox
+  #         tox -e py$(printf "${{ matrix.python }}" | tr -d '.')-devel
 
   coverage:
     needs: test
