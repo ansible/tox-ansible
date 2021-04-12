@@ -25,8 +25,8 @@ jobs:
           python-version: "3.x"
       - name: run lint
         run: |
-          python -m pip install -U tox
-          tox -e lint
+          python3 -m pip install -U tox
+          python3 -m tox -e lint
   packaging:
     runs-on: ubuntu-20.04
     steps:
@@ -36,31 +36,52 @@ jobs:
           python-version: "3.x"
       - name: run packaging
         run: |
-          python -m pip install -U tox
-          tox -e packaging
+          python3 -m pip install -U tox
+          python3 -m tox -e packaging
   test:
+    name: ${{ matrix.name }}
     needs: lint
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.6", "3.7", "3.8", "3.9"]
+        include:
+          - name: py36
+            tox_env: py36
+            os: ubuntu-20.04
+            python-version: 3.6
+          - name: py37
+            tox_env: py37
+            os: ubuntu-20.04
+            python-version: 3.7
+          - name: py38
+            tox_env: py38
+            os: ubuntu-20.04
+            python-version: 3.8
+          - name: py39
+            tox_env: py39
+            os: ubuntu-20.04
+            python-version: 3.9
+          - name: py38@macos
+            tox_env: py38
+            os: macOS-latest
+            python-version: 3.8
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@master
         with:
-          python-version: ${{ matrix.python }}
+          python-version: ${{ matrix.python-version }}
       - name: run test
         run: |
-          python -m pip install tox
-          tox -e py$(printf "${{ matrix.python }}" | tr -d '.')
+          python3 -m pip install tox
+          python3 -m tox -e ${{ matrix.tox_env }}
         env:
-          COVERAGE_FILE: .coverage.${{ matrix.python }}
+          COVERAGE_FILE: .coverage.${{ matrix.python-version }}
       - name: upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: coverage-results
-          path: .coverage.${{ matrix.python }}
+          path: .coverage.${{ matrix.python-version }}
 
   # Disabled until we can really start working on adding support for tox4
   # test-devel:
@@ -74,11 +95,11 @@ jobs:
   #     - uses: actions/checkout@v2
   #     - uses: actions/setup-python@master
   #       with:
-  #         python-version: ${{ matrix.python }}
+  #         python-version: ${{ matrix.python-version }}
   #     - name: run test (devel)
   #       run: |
   #         python -m pip install tox
-  #         tox -e py$(printf "${{ matrix.python }}" | tr -d '.')-devel
+  #         tox -e py$(printf "${{ matrix.version }}" | tr -d '.')-devel
 
   coverage:
     needs: test
@@ -93,8 +114,8 @@ jobs:
           name: coverage-results
       - name: run coverage
         run: |
-          python -m pip install tox codecov
-          tox -e coverage
+          python3 -m pip install tox codecov
+          python3 -m tox -e coverage
           codecov -X pycov -X gcov
         env:
           CODECOV_TOKEN: ${{ secrets.codecov_token }}
@@ -114,7 +135,7 @@ jobs:
         with:
           python-version: 3.6
       - name: Install tox
-        run: python -m pip install --user tox
+        run: python3 -m pip install --user tox
       - name: Check out src from Git
         uses: actions/checkout@v2
         with:
@@ -146,7 +167,7 @@ jobs:
           |
           xargs git tag --delete
       - name: Build dists
-        run: python -m tox
+        run: python3 -m tox
       - name: Publish to test.pypi.org
         if: >-
           (

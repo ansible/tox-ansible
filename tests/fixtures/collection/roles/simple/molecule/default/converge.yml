@@ -1,4 +1,5 @@
 - name: test
-  hosts: all
+  hosts: localhost
+  gather_facts: false
   roles:
     - simple
