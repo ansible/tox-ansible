@@ -1,5 +1,6 @@
 import copy
 import glob
+import logging
 import sys
 from os import path
 from typing import Any, Dict
@@ -139,13 +140,16 @@ class Ansible(object):
                     )
                 ):
                     continue
-                tox_cases.append(
-                    ToxAnsibleTestCase(
-                        command,
-                        args=ANSIBLE_TEST_COMMANDS[command]["args"],
-                        galaxy_config=galaxy_config,
+                try:
+                    tox_cases.append(
+                        ToxAnsibleTestCase(
+                            command,
+                            args=ANSIBLE_TEST_COMMANDS[command]["args"],
+                            galaxy_config=galaxy_config,
+                        )
                     )
-                )
+                except RuntimeError as exc:
+                    logging.warning(str(exc))
 
         tox_cases.append(ToxLintCase(tox_cases))
         return tox_cases
