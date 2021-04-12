@@ -1,5 +1,4 @@
 import os
-import sys
 
 from .tox_base_case import ToxBaseCase
 
@@ -18,13 +17,11 @@ class ToxAnsibleTestCase(ToxBaseCase):
         self.args = args or []
         self.galaxy_config = galaxy_config or {}
         if not galaxy_config or any(k not in galaxy_config for k in _galaxy_fields):
-            print(
+            raise RuntimeError(
                 "Invalid galaxy.yml content, missing one of "
                 "required keys %s but we got %s"
-                % (", ".join(_galaxy_fields), galaxy_config),
-                file=sys.stderr,
+                % (", ".join(_galaxy_fields), galaxy_config)
             )
-            sys.exit(102)
 
         self.namespace = galaxy_config["namespace"]
         self.collection = galaxy_config["name"]
