@@ -1,6 +1,9 @@
 import os
+from functools import lru_cache
+from string import Template
 from typing import Iterable
 
+from .options import INI_SCENARIO_FORMAT_DEFAULT
 from .tox_base_case import ToxBaseCase
 from .tox_helper import Tox
 
@@ -17,7 +20,7 @@ DRIVER_DEPENDENCIES = {
 }
 
 
-DEFAULT_DESCRIPTION = "Auto-generated for: molecule test -s {scenario_name}"
+DEFAULT_DESCRIPTION = "Auto-generated for: {cwd_cmd}molecule test -s {scenario_name}"
 
 
 class ToxMoleculeCase(ToxBaseCase):
@@ -80,19 +83,49 @@ class ToxMoleculeCase(ToxBaseCase):
             dependencies.append("-r" + self.scenario.requirements)
         return dependencies
 
-    def get_name(self):
+    @lru_cache()
+    def get_name(self, fmt=""):
         """The name of this test case. The name is made up of various factors
         from the tox world, joined together by hyphens. Some of them are based
         on the role and scenario names. Others are based on factors such as
         the python version or ansible version.
 
-        :return: The tox-friendly name of this test scenario"""
+        :return: The tox-friendly name of this test scenario
+        """
         scenario_path = self.scenario.directory.split(os.path.sep)
-        name_path = list(
-            filter(lambda x: x != "molecule" and "." not in x, scenario_path)
+        parts = list(filter(lambda x: x != "molecule" and "." not in x, scenario_path))
+
+        name = parts[-1]
+
+        parent = ""
+        path = ""
+        if len(parts) >= 3:
+            path = "-".join(parts[:-2])
+            parent = parts[-2]
+        elif len(parts) == 2:
+            parent = parts[-2]
+
+        nondefault_name = name if (name != "default" or not parent) else ""
+
+        if not fmt:
+            fmt = INI_SCENARIO_FORMAT_DEFAULT
+
+        formatted_name = Template(fmt).safe_substitute(
+            path=path, parent=parent, name=name, nondefault_name=nondefault_name
         )
-        return "-".join(self._name_parts + name_path)
+        formatted_name = "-".join(self._name_parts + [formatted_name])
+
+        # remove any leading or trailing dashes
+        formatted_name = formatted_name.strip("-")
+        # remove double dashes
+        while "--" in formatted_name:
+            formatted_name = formatted_name.replace("--", "-")
+
+        return formatted_name
 
     @property
     def description(self):
-        return DEFAULT_DESCRIPTION.format(scenario_name=self.scenario.name)
+        cwd_cmd = f"cd {self.scenario.run_dir} && " if self.scenario.run_dir else ""
+        return DEFAULT_DESCRIPTION.format(
+            scenario_name=self.scenario.name, cwd_cmd=cwd_cmd
+        )

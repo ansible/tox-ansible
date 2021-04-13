@@ -43,7 +43,7 @@ class ToxAnsibleTestCase(ToxBaseCase):
         self._name_parts = name_parts or []
         super().__init__()
 
-    def get_name(self):
+    def get_name(self, fmt=""):
         return self.command
 
     @property
