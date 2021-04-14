@@ -45,5 +45,5 @@ class ToxLintCase(ToxBaseCase):
         deps = set(["flake8", "ansible-lint", "yamllint", "ansible"])
         return deps
 
-    def get_name(self):
+    def get_name(self, fmt=""):
         return "-".join(self._name_parts + ["lint_all"])

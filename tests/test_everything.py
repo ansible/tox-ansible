@@ -57,6 +57,18 @@ EXPECTED = {
             "two",
         ]
     ),
+    "tests/fixtures/simplified": "\n".join(
+        [
+            "default",
+            "env",
+            "lint_all",
+            "myrole",
+            "myrole-another",
+            "sanity",
+            "shell",
+            "two",
+        ]
+    ),
 }
 EXPECTED["tests/fixtures/expand_collection_comma"] = EXPECTED[
     "tests/fixtures/expand_collection"
@@ -103,6 +115,7 @@ def run_tox(args, capture):
         ("tests/fixtures/expand_collection_comma"),
         ("tests/fixtures/expand_collection_newlines"),
         ("tests/fixtures/not_collection"),
+        ("tests/fixtures/simplified"),
     ],
 )
 def test_run_tox(directory, capfd):

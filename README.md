@@ -81,7 +81,21 @@ be separated by a mix of commas and newlines):
 [ansible]
 ansible = 2.{9,10},3.0
 python = 2.7,3.8
+# To change how tox env name is build for scanrios, you can use vars like:
+# $path - paths under which molecule file is hosted (can be empty string)
+# $parent - only the parent folder under which is hosted (can be empty string)
+# $name - this is the name of the scenario (folder under molecule/)
+# $nondefault_name - same as name but when scenario is named 'default' it becomes empty string
+#
+# scenario_format = $path-$role-$name
+
 ```
+
+If you find the default environment names generated for scenarios too long,
+you can configure `scenario_format = $parent-$nondefault_name` which should
+produce very short names, regardless if your scenarios are in repository root
+or under the roles. That works nicely as long you do not have duplicate
+scenario names.
 
 To pass a configuration file to "[ansible-lint](https://github.com/ansible-community/ansible-lint)",
 add the option "ansible\_lint\_config". Similarly to pass a config file option to

@@ -83,10 +83,11 @@ class Tox(object):
         # Store the generated ansible envlist
         self.config.ansible_envlist = []
         for tox_case in tox_cases:
-            section = testenvprefix + tox_case.get_name()
+            tox_case_name = tox_case.get_name(fmt=options.scenario_format)
+            section = testenvprefix + tox_case_name
             # pylint: disable=protected-access
             config = make_envconfig(
-                self.config, tox_case.get_name(), section, reader._subs, self.config
+                self.config, tox_case_name, section, reader._subs, self.config
             )
             config.tox_case = tox_case
             # We do not want to create new environments for each command we run
@@ -95,8 +96,8 @@ class Tox(object):
             if skip_install:
                 config.skip_install = skip_install
             self.customize_envconfig(config, options)
-            self.config.envconfigs[tox_case.get_name()] = config
-            self.config.ansible_envlist.append(tox_case.get_name())
+            self.config.envconfigs[tox_case_name] = config
+            self.config.ansible_envlist.append(tox_case_name)
 
     def customize_envconfig(self, config, options):
         """Writes the fields of the envconfig that need to be given default

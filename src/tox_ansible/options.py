@@ -19,8 +19,11 @@ INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 INI_IGNORE_PATHS = "ignore_path"
 INI_ANSIBLE_LINT_CONFIG = "ansible_lint_config"
 INI_YAMLLINT_CONFIG = "yamllint_config"
+INI_SCENARIO_FORMAT = "scenario_format"
+INI_SCENARIO_FORMAT_DEFAULT = "$path-$parent-$name"
 
 
+# pylint: disable=too-many-instance-attributes
 class Options(object):
     """Represents the options, and performs the logic around them."""
 
@@ -33,6 +36,9 @@ class Options(object):
         self.matrix = Matrix()
         self.ansible_lint = self.reader.getstring(INI_ANSIBLE_LINT_CONFIG)
         self.yamllint = self.reader.getstring(INI_YAMLLINT_CONFIG)
+        self.scenario_format = self.reader.getstring(
+            INI_SCENARIO_FORMAT, INI_SCENARIO_FORMAT_DEFAULT
+        )
 
         ansible = self.reader.getlist(INI_ANSIBLE_VERSIONS)
         ansible = _split_env(ansible)
