@@ -63,7 +63,7 @@ class ToxBaseCase(object):
     def __copy__(self):
         obj = type(self).__new__(self.__class__)
         for k, v in self.__dict__.items():
-            if k in ("scenario", "_config"):
+            if k in ("scenario", "_config", "_drivers"):
                 obj.__dict__[k] = v
             else:
                 obj.__dict__[k] = copy.copy(v)

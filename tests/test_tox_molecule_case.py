@@ -5,27 +5,6 @@ from tox_ansible.options import Options
 from tox_ansible.tox_helper import Tox
 from tox_ansible.tox_molecule_case import ToxMoleculeCase
 
-DOCKER_DRIVER = {"driver": {"name": "docker"}}
-OPENSTACK_DRIVER = {"driver": {"name": "openstack"}}
-BASE_DEPS = [
-    "ansible-lint",
-    "flake8",
-    "pytest",
-    "testinfra",
-    "yamllint",
-    "boto",
-    "boto3",
-    "molecule",
-    "molecule-containers",
-    "molecule-docker",
-    "molecule-ec2",
-    "molecule-openstack",
-    "molecule-podman",
-    "molecule-vagrant",
-    "openstacksdk",
-    "os-client-config",
-]
-
 
 @pytest.fixture
 def config(mocker):
@@ -33,8 +12,9 @@ def config(mocker):
 
 
 @pytest.fixture
-def scenario():
-    return Scenario("molecule/my_test")
+def scenario(mocker):
+    s = Scenario("molecule/my_test")
+    return s
 
 
 @pytest.fixture
@@ -54,7 +34,6 @@ def test_case_is_simple(config, opts, scenario, mocker):
     t = ToxMoleculeCase(scenario)
     assert t.get_name() == "my_test"
     assert t.get_working_dir() == ""
-    assert sorted(t.get_dependencies()) == sorted(BASE_DEPS + ["ansible"])
     cmds = [["molecule", "test", "-s", scenario.name]]
     assert t.get_commands(opts) == cmds
     assert t.get_basepython() is None
@@ -76,7 +55,7 @@ def test_case_expand_ansible(scenario):
     ts = t.expand_ansible("2.7")
     assert ts.ansible == "2.7"
     assert ts.get_name() == "ansible27-my_test"
-    assert sorted(ts.get_dependencies()) == sorted(BASE_DEPS + ["ansible==2.7.*"])
+    assert "ansible==2.7.*" in ts.get_dependencies()
     assert ts.get_basepython() is None
     assert "Auto-generated for: molecule test -s my_test" == ts.description
 
@@ -96,19 +75,30 @@ def test_case_expand_twice(scenario):
     assert t2.get_name() == "ansible10-py41-my_test"
 
 
-def test_case_includes_docker_deps(mocker):
-    mocker.patch.object(
-        Scenario, "driver", new_callable=mocker.PropertyMock, return_value="docker"
-    )
-    s = Scenario("molecule/my_test")
-    t = ToxMoleculeCase(s)
+def test_case_includes_docker_deps(scenario):
+    t = ToxMoleculeCase(scenario, drivers=["docker"])
     assert "molecule-docker" in t.get_dependencies()
+    assert "molecule-podman" in t.get_dependencies()
 
 
-def test_case_includes_openstack_deps(mocker):
-    mocker.patch.object(
-        Scenario, "driver", new_callable=mocker.PropertyMock, return_value="openstack"
-    )
-    s = Scenario("molecule/osp_test")
-    t = ToxMoleculeCase(s)
+def test_case_includes_openstack_deps(scenario):
+    t = ToxMoleculeCase(scenario, drivers=["openstack"])
     assert "openstacksdk" in t.get_dependencies()
+    assert "moelcule-podman" not in t.get_dependencies()
+
+
+def test_case_ignores_delegated_driver(scenario):
+    t = ToxMoleculeCase(scenario, drivers=["delegated"])
+    assert "molecule-delegated" not in t.get_dependencies()
+
+
+def test_case_handles_unknown_driver(scenario):
+    t = ToxMoleculeCase(scenario, drivers=["derpy"])
+    assert "molecule-derpy" in t.get_dependencies()
+
+
+def test_case_for_multiple_drivers(scenario):
+    t = ToxMoleculeCase(scenario, drivers=["docker", "podman", "vagrant"])
+    assert "molecule-docker" in t.get_dependencies()
+    assert "molecule-podman" in t.get_dependencies()
+    assert "molecule-vagrant" in t.get_dependencies()
