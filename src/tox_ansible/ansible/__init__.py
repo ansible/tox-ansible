@@ -125,8 +125,9 @@ class Ansible(object):
                 )
 
         tox_cases = []
+        drivers = {s.driver for s in self.scenarios}
         for scenario in self.scenarios:
-            tox_cases.append(ToxMoleculeCase(scenario))
+            tox_cases.append(ToxMoleculeCase(scenario, drivers=drivers))
 
         # if we are inside a collection, we also enable ansible-test support
         galaxy_file = path.join(self.directory, "galaxy.yml")

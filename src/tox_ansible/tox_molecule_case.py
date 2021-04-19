@@ -16,7 +16,7 @@ DRIVER_DEPENDENCIES = {
     "podman": ["molecule-podman", "molecule-docker"],
     "openstack": ["molecule-openstack", "openstacksdk", "os-client-config"],
     "ec2": ["molecule-ec2", "boto", "boto3"],
-    "vagrant": ["molecule-vagrant"],
+    "vagrant": ["molecule-vagrant", "python-vagrant"],
 }
 
 
@@ -26,7 +26,7 @@ DEFAULT_DESCRIPTION = "Auto-generated for: {cwd_cmd}molecule test -s {scenario_n
 class ToxMoleculeCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
 
-    def __init__(self, scenario, name_parts=None):
+    def __init__(self, scenario, name_parts=None, drivers=None):
         """Create the base test case.
 
         :param scenario: The scenario that this test case should run"""
@@ -40,6 +40,10 @@ class ToxMoleculeCase(ToxBaseCase):
             "testinfra",
         ]
         self._name_parts = name_parts or []
+        if drivers:
+            self._drivers = drivers
+        else:
+            self._drivers = []
         super().__init__()
 
     def get_commands(self, options):
@@ -70,14 +74,11 @@ class ToxMoleculeCase(ToxBaseCase):
             dependencies.append("ansible=={}.*".format(self.ansible))
         else:
             dependencies.append("ansible")
-        # Drivers can have their own dependencies but we preinstall of known
-        # ones as the current venv may be shared among multiple scenarios
-        # If this proves to become heavy, we should look into finding a way
-        # to optimize it by allowing user to enable a slim mode.
-        for _, deps in DRIVER_DEPENDENCIES.items():
-            for dep in deps:
-                if dep not in dependencies:
-                    dependencies.append(dep)
+        for driver in self._drivers:
+            if driver in DRIVER_DEPENDENCIES.keys():
+                dependencies.extend(DRIVER_DEPENDENCIES[driver])
+            elif driver != "delegated":
+                dependencies.append("molecule-" + driver)
         # Scenarios can specify a requirements.txt
         if self.scenario.requirements is not None:
             dependencies.append("-r" + self.scenario.requirements)
