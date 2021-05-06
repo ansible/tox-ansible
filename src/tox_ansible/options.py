@@ -19,6 +19,7 @@ INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 INI_IGNORE_PATHS = "ignore_path"
 INI_ANSIBLE_LINT_CONFIG = "ansible_lint_config"
 INI_YAMLLINT_CONFIG = "yamllint_config"
+INI_MOLECULE_CONFIG_FILES = "molecule_config_files"
 INI_SCENARIO_FORMAT = "scenario_format"
 INI_SCENARIO_FORMAT_DEFAULT = "$path-$parent-$name"
 
@@ -36,6 +37,9 @@ class Options(object):
         self.matrix = Matrix()
         self.ansible_lint = self.reader.getstring(INI_ANSIBLE_LINT_CONFIG)
         self.yamllint = self.reader.getstring(INI_YAMLLINT_CONFIG)
+        self.molecule_config_files = self.reader.getlist(
+            INI_MOLECULE_CONFIG_FILES, sep="\n"
+        )
         self.scenario_format = self.reader.getstring(
             INI_SCENARIO_FORMAT, INI_SCENARIO_FORMAT_DEFAULT
         )

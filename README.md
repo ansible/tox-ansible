@@ -174,9 +174,24 @@ spaces and other special characters to be used without needing shell-style escap
 ```ini
 [ansible]
 molecule_opts =
-    -c
-    {toxinidir}/tests/molecule.yml
     --debug
+```
+
+If you use a global molecule configuration file at the project level
+(`<project_name>/.config/molecule/config.yml`), it will be detected
+automatically and will be the reference in order to determine the default driver
+name used for your molecule scenarios.
+
+If you want pass one or multiple base configuration file(s) to
+"[molecule](https://github.com/ansible-community/molecule)", add the option
+"molecule\_config\_files" to the Ansible section and list them as follows.
+```ini
+[ansible]
+molecule_opts =
+    --debug
+molecule_config_files =
+    {toxinidir}/tests/molecule_one.yml
+    {toxinidir}/tests/molecule_two.yml
 ```
 
 Sometimes there are paths you will want to ignore running tests in. Particularly if you

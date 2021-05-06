@@ -54,6 +54,11 @@ class ToxMoleculeCase(ToxBaseCase):
         user does not configure them explicitly"""
         molecule = ["molecule"]
         molecule.extend(options.get_global_opts())
+
+        if options.molecule_config_files:
+            for config_file in options.molecule_config_files:
+                molecule.extend(["-c", config_file])
+
         molecule.extend(["test", "-s", self.scenario.name])
         tox = Tox()
         molecule.extend(tox.posargs)
