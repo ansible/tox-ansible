@@ -32,9 +32,39 @@ def test_case_is_simple(config, opts, scenario, mocker):
         Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
     t = ToxMoleculeCase(scenario)
+    opts.molecule_config_files = []
     assert t.get_name() == "my_test"
     assert t.get_working_dir() == ""
     cmds = [["molecule", "test", "-s", scenario.name]]
+    assert t.get_commands(opts) == cmds
+    assert t.get_basepython() is None
+
+
+def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
+    base_configs = [
+        "/home/jdoe/my_ansible_collections/tests/molecule_one.yml",
+        "/home/jdoe/my_ansible_collections/tests/molecule_one.yml",
+    ]
+    mocker.patch.object(Options, "get_global_opts", return_value=[])
+    mocker.patch.object(
+        Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
+    )
+    t = ToxMoleculeCase(scenario)
+    opts.molecule_config_files = base_configs
+    assert t.get_name() == "my_test"
+    assert t.get_working_dir() == ""
+    cmds = [
+        [
+            "molecule",
+            "-c",
+            base_configs[0],
+            "-c",
+            base_configs[-1],
+            "test",
+            "-s",
+            scenario.name,
+        ]
+    ]
     assert t.get_commands(opts) == cmds
     assert t.get_basepython() is None
 
@@ -45,6 +75,7 @@ def test_case_has_global_opts(mocker, scenario, opts, config):
         Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
     t = ToxMoleculeCase(scenario)
+    opts.molecule_config_files = []
     cmds = [["molecule", "-c", "derp", "test", "-s", scenario.name]]
     assert t.get_commands(opts) == cmds
 

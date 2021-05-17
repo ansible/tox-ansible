@@ -13,6 +13,8 @@ from ..tox_lint_case import ToxLintCase
 from ..tox_molecule_case import ToxMoleculeCase
 from .scenario import Scenario
 
+LOCAL_CONFIG_FILE = ".config/molecule/config.yml"
+
 
 class Ansible(object):
     """A generalized class that handles interactions between the plugin and
@@ -35,6 +37,24 @@ class Ansible(object):
         self.options = options
         self.tox = Tox()
 
+    def molecule_config_files(self):
+        """Determine if there is a global molecule configuration file at the
+        project level. If there are molecule base configuration file(s) passed
+        as an option in the tox.ini file, those will take precedence over the
+        global configuration file at the project level.
+
+        :return: A list of absolute path of molecule base configuration file.
+                 None, otherwise."""
+        global_molecule_config = path.join(self.directory, LOCAL_CONFIG_FILE)
+
+        if self.options.molecule_config_files:
+            return self.options.molecule_config_files
+
+        if path.isfile(global_molecule_config):
+            return [global_molecule_config]
+
+        return None
+
     @property
     def is_ansible(self):
         """Determine if the specified directory is an Ansible structure or not
@@ -43,6 +63,22 @@ class Ansible(object):
         return len(self.scenarios) > 0 or path.isfile(
             path.join(self.directory, "galaxy.yml")
         )
+
+    @property
+    def molecule_config(self):
+        """Reads all the molecule base configuration files present and adds them
+        in the self.molecule_config field.
+
+        :return: A list of one or multiple dictionaries including the content of
+                 the molecule base configuration file(s)
+        """
+        configs = []
+        config_files_list = self.molecule_config_files()
+        if config_files_list:
+            for config_file in config_files_list:
+                configs.append(load_yaml(config_file))
+
+        return configs
 
     @property
     def scenarios(self):
@@ -74,7 +110,12 @@ class Ansible(object):
                 if branch in self.options.ignore_paths:
                     ignored = True
             if not ignored:
-                self._scenarios.append(Scenario(path.relpath(base_dir, self.directory)))
+                self._scenarios.append(
+                    Scenario(
+                        path.relpath(base_dir, self.directory),
+                        self.molecule_config,
+                    )
+                )
         return self._scenarios
 
     @property

@@ -52,3 +52,19 @@ def test_no_driver(no_driver):
     s = Scenario(no_driver)
     assert s.name == "no_driver"
     assert s.driver is None
+
+
+def test_driver_with_global_config(surprise):
+    global_config = [{"driver": {"name": "podman"}}]
+    s = Scenario(surprise, global_config)
+    assert s.name == "surprise"
+    assert str(s) == "surprise"
+    assert s.driver == "surprise"
+    assert s.requirements is None
+
+
+def test_no_driver_with_global_config(no_driver):
+    global_config = [{"driver": {"name": "podman"}}]
+    s = Scenario(no_driver, global_config)
+    assert s.name == "no_driver"
+    assert s.driver == "podman"
