@@ -1,7 +1,7 @@
 import os
 from functools import lru_cache
 from string import Template
-from typing import Iterable
+from typing import Iterable, List, Optional
 
 from .options import INI_SCENARIO_FORMAT_DEFAULT
 from .tox_base_case import ToxBaseCase
@@ -26,7 +26,7 @@ DEFAULT_DESCRIPTION = "Auto-generated for: {cwd_cmd}molecule test -s {scenario_n
 class ToxMoleculeCase(ToxBaseCase):
     """Represents a generalized Test Case for an Ansible structure."""
 
-    def __init__(self, scenario, name_parts=None, drivers=None):
+    def __init__(self, scenario, name_parts=None, drivers: Optional[List[str]] = None):
         """Create the base test case.
 
         :param scenario: The scenario that this test case should run"""
@@ -44,7 +44,7 @@ class ToxMoleculeCase(ToxBaseCase):
             self._drivers = drivers
         else:
             self._drivers = []
-        super().__init__()
+        super().__init__()  # type: ignore
 
     def get_commands(self, options):
         """Get the commands that this scenario should execute.
