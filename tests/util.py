@@ -86,6 +86,7 @@ class ToxAnsible_TestCase(TestCase):
         env = os.environ.copy()
         env.pop(TOX_PARALLEL_ENV, None)
 
+        # pylint: disable=consider-using-with
         proc = subprocess.Popen(
             arguments, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env
         )

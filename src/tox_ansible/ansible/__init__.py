@@ -166,7 +166,7 @@ class Ansible(object):
                 )
 
         tox_cases = []
-        drivers = {s.driver for s in self.scenarios}
+        drivers = {s.driver for s in self.scenarios if s.driver}
         for scenario in self.scenarios:
             tox_cases.append(ToxMoleculeCase(scenario, drivers=drivers))
 
