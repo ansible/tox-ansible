@@ -128,25 +128,29 @@ class Ansible(object):
         # pylint: disable=fixme
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
+        #
+        # We use --venv because otherwise we risk getting errors from the
+        # system environment, especially as one of tests performed is
+        # 'pip check'.
         ANSIBLE_TEST_COMMANDS: Dict[str, Dict[str, Any]] = {
             "integration": {
-                "args": ["--requirements"],
+                "args": ["--requirements", "--venv"],
                 "requires": "tests/integration",
             },
             "network-integration": {
-                "args": ["--requirements"],
+                "args": ["--requirements", "--venv"],
                 "requires": "tests/network-integration",
             },
             # sanity tests do not need presence of sanity check or even tests
             # folder
-            "sanity": {"args": ["--requirements"], "requires": ""},
-            "shell": {"args": ["--requirements"]},
+            "sanity": {"args": ["--requirements", "--venv"], "requires": ""},
+            "shell": {"args": ["--requirements", "--venv"]},
             "units": {
-                "args": ["--requirements"],
+                "args": ["--requirements", "--venv"],
                 "requires": "tests/unit",
             },
             "windows-integration": {
-                "args": ["--requirements"],
+                "args": ["--requirements", "--venv"],
                 "requires": "tests/windows-integration",
             },
             # special commands (not supported by us yet)
