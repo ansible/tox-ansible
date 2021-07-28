@@ -96,6 +96,12 @@ class Tox(object):
             if skip_install:
                 config.skip_install = skip_install
             self.customize_envconfig(config, options)
+            if "HOME" not in config.passenv:
+                # ansible-test does not work without HOME directory
+                config.passenv.add("HOME")
+            # We do not want to install packages
+            config.skipsdist = True
+
             self.config.envconfigs[tox_case_name] = config
             self.config.ansible_envlist.append(tox_case_name)
 
