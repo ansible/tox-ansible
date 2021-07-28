@@ -32,13 +32,9 @@ class ToxAnsibleTestCase(ToxBaseCase):
 
         self._dependencies = [
             # to build collections we want to be sure we use latest version
-            # of ansible-base, as older versions like 2.9 do not support
+            # of ansible core, as older versions like 2.9 do not support
             # ignore patterns. Install can be done with older versions.
-            "ansible-base>=2.10.3",
-            # ansible-test is missing to install them on py39:
-            "pylint",
-            "pytest",
-            "pytest-xdist",
+            "ansible-core>=2.11.3",
         ]
         self._name_parts = name_parts or []
         super().__init__()
