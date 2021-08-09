@@ -3,6 +3,14 @@ from os.path import abspath, isfile, join
 import py
 from tox.config import DepOption, ParseIni, SectionReader, testenvprefix
 
+passenv_list = (
+    # ansible-test does not work without HOME directory
+    "HOME",
+    # both ansible-test and molecule may fail to run if these are not passed:
+    "DOCKER_HOST",
+    "CONTAINER_HOST",
+)
+
 
 class Tox(object):
     instance = None
@@ -96,9 +104,9 @@ class Tox(object):
             if skip_install:
                 config.skip_install = skip_install
             self.customize_envconfig(config, options)
-            if "HOME" not in config.passenv:
-                # ansible-test does not work without HOME directory
-                config.passenv.add("HOME")
+            for v in passenv_list:
+                if v not in config.passenv:
+                    config.passenv.add(v)
             # We do not want to install packages
             config.skipsdist = True
 
