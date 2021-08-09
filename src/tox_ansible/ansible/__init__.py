@@ -11,6 +11,7 @@ from tox_ansible.tox_helper import Tox
 from ..tox_ansible_test_case import ToxAnsibleTestCase
 from ..tox_lint_case import ToxLintCase
 from ..tox_molecule_case import ToxMoleculeCase
+from ..utils import use_docker
 from .scenario import Scenario
 
 LOCAL_CONFIG_FILE = ".config/molecule/config.yml"
@@ -128,29 +129,33 @@ class Ansible(object):
         # pylint: disable=fixme
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
-        #
+
+        if use_docker():
+            opts = ["--docker", "default"]
+        else:
+            opts = ["--venv"]
         # We use --venv because otherwise we risk getting errors from the
         # system environment, especially as one of tests performed is
         # 'pip check'.
         ANSIBLE_TEST_COMMANDS: Dict[str, Dict[str, Any]] = {
             "integration": {
-                "args": ["--requirements", "--venv"],
+                "args": ["--requirements", *opts],
                 "requires": "tests/integration",
             },
             "network-integration": {
-                "args": ["--requirements", "--venv"],
+                "args": ["--requirements", *opts],
                 "requires": "tests/network-integration",
             },
             # sanity tests do not need presence of sanity check or even tests
             # folder
-            "sanity": {"args": ["--requirements", "--venv"], "requires": ""},
-            "shell": {"args": ["--requirements", "--venv"]},
+            "sanity": {"args": ["--requirements", *opts], "requires": ""},
+            "shell": {"args": ["--requirements", *opts]},
             "units": {
-                "args": ["--requirements", "--venv"],
+                "args": ["--requirements", *opts],
                 "requires": "tests/unit",
             },
             "windows-integration": {
-                "args": ["--requirements", "--venv"],
+                "args": ["--requirements", *opts],
                 "requires": "tests/windows-integration",
             },
             # special commands (not supported by us yet)
