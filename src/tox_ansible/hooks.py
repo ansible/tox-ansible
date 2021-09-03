@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import logging
-import sys
 
 try:
     from tox import hookimpl
@@ -84,8 +83,7 @@ try:
         config.envlist.sort()
         config.envlist_default = config.envlist
         if len(config.envlist) == 0:
-            print("****** No environments matched. This is a problem.")
-            sys.exit(101)
+            logging.error("tox-ansible found no matching environments")
 
 
 except ImportError:
