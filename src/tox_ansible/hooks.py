@@ -46,11 +46,12 @@ try:
         combo that is discovered therein."""
         tox = tox_helper.Tox(config)
         options = Options(tox)
-        ansible = Ansible(options=options, base=tox.toxinidir)
 
         # Only execute inside of a collection, otherwise we have nothing to do
-        if not ansible.is_ansible:
+        if options.disabled:
             return
+
+        ansible = Ansible(options=options, base=tox.toxinidir)
 
         # Create any test cases that are discovered in the directory structure and
         # expand them per any configured matrix axes in the config file

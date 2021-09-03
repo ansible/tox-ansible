@@ -1,6 +1,10 @@
+from configparser import ConfigParser
+from pathlib import Path
+
 import pytest
 
 from tox_ansible.options import Options
+from tox_ansible.tox_helper import Tox
 
 
 @pytest.fixture
@@ -38,3 +42,24 @@ def test_options_expand_matrix(opts, mocker):
     opts.matrix = mocker.Mock()
     opts.expand_matrix([])
     opts.matrix.expand.assert_called_once_with([])
+
+
+@pytest.mark.parametrize(
+    "folder,expected",
+    [
+        (Path("tests/fixtures/collection"), False),
+        (Path("tests/fixtures/expand_collection"), False),
+        (Path("tests/fixtures/expand_collection_newlines"), False),
+        (Path("tests/fixtures/has_deps"), False),
+        (Path("tests/fixtures/not_collection"), False),
+        (Path("tests/fixtures/nothing"), True),
+    ],
+)
+def test_disabled(mocker, folder, expected):
+    c = ConfigParser()
+    c.read(folder / "tox.ini")
+    config = mocker.Mock()
+    config._cfg = c  # pylint: disable=protected-access
+    tox = Tox(config)
+    options = Options(tox)
+    assert options.disabled == expected

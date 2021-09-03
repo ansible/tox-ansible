@@ -69,6 +69,7 @@ EXPECTED = {
             "two",
         ]
     ),
+    "tests/fixtures/nothing": "manual",
 }
 EXPECTED["tests/fixtures/expand_collection_comma"] = EXPECTED[
     "tests/fixtures/expand_collection"
@@ -115,6 +116,7 @@ def run_tox(args, capture):
         ("tests/fixtures/expand_collection_comma"),
         ("tests/fixtures/expand_collection_newlines"),
         ("tests/fixtures/not_collection"),
+        ("tests/fixtures/nothing"),
         ("tests/fixtures/simplified"),
     ],
 )
@@ -150,6 +152,9 @@ def test_run_tox_with_args(target, value, capfd):
 
 def test_run_with_test_command(capfd):
     with cd("tests/fixtures/collection"):
-        shutil.rmtree(".tox")
+        try:
+            shutil.rmtree(".tox")
+        except FileNotFoundError:
+            pass
         cli = run_tox(["-e", "roles-simple-default"], capfd)
     assert "tox-ansible is the best" in cli
