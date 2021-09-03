@@ -4,6 +4,7 @@ import contextlib
 import os
 import shutil
 import subprocess
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -151,10 +152,11 @@ def test_run_tox_with_args(target, value, capfd):
 
 
 def test_run_with_test_command(capfd):
-    with cd("tests/fixtures/collection"):
-        try:
-            shutil.rmtree(".tox")
-        except FileNotFoundError:
-            pass
-        cli = run_tox(["-e", "roles-simple-default"], capfd)
-    assert "tox-ansible is the best" in cli
+    if "linux" in sys.platform:
+        with cd("tests/fixtures/collection"):
+            try:
+                shutil.rmtree(".tox")
+            except FileNotFoundError:
+                pass
+            cli = run_tox(["-e", "roles-simple-default"], capfd)
+        assert "tox-ansible is the best" in cli
