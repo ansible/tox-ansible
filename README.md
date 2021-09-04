@@ -1,4 +1,4 @@
-[![CI/CD Builds](https://github.com/ansible-community/tox-ansible/workflows/tox/badge.svg)](https://github.com/ansible-community/tox-ansible/actions)
+[![CI/CD Builds](https://github.com/tox-dev/tox-ansible/workflows/tox/badge.svg)](https://github.com/tox-dev/tox-ansible/actions)
 [![codecov](https://codecov.io/gh/ansible-community/tox-ansible/branch/main/graph/badge.svg)](https://codecov.io/gh/ansible-community/tox-ansible)
 [![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
 
