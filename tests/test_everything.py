@@ -159,4 +159,6 @@ def test_run_with_test_command(capfd):
             except FileNotFoundError:
                 pass
             cli = run_tox(["-e", "roles-simple-default"], capfd)
-        assert "tox-ansible is the best" in cli
+        assert (
+            "roles-simple-default: commands succeeded" in cli
+        ), f"Important text missing from {cli}"

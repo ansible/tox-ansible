@@ -183,19 +183,19 @@ class Ansible(object):
         galaxy_file = path.join(self.directory, "galaxy.yml")
         if path.isfile(galaxy_file):
             galaxy_config = load_yaml(galaxy_file)
-            for command in ANSIBLE_TEST_COMMANDS:
+            for command in ANSIBLE_TEST_COMMANDS.items():
                 if not path.exists(
                     path.join(
                         self.directory,
-                        ANSIBLE_TEST_COMMANDS[command].get("requires", ""),
+                        command[1].get("requires", ""),
                     )
                 ):
                     continue
                 try:
                     tox_cases.append(
                         ToxAnsibleTestCase(
-                            command,
-                            args=ANSIBLE_TEST_COMMANDS[command]["args"],
+                            command[0],
+                            args=command[1]["args"],
                             galaxy_config=galaxy_config,
                         )
                     )
