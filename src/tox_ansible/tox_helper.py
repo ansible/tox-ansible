@@ -9,6 +9,7 @@ passenv_list = (
     # both ansible-test and molecule may fail to run if these are not passed:
     "DOCKER_HOST",
     "CONTAINER_HOST",
+    "SSH_AUTH_SOCK",
 )
 
 
