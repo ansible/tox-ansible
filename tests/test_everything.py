@@ -105,8 +105,8 @@ def run_tox(args, capture):
     except SystemExit as s:
         if s.code != 0:
             raise
-    outs = capture.readouterr()
-    return outs.out.strip()
+    out, err = capture.readouterr()
+    return out.strip(), err.strip()
 
 
 @pytest.mark.parametrize(
@@ -123,14 +123,21 @@ def run_tox(args, capture):
 )
 def test_run_tox(directory, capfd):
     with cd(directory):
-        out = run_tox(["-l"], capfd)
+        out, _ = run_tox(["-l"], capfd)
     assert out == EXPECTED[directory]
+
+
+def test_no_results(capfd):
+    with cd("tests/fixtures/collection"):
+        out, err = run_tox(["-l", "--ansible-driver", "derp"], capfd)
+    assert out == ""
+    assert err == ""
 
 
 def test_tox_ini_deps_preserved(capfd):
     with cd("tests/fixtures/has_deps"):
-        lint_out = run_tox(["--showconfig", "-e", "lint_all"], capfd)
-        simple_out = run_tox(["--showconfig", "-e", "roles-simple-default"], capfd)
+        lint_out, _ = run_tox(["--showconfig", "-e", "lint_all"], capfd)
+        simple_out, _ = run_tox(["--showconfig", "-e", "roles-simple-default"], capfd)
     deps = [m for m in lint_out.split("\n") if m.startswith("deps = ")][0]
     assert "notadep==1" in deps
     deps = [m for m in simple_out.split("\n") if m.startswith("deps = ")][0]
@@ -144,9 +151,9 @@ def test_tox_ini_deps_preserved(capfd):
 def test_run_tox_with_args(target, value, capfd):
     args = ["-l", "--ansible-{}".format(target), value]
     with cd("tests/fixtures/collection"):
-        cli = run_tox(args, capfd)
+        cli, _ = run_tox(args, capfd)
         with patch.dict("os.environ", {"TOX_ANSIBLE_{}".format(target.upper()): value}):
-            env = run_tox(["-l"], capfd)
+            env, _ = run_tox(["-l"], capfd)
     assert cli == EXPECTED_ARGS[value]
     assert env == EXPECTED_ARGS[value]
 
@@ -158,7 +165,7 @@ def test_run_with_test_command(capfd):
                 shutil.rmtree(".tox")
             except FileNotFoundError:
                 pass
-            cli = run_tox(["-e", "roles-simple-default"], capfd)
+            cli, _ = run_tox(["-e", "roles-simple-default"], capfd)
         assert (
             "roles-simple-default: commands succeeded" in cli
         ), f"Important text missing from {cli}"

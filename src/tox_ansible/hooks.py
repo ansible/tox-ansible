@@ -82,8 +82,6 @@ try:
             config.envlist = list(config.envconfigs.keys())
         config.envlist.sort()
         config.envlist_default = config.envlist
-        if len(config.envlist) == 0:
-            logging.error("tox-ansible found no matching environments")
 
 
 except ImportError:
