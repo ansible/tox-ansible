@@ -83,7 +83,6 @@ try:
         config.envlist.sort()
         config.envlist_default = config.envlist
 
-
 except ImportError:
     # tox4
     logging.error("tox-ansible disabled itself as it does not support tox4 yet.")
