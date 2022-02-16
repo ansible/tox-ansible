@@ -1,3 +1,5 @@
 namespace: example
 name: foo
 version: 0.0.1
+authors: []
+readme: ''
