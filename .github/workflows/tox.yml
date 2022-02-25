@@ -27,6 +27,7 @@ jobs:
         run: |
           python3 -m pip install -U tox
           python3 -m tox -e lint
+
   packaging:
     runs-on: ubuntu-20.04
     steps:
@@ -38,9 +39,9 @@ jobs:
         run: |
           python3 -m pip install -U tox
           python3 -m tox -e packaging
+
   test:
     name: ${{ matrix.name }}
-    needs: lint
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -125,7 +126,10 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.codecov_token }}
 
   publish:
-    needs: coverage
+    needs:
+      - coverage
+      - lint
+      - packaging
     if: startsWith(github.ref, 'refs/tags/')  # Only release during tags
     runs-on: ubuntu-20.04
 
