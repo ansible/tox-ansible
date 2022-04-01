@@ -20,9 +20,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v3.0.0
         with:
           python-version: "3.x"
+          cache: pip
       - name: run lint
         run: |
           python3 -m pip install -U tox
@@ -32,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v3.0.0
         with:
           python-version: "3.x"
       - name: run packaging
@@ -73,9 +74,10 @@ jobs:
             python-version: 3.8
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v3.0.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
       - name: run test
         run: |
           python3 -m pip install tox
@@ -98,7 +100,7 @@ jobs:
   #       python: ["3.6"]
   #   steps:
   #     - uses: actions/checkout@v2
-  #     - uses: actions/setup-python@master
+  #     - uses: actions/setup-python@v3.0.0
   #       with:
   #         python-version: ${{ matrix.python-version }}
   #     - name: run test (devel)
@@ -111,9 +113,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@master
+      - uses: actions/setup-python@v3.0.0
         with:
           python-version: "3.x"
+          cache: pip
       - uses: actions/download-artifact@v2
         with:
           name: coverage-results
@@ -139,9 +142,10 @@ jobs:
 
     steps:
       - name: Switch to using Python 3.6 by default
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3.0.0
         with:
           python-version: 3.6
+          cache: pip
       - name: Install tox
         run: python3 -m pip install --user tox
       - name: Check out src from Git
