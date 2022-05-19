@@ -129,11 +129,15 @@ class Ansible(object):
         # pylint: disable=fixme
         # TODO(ssbarnea): Detect and enable only those tests that do exist
         # to avoid confusing tox user.
-
-        if use_docker():
+        docker_present = use_docker()
+        platform = self.options.ansible_test_platform
+        if (platform == "auto" and docker_present) or platform == "docker":
             opts = ["--docker", "default"]
-        else:
+        elif platform in ("auto", "venv"):
             opts = ["--venv"]
+        else:
+            opts = []
+
         # We use --venv because otherwise we risk getting errors from the
         # system environment, especially as one of tests performed is
         # 'pip check'.
@@ -169,7 +173,10 @@ class Ansible(object):
                 value["args"] = copy.deepcopy(self.tox.posargs)
             else:
                 value["args"].extend(self.tox.posargs)
-            if "--python" not in self.tox.posargs:
+            if (
+                "--python" not in self.tox.posargs
+                and self.options.ansible_test_platform == "auto"
+            ):
                 value["args"].extend(
                     ["--python", f"{sys.version_info[0]}.{sys.version_info[1]}"]
                 )
