@@ -36,7 +36,7 @@ class Options(object):
     def __init__(self, tox):
         self.tox = tox
         self.reader = tox.get_reader(INI_SECTION)
-        opts = tox.get_opts()
+        opts = tox.opts
         self.scenario = self._parse_opt(opts, SCENARIO_OPTION_NAME, SCENARIO_ENV_NAME)
         self.driver = self._parse_opt(opts, DRIVER_OPTION_NAME, DRIVER_ENV_NAME)
         self.matrix = Matrix()
@@ -86,7 +86,8 @@ class Options(object):
         no environments to execute against."""
         return len(self.scenario) != 0 or len(self.driver) != 0
 
-    def get_global_opts(self):
+    @property
+    def global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
         return opts
 

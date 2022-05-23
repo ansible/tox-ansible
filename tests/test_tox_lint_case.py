@@ -13,8 +13,8 @@ def test_names_are_correct(mocker):
         return_value="/home",
     )
     assert tc.get_name() == "lint_all"
-    assert tc.get_working_dir() == "/home"
-    assert tc.get_dependencies() == deps
+    assert tc.working_dir == "/home"
+    assert tc.dependencies == deps
 
 
 def test_expand_python():
@@ -31,7 +31,7 @@ def test_expand_ansible():
 
 def test_commands_are_correct(mocker):
     options = Mock()
-    options.get_global_opts.return_value = []
+    options.global_opts = []
     options.ansible_lint = None
     options.yamllint = None
     case1 = Mock(scenario=Scenario("molecule/s1"))
@@ -47,7 +47,7 @@ def test_commands_are_correct(mocker):
 
 def test_lint_options_correct(mocker):
     options = mocker.Mock()
-    options.get_global_opts.return_value = []
+    options.global_opts = []
     options.ansible_lint = "some/path"
     options.yamllint = "some/yaml.path"
     bummer = ToxLintCase([])

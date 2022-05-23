@@ -63,7 +63,8 @@ class Tox(object):
         """Returns the configured toxinidir for working with base directory paths"""
         return self.config.toxinidir
 
-    def get_opts(self):
+    @property
+    def opts(self):
         """Return the options as a dictionary-style object.
 
         :return: A dictionary of the command line options"""
@@ -128,7 +129,7 @@ class Tox(object):
         config.commands = tox_case.get_commands(options)
         # Default deps to install molecule, etc
         do = DepOption()
-        processed_deps = do.postprocess(config, tox_case.get_dependencies())
+        processed_deps = do.postprocess(config, tox_case.dependencies)
         if config.deps:
             processed_deps = config.deps + processed_deps
         config.deps = processed_deps
@@ -137,9 +138,9 @@ class Tox(object):
             config.envdir = self.config.toxworkdir.join("ansible")
         # Need to run molecule from the role directory
         if not config.changedir or config.changedir == self.config.toxinidir:
-            config.changedir = py.path.local(tox_case.get_working_dir())
+            config.changedir = py.path.local(tox_case.working_dir)
         if not config.basepython and tox_case.python is not None:
-            config.basepython = tox_case.get_basepython()
+            config.basepython = tox_case.basepython
 
         if hasattr(config, "whitelist_externals"):
             allowlist = "whitelist_externals"

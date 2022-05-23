@@ -46,10 +46,12 @@ class ToxAnsibleTestCase(ToxBaseCase):
     def description(self):
         return f"Auto-generated for: ansible-test {self.command} {' '.join(self.args)}"
 
-    def get_dependencies(self):
+    @property
+    def dependencies(self):
         return self._dependencies
 
-    def get_working_dir(self):
+    @property
+    def working_dir(self):
         """Get the directory where the test should be executed.
 
         :return: Path where the test case should be executed from"""

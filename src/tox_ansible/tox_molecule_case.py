@@ -53,7 +53,7 @@ class ToxMoleculeCase(ToxBaseCase):
         :return: the default commands to run to execute this test case, if the
         user does not configure them explicitly"""
         molecule = ["molecule"]
-        molecule.extend(options.get_global_opts())
+        molecule.extend(options.global_opts)
 
         if options.molecule_config_files:
             for config_file in options.molecule_config_files:
@@ -64,13 +64,15 @@ class ToxMoleculeCase(ToxBaseCase):
         molecule.extend(tox.posargs)
         return [molecule]
 
-    def get_working_dir(self):
+    @property
+    def working_dir(self):
         """Get the directory where the test should be executed.
 
         :return: Path where the test case should be executed from"""
         return os.path.dirname(os.path.dirname(self.scenario.directory))
 
-    def get_dependencies(self) -> Iterable:
+    @property
+    def dependencies(self) -> Iterable:
         """The dependencies for this particular test case.
 
         :return: A list of the pip dependencies for this test case"""
