@@ -57,15 +57,6 @@ class Ansible(object):
         return None
 
     @property
-    def is_ansible(self):
-        """Determine if the specified directory is an Ansible structure or not
-
-        :return: True if this is an Ansible structure. False, otherwise."""
-        return len(self.scenarios) > 0 or path.isfile(
-            path.join(self.directory, "galaxy.yml")
-        )
-
-    @property
     def molecule_config(self):
         """Reads all the molecule base configuration files present and adds them
         in the self.molecule_config field.
