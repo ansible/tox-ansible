@@ -86,7 +86,8 @@ class Options(object):
         no environments to execute against."""
         return len(self.scenario) != 0 or len(self.driver) != 0
 
-    def get_global_opts(self):
+    @property
+    def global_opts(self):
         opts = self.reader.getlist(INI_MOLECULE_GLOBAL_OPTS, sep="\n")
         return opts
 

@@ -53,7 +53,7 @@ class ToxMoleculeCase(ToxBaseCase):
         :return: the default commands to run to execute this test case, if the
         user does not configure them explicitly"""
         molecule = ["molecule"]
-        molecule.extend(options.get_global_opts())
+        molecule.extend(options.global_opts)
 
         if options.molecule_config_files:
             for config_file in options.molecule_config_files:

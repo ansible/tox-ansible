@@ -31,7 +31,7 @@ def test_expand_ansible():
 
 def test_commands_are_correct(mocker):
     options = Mock()
-    options.get_global_opts.return_value = []
+    options.global_opts = []
     options.ansible_lint = None
     options.yamllint = None
     case1 = Mock(scenario=Scenario("molecule/s1"))
@@ -47,7 +47,7 @@ def test_commands_are_correct(mocker):
 
 def test_lint_options_correct(mocker):
     options = mocker.Mock()
-    options.get_global_opts.return_value = []
+    options.global_opts = []
     options.ansible_lint = "some/path"
     options.yamllint = "some/yaml.path"
     bummer = ToxLintCase([])
