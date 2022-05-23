@@ -54,6 +54,21 @@ def test_no_driver(no_driver):
     assert s.driver is None
 
 
+def test_no_driver_with_empty_global(no_driver):
+    s = Scenario(no_driver)
+    s.global_config = [{}]
+    assert s.name == "no_driver"
+    assert s.driver is None
+
+
+def test_no_driver_with_multiple_globals(no_driver):
+    s = Scenario(no_driver)
+    s.global_config = [{"driver": {}}, {"driver": {}}]
+    with pytest.raises(RuntimeError) as info:
+        s.driver
+    assert "Driver configuration is present" in str(info.value)
+
+
 def test_driver_with_global_config(surprise):
     global_config = [{"driver": {"name": "podman"}}]
     s = Scenario(surprise, global_config)
