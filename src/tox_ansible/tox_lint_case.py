@@ -38,7 +38,8 @@ class ToxLintCase(ToxBaseCase):
         cmds.append(flake8)
         return cmds
 
-    def get_working_dir(self):
+    @property
+    def working_dir(self):
         return self._config.toxinidir
 
     @property

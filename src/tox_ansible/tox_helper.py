@@ -137,7 +137,7 @@ class Tox(object):
             config.envdir = self.config.toxworkdir.join("ansible")
         # Need to run molecule from the role directory
         if not config.changedir or config.changedir == self.config.toxinidir:
-            config.changedir = py.path.local(tox_case.get_working_dir())
+            config.changedir = py.path.local(tox_case.working_dir)
         if not config.basepython and tox_case.python is not None:
             config.basepython = tox_case.get_basepython()
 

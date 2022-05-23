@@ -64,7 +64,8 @@ class ToxMoleculeCase(ToxBaseCase):
         molecule.extend(tox.posargs)
         return [molecule]
 
-    def get_working_dir(self):
+    @property
+    def working_dir(self):
         """Get the directory where the test should be executed.
 
         :return: Path where the test case should be executed from"""

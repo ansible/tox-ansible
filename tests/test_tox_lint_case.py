@@ -13,7 +13,7 @@ def test_names_are_correct(mocker):
         return_value="/home",
     )
     assert tc.get_name() == "lint_all"
-    assert tc.get_working_dir() == "/home"
+    assert tc.working_dir == "/home"
     assert tc.dependencies == deps
 
 

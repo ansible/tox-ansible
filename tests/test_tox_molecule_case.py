@@ -35,7 +35,7 @@ def test_case_is_simple(config, opts, scenario, mocker):
     t = ToxMoleculeCase(scenario)
     opts.molecule_config_files = []
     assert t.get_name() == "my_test"
-    assert t.get_working_dir() == ""
+    assert t.working_dir == ""
     cmds = [["molecule", "test", "-s", scenario.name]]
     assert t.get_commands(opts) == cmds
     assert t.get_basepython() is None
@@ -53,7 +53,7 @@ def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
     t = ToxMoleculeCase(scenario)
     opts.molecule_config_files = base_configs
     assert t.get_name() == "my_test"
-    assert t.get_working_dir() == ""
+    assert t.working_dir == ""
     cmds = [
         [
             "molecule",
