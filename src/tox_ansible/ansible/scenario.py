@@ -50,7 +50,7 @@ class Scenario(object):
                 [i for i, d in enumerate(self.global_config) if "driver" in d]
             )
             if drivers_found_number == 0:
-                raise RuntimeError("No driver configuration found.")
+                return None
 
             if drivers_found_number == 1:
                 return self.global_config[-1].get("driver")["name"]

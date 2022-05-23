@@ -1,5 +1,6 @@
 import pytest
 
+# pylint: disable=import-error
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
 from tox_ansible.tox_helper import Tox
@@ -14,6 +15,18 @@ def config(mocker):
 @pytest.fixture
 def scenario(mocker):
     s = Scenario("molecule/my_test")
+    return s
+
+
+@pytest.fixture
+def long_scenario(mocker):
+    s = Scenario("roles/somedir/subdir/molecule/foo")
+    return s
+
+
+@pytest.fixture
+def odd_scenario(mocker):
+    s = Scenario("somedir/molecule/scenario")
     return s
 
 
@@ -143,3 +156,25 @@ def test_case_for_multiple_drivers(scenario):
     assert "molecule-docker" in t.dependencies
     assert "molecule-podman" in t.dependencies
     assert "molecule-vagrant" in t.dependencies
+    assert len(list(filter(lambda r: "-r" in r, t.dependencies))) == 0
+
+
+def test_case_handles_requirements(mocker, scenario):
+    t = ToxMoleculeCase(scenario, drivers=["derp"])
+    mocker.patch(
+        "tox_ansible.ansible.scenario.Scenario.requirements",
+        new_callable=mocker.PropertyMock,
+        return_value="some_reqs.txt",
+    )
+    print(t.dependencies)
+    assert "-rsome_reqs.txt" in t.dependencies
+
+
+def test_long_name(long_scenario):
+    t = ToxMoleculeCase(long_scenario, drivers=["empty"])
+    assert t.get_name() == "roles-somedir-subdir-foo"
+
+
+def test_odd_name(odd_scenario):
+    t = ToxMoleculeCase(odd_scenario, drivers=[])
+    assert t.get_name() == "somedir-scenario"

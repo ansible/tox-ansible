@@ -36,6 +36,18 @@ def test_scenarios_correct(mocker):
     ansible.options.ignore_paths = []
     ansible.options.molecule_config_files = []
     assert len(ansible.scenarios) == 6
+    # Second call to be sure we are not walking twice
+    assert len(ansible.scenarios) == 6
+
+
+def test_ignore_paths(mocker):
+    ansible = Ansible("tests/fixtures/collection")
+    ansible.options = mocker.Mock()
+    # We're ignoring one of them
+    ansible.options.ignore_paths = ["one"]
+    ansible.options.molecule_config_files = ["tests/fixtures/collection/molecule.yml"]
+    assert len(ansible.scenarios) == 5
+    assert len(ansible.molecule_config) == 1
 
 
 def test_scenarios_with_global_molecule_config(mocker):
