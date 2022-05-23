@@ -28,7 +28,9 @@ def opts(mocker):
 
 
 def test_case_is_simple(config, opts, scenario, mocker):
-    mocker.patch.object(Options, "global_opts", new_callable=mocker.PropertyMock, return_value=[])
+    mocker.patch.object(
+        Options, "global_opts", new_callable=mocker.PropertyMock, return_value=[]
+    )
     mocker.patch.object(
         Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
@@ -46,7 +48,9 @@ def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
         "/home/jdoe/my_ansible_collections/tests/molecule_one.yml",
         "/home/jdoe/my_ansible_collections/tests/molecule_one.yml",
     ]
-    mocker.patch.object(Options, "global_opts", new_callable=mocker.PropertyMock, return_value=[])
+    mocker.patch.object(
+        Options, "global_opts", new_callable=mocker.PropertyMock, return_value=[]
+    )
     mocker.patch.object(
         Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
@@ -71,7 +75,12 @@ def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
 
 
 def test_case_has_global_opts(mocker, scenario, opts, config):
-    mocker.patch.object(Options, "global_opts", new_callable=mocker.PropertyMock, return_value=["-c", "derp"])
+    mocker.patch.object(
+        Options,
+        "global_opts",
+        new_callable=mocker.PropertyMock,
+        return_value=["-c", "derp"],
+    )
     mocker.patch.object(
         Tox, "posargs", new_callable=mocker.PropertyMock, return_value=[]
     )
