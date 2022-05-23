@@ -17,11 +17,15 @@ ansible-test
 This plugin saves you this trouble by allowing you the freedom to run
 these commands tranparently. For example you can run `tox -e sanity` which
 will install the collection, change current directory and execute
-`ansible-test sanity --python X.Y`. You can even add posargs that endup being
+`ansible-test sanity --python X.Y`. You can even add posargs that end up being
 passed to the executed command, like `tox -e sanity -- --help`.
 
-By default tox-ansible will also limit execution of ansible-test to the
-current python version used by tox.
+By default, tox-ansible will also limit execution of ansible-test to the
+current python version used by tox. In addition, tox-ansible will try to
+automatically determine the best environment to run these tests in
+(docker if present on the host, virtualenv, etc.).
+
+You can disable this auto-detection feature in the `tox.ini`, see below for details.
 
 ```shell
 $ tox -va
@@ -31,6 +35,7 @@ sanity       -> Auto-generated for: ansible-test sanity
 
 Only those enviroments that are detected will be listed. At least sanity will
 always be visible as it does not require adding new files.
+
 
 More details
 ------------
@@ -168,6 +173,23 @@ environments specified in the config file. To suppress it, specify at least one 
 in the envlist entry within tox.ini
 
 ### tox.ini examples
+The `ansible_test_platform` option controls the platform (docker, venv, python version) that ansible-test targets run in.
+By default, this is set to `auto` for automatic detection. You can also set this option
+to `docker` or `venv` explicitly, or disable the Python and platform auto-detection by setting
+this option to `posargs`:
+
+```ini
+[ansible]
+ansible_test_platform = posargs # Disable auto-detection
+```
+
+Note that if you do this, you will have to add your own platform parameters to ansible-test via posargs,
+as discussed above. For example, to use a separate container for the controller and target hosts,
+you can use the following command:
+
+`$ tox -e integration -- --controller docker:default --target docker:centos7`
+
+
 To add arguments to every molecule invocation, add the
 following segment to tox.ini. Each argument needs to be on a separate line, which allows
 spaces and other special characters to be used without needing shell-style escapes:

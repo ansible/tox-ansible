@@ -23,6 +23,7 @@ def opts(mocker):
     reader = mocker.Mock()
     config.get_reader.return_value = reader
     reader.getlist.return_value = ["2.10", "3.9"]
+    reader.getstring.return_value = "auto"
     return Options(config)
 
 

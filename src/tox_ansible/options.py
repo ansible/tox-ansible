@@ -15,6 +15,9 @@ DRIVER_ENV_NAME = "TOX_" + DRIVER_OPTION_NAME.upper()
 INI_SECTION = "ansible"
 INI_PYTHON_VERSIONS = "python"
 INI_ANSIBLE_VERSIONS = "ansible"
+INI_ANSIBLE_TEST_PLATFORM = "ansible_test_platform"
+INI_ANSIBLE_TEST_PLATFORM_DEFAULT = "auto"
+INI_ANSIBLE_TEST_PLATFORM_CHOICES = ["auto", "posargs", "docker", "venv"]
 INI_MOLECULE_GLOBAL_OPTS = "molecule_opts"
 INI_IGNORE_PATHS = "ignore_path"
 INI_ANSIBLE_LINT_CONFIG = "ansible_lint_config"
@@ -50,6 +53,19 @@ class Options(object):
         ansible = _split_env(ansible)
         if ansible:
             self.matrix.add_axis(AnsibleAxis(ansible))
+        self.ansible_test_platform = self.reader.getstring(
+            INI_ANSIBLE_TEST_PLATFORM, INI_ANSIBLE_TEST_PLATFORM_DEFAULT
+        )
+        if self.ansible_test_platform not in INI_ANSIBLE_TEST_PLATFORM_CHOICES:
+            raise ValueError(
+                "Invalid value for 'ansible_test_platform': %s. "
+                "Supported values are: %s"
+                % (
+                    self.ansible_test_platform,
+                    ", ".join(INI_ANSIBLE_TEST_PLATFORM_CHOICES),
+                )
+            )
+
         pythons = self.reader.getlist(INI_PYTHON_VERSIONS)
         pythons = _split_env(pythons)
         if pythons:
