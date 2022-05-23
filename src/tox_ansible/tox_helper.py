@@ -128,7 +128,7 @@ class Tox(object):
         config.commands = tox_case.get_commands(options)
         # Default deps to install molecule, etc
         do = DepOption()
-        processed_deps = do.postprocess(config, tox_case.get_dependencies())
+        processed_deps = do.postprocess(config, tox_case.dependencies)
         if config.deps:
             processed_deps = config.deps + processed_deps
         config.deps = processed_deps

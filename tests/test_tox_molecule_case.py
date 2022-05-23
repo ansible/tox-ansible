@@ -87,7 +87,7 @@ def test_case_expand_ansible(scenario):
     ts = t.expand_ansible("2.7")
     assert ts.ansible == "2.7"
     assert ts.get_name() == "ansible27-my_test"
-    assert "ansible==2.7.*" in ts.get_dependencies()
+    assert "ansible==2.7.*" in ts.dependencies
     assert ts.get_basepython() is None
     assert "Auto-generated for: molecule test -s my_test" == ts.description
 
@@ -109,28 +109,28 @@ def test_case_expand_twice(scenario):
 
 def test_case_includes_docker_deps(scenario):
     t = ToxMoleculeCase(scenario, drivers=["docker"])
-    assert "molecule-docker" in t.get_dependencies()
-    assert "molecule-podman" in t.get_dependencies()
+    assert "molecule-docker" in t.dependencies
+    assert "molecule-podman" in t.dependencies
 
 
 def test_case_includes_openstack_deps(scenario):
     t = ToxMoleculeCase(scenario, drivers=["openstack"])
-    assert "openstacksdk" in t.get_dependencies()
-    assert "moelcule-podman" not in t.get_dependencies()
+    assert "openstacksdk" in t.dependencies
+    assert "moelcule-podman" not in t.dependencies
 
 
 def test_case_ignores_delegated_driver(scenario):
     t = ToxMoleculeCase(scenario, drivers=["delegated"])
-    assert "molecule-delegated" not in t.get_dependencies()
+    assert "molecule-delegated" not in t.dependencies
 
 
 def test_case_handles_unknown_driver(scenario):
     t = ToxMoleculeCase(scenario, drivers=["derpy"])
-    assert "molecule-derpy" in t.get_dependencies()
+    assert "molecule-derpy" in t.dependencies
 
 
 def test_case_for_multiple_drivers(scenario):
     t = ToxMoleculeCase(scenario, drivers=["docker", "podman", "vagrant"])
-    assert "molecule-docker" in t.get_dependencies()
-    assert "molecule-podman" in t.get_dependencies()
-    assert "molecule-vagrant" in t.get_dependencies()
+    assert "molecule-docker" in t.dependencies
+    assert "molecule-podman" in t.dependencies
+    assert "molecule-vagrant" in t.dependencies

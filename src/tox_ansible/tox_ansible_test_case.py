@@ -46,7 +46,8 @@ class ToxAnsibleTestCase(ToxBaseCase):
     def description(self):
         return f"Auto-generated for: ansible-test {self.command} {' '.join(self.args)}"
 
-    def get_dependencies(self):
+    @property
+    def dependencies(self):
         return self._dependencies
 
     def get_working_dir(self):

@@ -70,7 +70,8 @@ class ToxMoleculeCase(ToxBaseCase):
         :return: Path where the test case should be executed from"""
         return os.path.dirname(os.path.dirname(self.scenario.directory))
 
-    def get_dependencies(self) -> Iterable:
+    @property
+    def dependencies(self) -> Iterable:
         """The dependencies for this particular test case.
 
         :return: A list of the pip dependencies for this test case"""

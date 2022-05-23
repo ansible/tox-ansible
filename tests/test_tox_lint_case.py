@@ -14,7 +14,7 @@ def test_names_are_correct(mocker):
     )
     assert tc.get_name() == "lint_all"
     assert tc.get_working_dir() == "/home"
-    assert tc.get_dependencies() == deps
+    assert tc.dependencies == deps
 
 
 def test_expand_python():
