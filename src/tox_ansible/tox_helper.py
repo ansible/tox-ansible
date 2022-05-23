@@ -139,7 +139,7 @@ class Tox(object):
         if not config.changedir or config.changedir == self.config.toxinidir:
             config.changedir = py.path.local(tox_case.working_dir)
         if not config.basepython and tox_case.python is not None:
-            config.basepython = tox_case.get_basepython()
+            config.basepython = tox_case.basepython
 
         if hasattr(config, "whitelist_externals"):
             allowlist = "whitelist_externals"

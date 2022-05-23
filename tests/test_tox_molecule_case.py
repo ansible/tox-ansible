@@ -38,7 +38,7 @@ def test_case_is_simple(config, opts, scenario, mocker):
     assert t.working_dir == ""
     cmds = [["molecule", "test", "-s", scenario.name]]
     assert t.get_commands(opts) == cmds
-    assert t.get_basepython() is None
+    assert t.basepython is None
 
 
 def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
@@ -67,7 +67,7 @@ def test_case_is_simple_with_config_files(config, opts, scenario, mocker):
         ]
     ]
     assert t.get_commands(opts) == cmds
-    assert t.get_basepython() is None
+    assert t.basepython is None
 
 
 def test_case_has_global_opts(mocker, scenario, opts, config):
@@ -88,7 +88,7 @@ def test_case_expand_ansible(scenario):
     assert ts.ansible == "2.7"
     assert ts.get_name() == "ansible27-my_test"
     assert "ansible==2.7.*" in ts.dependencies
-    assert ts.get_basepython() is None
+    assert ts.basepython is None
     assert "Auto-generated for: molecule test -s my_test" == ts.description
 
 
@@ -97,7 +97,7 @@ def test_case_expand_python(scenario):
     ts = t.expand_python("4.1")
     assert ts.python == "4.1"
     assert ts.get_name() == "py41-my_test"
-    assert ts.get_basepython() == "python4.1"
+    assert ts.basepython == "python4.1"
 
 
 def test_case_expand_twice(scenario):

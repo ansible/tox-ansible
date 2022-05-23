@@ -12,7 +12,8 @@ class ToxBaseCase(object):
         self.ansible = None
         self._config = Tox()
 
-    def get_basepython(self):
+    @property
+    def basepython(self):
         """The python version that should be used to execute this, if a
         particular one is requested. If not, then leave it up to the system
         default. The name of the executable is arrived at simply by appending
