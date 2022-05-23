@@ -1,10 +1,16 @@
+import os
 from configparser import ConfigParser
 from pathlib import Path
 
 import pytest
-import os
 
-from tox_ansible.options import Options, INI_MOLECULE_GLOBAL_OPTS, INI_IGNORE_PATHS, SCENARIO_ENV_NAME, SCENARIO_OPTION_NAME
+from tox_ansible.options import (
+    INI_IGNORE_PATHS,
+    INI_MOLECULE_GLOBAL_OPTS,
+    SCENARIO_ENV_NAME,
+    SCENARIO_OPTION_NAME,
+    Options,
+)
 from tox_ansible.tox_helper import Tox
 
 
@@ -15,7 +21,7 @@ def good_config(mocker):
     c.get_reader.return_value = reader
     reader.getlist.return_value = ["2.10", "3.9"]
     reader.getstring.return_value = "auto"
-    c.opts = {SCENARIO_OPTION_NAME: ['explicit_scenario,other_scenario']}
+    c.opts = {SCENARIO_OPTION_NAME: ["explicit_scenario,other_scenario"]}
     return c
 
 
@@ -85,7 +91,7 @@ def test_disabled(mocker, folder, expected):
 
 def test_options_are_valid(bad_config):
     with pytest.raises(ValueError):
-        o = Options(bad_config)
+        Options(bad_config)
 
 
 def test_global_opts(opts):

@@ -1,5 +1,6 @@
 import pytest
 
+# pylint: disable=import-error
 from tox_ansible.ansible.scenario import Scenario
 from tox_ansible.options import Options
 from tox_ansible.tox_helper import Tox
