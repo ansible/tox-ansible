@@ -58,12 +58,10 @@ class Options(object):
         )
         if self.ansible_test_platform not in INI_ANSIBLE_TEST_PLATFORM_CHOICES:
             raise ValueError(
-                "Invalid value for 'ansible_test_platform': %s. "
-                "Supported values are: %s"
-                % (
-                    self.ansible_test_platform,
-                    ", ".join(INI_ANSIBLE_TEST_PLATFORM_CHOICES),
-                )
+                "Invalid value for 'ansible_test_platform': "
+                f"{self.ansible_test_platform}. "
+                "Supported values are: "
+                f"{' '.join(INI_ANSIBLE_TEST_PLATFORM_CHOICES)}"
             )
 
         pythons = self.reader.getlist(INI_PYTHON_VERSIONS)

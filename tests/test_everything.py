@@ -149,10 +149,10 @@ def test_tox_ini_deps_preserved(capfd):
     [("scenario", "default"), ("driver", "openstack")],
 )
 def test_run_tox_with_args(target, value, capfd):
-    args = ["-l", "--ansible-{}".format(target), value]
+    args = ["-l", f"--ansible-{target}", value]
     with cd("tests/fixtures/collection"):
         cli, _ = run_tox(args, capfd)
-        with patch.dict("os.environ", {"TOX_ANSIBLE_{}".format(target.upper()): value}):
+        with patch.dict("os.environ", {f"TOX_ANSIBLE_{target.upper()}": value}):
             env, _ = run_tox(["-l"], capfd)
     assert cli == EXPECTED_ARGS[value]
     assert env == EXPECTED_ARGS[value]
