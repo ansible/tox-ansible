@@ -1,4 +1,5 @@
 from copy import copy
+from pathlib import Path
 
 from .tox_base_case import ToxBaseCase
 from .tox_helper import Tox
@@ -17,26 +18,34 @@ class ToxLintCase(ToxBaseCase):
         super().__init__()
 
     def get_commands(self, options):
-        cmds = []
-        # Construct the ansible-lint command
-        ansible_lint = ["ansible-lint", "-R"]
-        if options.ansible_lint:
-            ansible_lint.append("-c")
-            ansible_lint.append(options.ansible_lint)
+        if self.is_precommit:
+            cmds = [["pre-commit", "run", "--all"]]
+        else:
+            cmds = []
+            # Construct the ansible-lint command
+            ansible_lint = ["ansible-lint", "-R"]
+            if options.ansible_lint:
+                ansible_lint.append("-c")
+                ansible_lint.append(options.ansible_lint)
+            cmds.append(ansible_lint)
 
-        # Construct the yamllint command
-        yamllint = ["yamllint"]
-        if options.yamllint:
-            yamllint.append("-c")
-            yamllint.append(options.yamllint)
-        yamllint.append(".")
+            # Construct the yamllint command
+            if options.yamllint:
+                yamllint = ["yamllint", "-c", options.yamllint, "."]
+                cmds.append(yamllint)
 
-        # Construct the flake8 invocation
-        flake8 = ["flake8", "."]
-        cmds.append(ansible_lint)
-        cmds.append(yamllint)
-        cmds.append(flake8)
+            # Construct the flake8 invocation
+            flake8 = ["flake8", "."]
+            cmds.append(flake8)
+
         return cmds
+
+    @property
+    def is_precommit(self) -> bool:
+        """Determines if this repository is configured to use pre-commit
+        or not."""
+        p = Path(self.working_dir) / ".pre-commit-config.yaml"
+        return p.exists()
 
     @property
     def working_dir(self):
@@ -44,7 +53,10 @@ class ToxLintCase(ToxBaseCase):
 
     @property
     def dependencies(self):
-        deps = set(["flake8", "ansible-lint", "yamllint", "ansible"])
+        if self.is_precommit:
+            deps = set(["pre-commit"])
+        else:
+            deps = set(["flake8", "ansible-lint", "yamllint", "ansible"])
         return deps
 
     def get_name(self, fmt=""):
