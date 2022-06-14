@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3.0.0
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
           cache: pip
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3.0.0
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
       - name: run packaging
@@ -74,7 +74,7 @@ jobs:
             python-version: 3.8
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3.0.0
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -100,7 +100,7 @@ jobs:
   #       python: ["3.6"]
   #   steps:
   #     - uses: actions/checkout@v2
-  #     - uses: actions/setup-python@v3.0.0
+  #     - uses: actions/setup-python@v4
   #       with:
   #         python-version: ${{ matrix.python-version }}
   #     - name: run test (devel)
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3.0.0
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.x"
           cache: pip
@@ -161,7 +161,7 @@ jobs:
               1 || 0
             }}
       - name: Switch to using Python 3.9 by default
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3.9"
           cache: pip
