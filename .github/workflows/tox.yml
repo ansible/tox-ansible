@@ -68,10 +68,6 @@ jobs:
             tox_env: py310
             os: ubuntu-20.04
             python-version: "3.10"
-          - name: py311
-            tox_env: py311
-            os: ubuntu-20.04
-            python-version: "3.11"
           - name: py38@macos
             tox_env: py38
             os: macOS-latest
