@@ -54,11 +54,13 @@ class ToxAnsible_TestCase(TestCase):
         cls.ini_filepath = os.path.join(cls._temp_dir, cls.ini_filename)
 
         # Write out the tox.ini file
-        with open(cls.ini_filepath, "w") as ini_file:
+        with open(cls.ini_filepath, "w", encoding="utf-8") as ini_file:
             ini_file.write(dedent(cls.ini_contents))
 
         # Write the galaxy.yml file - blank for now
-        with open(os.path.join(cls._temp_dir, "galaxy.yml"), "w") as galaxy_yml:
+        with open(
+            os.path.join(cls._temp_dir, "galaxy.yml"), "w", encoding="utf-8"
+        ) as galaxy_yml:
             galaxy_yml.write(GALAXY_SAMPLE)
 
         # Create role and scenario dirs
@@ -66,13 +68,15 @@ class ToxAnsible_TestCase(TestCase):
             tasks = os.path.join(cls._temp_dir, "roles", role, "tasks")
             os.makedirs(tasks)
             # It's not a role if it doesn't have a tasks/main.yml
-            with open(os.path.join(tasks, "main.yml"), "w") as tasks:
+            with open(os.path.join(tasks, "main.yml"), "w", encoding="utf-8") as tasks:
                 tasks.write("")
             # Create the molecule scenarios
             for scenario, molecule in scenarios:
                 d = os.path.join(cls._temp_dir, "roles", role, "molecule", scenario)
                 os.makedirs(d)
-                with open(os.path.join(d, "molecule.yml"), "w") as mol_file:
+                with open(
+                    os.path.join(d, "molecule.yml"), "w", encoding="utf-8"
+                ) as mol_file:
                     mol_file.write(dedent(molecule))
 
     @classmethod

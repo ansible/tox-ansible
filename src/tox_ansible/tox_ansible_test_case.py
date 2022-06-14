@@ -19,8 +19,7 @@ class ToxAnsibleTestCase(ToxBaseCase):
         if not galaxy_config or any(k not in galaxy_config for k in _galaxy_fields):
             raise RuntimeError(
                 "Invalid galaxy.yml content, missing one of "
-                "required keys %s but we got %s"
-                % (", ".join(_galaxy_fields), galaxy_config)
+                f"required keys {', '.join(_galaxy_fields)} but we got {galaxy_config}"
             )
 
         self.namespace = galaxy_config["namespace"]

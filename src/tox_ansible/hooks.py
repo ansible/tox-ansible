@@ -25,17 +25,15 @@ try:
             "--ansible-scenario",
             dest=SCENARIO_OPTION_NAME,
             action="append",
-            help="Only execute scenarios with the given names (env {})".format(
-                SCENARIO_ENV_NAME
-            ),
+            help="Only execute scenarios with the given names (env "
+            + f"{SCENARIO_ENV_NAME})",
         )
         parser.add_argument(
             "--ansible-driver",
             dest=DRIVER_OPTION_NAME,
             action="append",
-            help="Only execute scenarios with the given driver (env {})".format(
-                DRIVER_ENV_NAME
-            ),
+            help="Only execute scenarios with the given driver (env "
+            + f"{DRIVER_ENV_NAME})",
         )
 
     @hookimpl
