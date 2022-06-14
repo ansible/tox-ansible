@@ -78,11 +78,11 @@ class ToxMoleculeCase(ToxBaseCase):
         :return: A list of the pip dependencies for this test case"""
         dependencies = self._dependencies
         if self.ansible is not None:
-            dependencies.append("ansible=={}.*".format(self.ansible))
+            dependencies.append(f"ansible=={self.ansible}.*")
         else:
             dependencies.append("ansible")
         for driver in self._drivers:
-            if driver in DRIVER_DEPENDENCIES.keys():
+            if driver in DRIVER_DEPENDENCIES:
                 dependencies.extend(DRIVER_DEPENDENCIES[driver])
             elif driver != "delegated":
                 dependencies.append("molecule-" + driver)

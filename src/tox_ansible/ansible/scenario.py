@@ -12,7 +12,7 @@ class Scenario(object):
         self.global_config = global_config
 
     def __str__(self):
-        return "{}".format(self.name)
+        return f"{self.name}"
 
     @property
     def run_dir(self):

@@ -7,5 +7,5 @@ except ImportError:  # pragma: no cover
 
 
 def load_yaml(filename: str):
-    with open(filename, "r") as c:
+    with open(filename, "r", encoding="utf-8") as c:
         return load(c.read(), Loader=Loader)

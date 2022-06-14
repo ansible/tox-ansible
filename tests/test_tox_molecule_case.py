@@ -104,7 +104,6 @@ def test_case_has_global_opts(mocker, scenario, opts, config):
 
 
 def test_case_expand_ansible(scenario):
-    # pylint: disable=misplaced-comparison-constant
     t = ToxMoleculeCase(scenario)
     ts = t.expand_ansible("2.7")
     assert ts.ansible == "2.7"

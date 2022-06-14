@@ -7,7 +7,6 @@ disable =
     missing-function-docstring,
     missing-module-docstring,
     no-member,
-    no-self-use,
     redefined-outer-name,
     too-few-public-methods,
     unused-argument,
