@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.10"
           cache: pip
       - name: run lint
         run: |
@@ -51,23 +51,27 @@ jobs:
           - name: py36
             tox_env: py36
             os: ubuntu-20.04
-            python-version: 3.6
+            python-version: "3.6"
           - name: py37
             tox_env: py37
             os: ubuntu-20.04
-            python-version: 3.7
+            python-version: "3.7"
           - name: py38
             tox_env: py38
             os: ubuntu-20.04
-            python-version: 3.8
+            python-version: "3.8"
           - name: py39
             tox_env: py39
             os: ubuntu-20.04
-            python-version: 3.9
+            python-version: "3.9"
           - name: py310
             tox_env: py310
             os: ubuntu-20.04
             python-version: "3.10"
+          - name: py311
+            tox_env: py311
+            os: ubuntu-20.04
+            python-version: "3.11"
           - name: py38@macos
             tox_env: py38
             os: macOS-latest
