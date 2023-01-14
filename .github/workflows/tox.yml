@@ -7,6 +7,7 @@ on:
   push:  # only publishes pushes to the main branch to TestPyPI
     branches:  # any integration branch but not tag
       - "main"
+      - "v1"
   pull_request:
   release:
     types:
@@ -84,7 +85,7 @@ jobs:
           cache: pip
       - name: run test
         run: |
-          python3 -m pip install tox
+          python3 -m pip install "tox<4"
           python3 -m tox -e ${{ matrix.tox_env }}
         env:
           COVERAGE_FILE: .coverage.${{ matrix.python-version }}
