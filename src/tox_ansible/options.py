@@ -1,7 +1,7 @@
 import os
 from itertools import chain
 
-from tox.config import _split_env
+from tox.config import _split_env  # pylint: disable=no-name-in-module
 
 from .matrix import Matrix
 from .matrix.axes import AnsibleAxis, PythonAxis

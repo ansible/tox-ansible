@@ -1,7 +1,12 @@
 from os.path import abspath, isfile, join
 
 import py
-from tox.config import DepOption, ParseIni, SectionReader, testenvprefix
+from tox.config import (  # pylint: disable=no-name-in-module
+    DepOption,
+    ParseIni,
+    SectionReader,
+    testenvprefix,
+)
 
 passenv_list = (
     # ansible-test does not work without HOME directory

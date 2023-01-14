@@ -5,7 +5,7 @@ import tempfile
 from textwrap import dedent
 from unittest import TestCase
 
-from tox.config import PARALLEL_ENV_VAR_KEY_PUBLIC as TOX_PARALLEL_ENV
+from tox.config import PARALLEL_ENV_VAR_KEY_PUBLIC  # pylint: disable=no-name-in-module
 
 GALAXY_SAMPLE = """
 namespace: example
@@ -85,10 +85,10 @@ class ToxAnsible_TestCase(TestCase):
         super().tearDownClass()
 
     def _tox_call(self, arguments):
-        # Remove TOX_PARALLEL_ENV from the subprocess environment variables
+        # Remove PARALLEL_ENV_VAR_KEY_PUBLIC from the subprocess environment variables
         # See: https://github.com/tox-dev/tox/issues/1275
         env = os.environ.copy()
-        env.pop(TOX_PARALLEL_ENV, None)
+        env.pop(PARALLEL_ENV_VAR_KEY_PUBLIC, None)
 
         # pylint: disable=consider-using-with
         proc = subprocess.Popen(

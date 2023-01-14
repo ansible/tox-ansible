@@ -14,7 +14,7 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: mixed-line-ending
-      - id: check-byte-order-marker
+      - id: fix-byte-order-marker
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
       - id: debug-statements
@@ -40,8 +40,8 @@ repos:
         additional_dependencies:
           - py>=1.9.0
           - types-PyYAML
-  - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v3.0.0a5
+  - repo: https://github.com/PyCQA/pylint
+    rev: v2.15.10
     hooks:
       - id: pylint
         additional_dependencies:
