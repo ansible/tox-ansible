@@ -8,7 +8,6 @@ BASH = "cd {} && molecule {} lint -s {}"
 
 
 class ToxLintCase(ToxBaseCase):
-
     description = "Auto-generated lint for ansible cases"
 
     def __init__(self, cases, name_parts=None):
