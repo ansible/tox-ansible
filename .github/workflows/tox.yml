@@ -84,7 +84,7 @@ jobs:
           cache: pip
       - name: run test
         run: |
-          python3 -m pip install tox
+          python3 -m pip install "tox<4.0"
           python3 -m tox -e ${{ matrix.tox_env }}
         env:
           COVERAGE_FILE: .coverage.${{ matrix.python-version }}
