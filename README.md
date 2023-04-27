@@ -1,5 +1,17 @@
 # tox-ansible
 
+## Note to version 1.x users
+
+Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
+
+The rewritten plugin will feature additional options for facilitating running tests of any repository with Ansible content:
+
+Ability to run molecule scenarios (planned)
+Close-to-zero configuration goals (in progress)
+Focus on testing collections (initial implementation)
+
+## Introduction
+
 `tox-ansible` is a utility designed to simplify the testing of ansible content collections.
 
 Implemented as `tox` plugin, `tox-ansible` provides a simple way to test ansible content collections across multiple python interpreter and ansible versions.
