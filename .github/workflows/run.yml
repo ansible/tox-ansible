@@ -1,4 +1,4 @@
-name: ansitest
+name: tox-ansible
 
 on:
   pull_request:
