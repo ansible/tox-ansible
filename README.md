@@ -20,7 +20,7 @@ Until `tox-ansible` is published to PyPI, you can install it from source:
 pip install tox-ansible
 ```
 
-`tox-ansible` will install tox as a dependency.
+`tox-ansible` will install `tox` as a dependency if necessary.
 
 ## Collection dependencies
 
