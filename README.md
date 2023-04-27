@@ -1,10 +1,10 @@
-# ansitest
+# tox-ansible
 
-`ansitest` is a utility designed to simplify the testing of ansible content collections.
+`tox-ansible` is a utility designed to simplify the testing of ansible content collections.
 
-Implemented as `tox` plugin, `ansitest` provides a simple way to test ansible content collections across multiple python interpreter and ansible versions.
+Implemented as `tox` plugin, `tox-ansible` provides a simple way to test ansible content collections across multiple python interpreter and ansible versions.
 
-`ansitest` uses familiar python testing tools to perform the actual testing. It uses `tox` to create and manage the testing environments, `ansible-test sanity` to run the sanity tests, and `pytest` to run the unit and integration tests. This eliminated the black box nature of other approaches and allows for more control over the testing process.
+`tox-ansible` uses familiar python testing tools to perform the actual testing. It uses `tox` to create and manage the testing environments, `ansible-test sanity` to run the sanity tests, and `pytest` to run the unit and integration tests. This eliminated the black box nature of other approaches and allows for more control over the testing process.
 
 When used on a local development system, each of the environments are left intact after a test run. This allows for easy debugging of failed tests for a given test type, python interpreter and ansible version.
 
@@ -14,13 +14,13 @@ By using `tox` to create and manage the testing environments, Test outcomes shou
 
 ## Installation
 
-Until `ansitest` is published to PyPI, you can install it from source:
+Until `tox-ansible` is published to PyPI, you can install it from source:
 
 ```bash
-pip install git+https://github.com/cidrblock/ansitest
+pip install `tox-ansible`
 ```
 
-`ansitest` will install tox as a dependency.
+`tox-ansible` will install tox as a dependency.
 
 ## Collection dependencies
 
@@ -30,7 +30,7 @@ Add the following to a `test-requirements.txt` file in the root of your collecti
 git+https://github.com/ansible-community/pytest-ansible-units.git
 ```
 
-The `pytest-ansible-units` package is required for `ansitest` to run unit tests.
+The `pytest-ansible-units` package is required for `tox-ansible` to run unit tests.
 
 ## Usage
 
@@ -128,7 +128,7 @@ sudo dnf install python3.9
 
 ## Configuration
 
-`ansitest` can be configured using the `tox.ini` file. The following options are available:
+`tox-ansible` can be configured using the `tox.ini` file. The following options are available:
 
 ```ini
 [ansible]
@@ -145,7 +145,7 @@ The repo contains a github workflow that can be used in a github actions CI/CD p
 
 Each environment will be run in a separate job. The workflow will run all jobs in parallel.
 
-The github matrix is dynamically created by `ansitest` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
+The github matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
 
 A sample use of the github workflow might look like this:
 
@@ -162,15 +162,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  ansitest:
-    uses: cidrblock/ansitest/.github/workflows/run.yml@main
+  tox-ansible:
+    uses: tox-dev/tox-ansible/.github/workflows/run.yml@main
 ```
 
 ## How does it work?
 
-`tox` will, by default, create a python virtual environment for a given environment. `ansitest` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `ansitest` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
+`tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
 
-`ansitest` also sets the `ANSIBLE_COLLECTIONS_PATHS` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATHS` environment variable into the collection loader so ansible-core can locate the collection.
+`tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATHS` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATHS` environment variable into the collection loader so ansible-core can locate the collection.
 
 `pytest` is ued to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
