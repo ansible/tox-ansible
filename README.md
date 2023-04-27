@@ -17,7 +17,7 @@ By using `tox` to create and manage the testing environments, Test outcomes shou
 Until `tox-ansible` is published to PyPI, you can install it from source:
 
 ```bash
-pip install `tox-ansible`
+pip install tox-ansible
 ```
 
 `tox-ansible` will install tox as a dependency.
