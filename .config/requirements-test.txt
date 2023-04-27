@@ -1,0 +1,4 @@
+black
+pytest
+ruff
+pre-commit

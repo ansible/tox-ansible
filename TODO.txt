@@ -1,3 +1,0 @@
-* Molecule 3.0 support
-  Now that Molecule 3.0 has been released, it's time to update this to handle
-the separation of non-Docker drivers from the core testing

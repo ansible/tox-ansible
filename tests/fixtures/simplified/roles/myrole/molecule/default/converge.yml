@@ -1,5 +1,0 @@
-- name: test
-  hosts: localhost
-  gather_facts: false
-  roles:
-    - myrole
