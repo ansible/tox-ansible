@@ -7,7 +7,9 @@ Users of tox-ansible v1 should use the stable/1.x branch because the default bra
 The rewritten plugin will feature additional options for facilitating running tests of any repository with Ansible content:
 
 Ability to run molecule scenarios (planned)
+
 Close-to-zero configuration goals (in progress)
+
 Focus on testing collections (initial implementation)
 
 ## Introduction
