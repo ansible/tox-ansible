@@ -72,7 +72,7 @@ jobs:
       #     verbose: true # optional (default = false)
 
   tox_passed:
-    needs: test
+    needs: tox
     runs-on: ubuntu-latest
     steps:
       - run: >-
