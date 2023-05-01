@@ -9,4 +9,7 @@ passenv
 setenv
 toxfile
 toxinidir
+workdir
 xdist
+delenv
+autouse

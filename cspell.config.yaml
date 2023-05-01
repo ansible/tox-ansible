@@ -22,6 +22,7 @@ ignorePaths:
   - pyproject.toml
   # requirements files
   - .config/requirements*
+  - requirements.txt
   # The tox configuration file
   - tox.ini
 
