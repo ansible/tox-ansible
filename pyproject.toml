@@ -77,6 +77,9 @@ enable = [
 
 ]
 
+[tool.pytest.ini_options]
+addopts = "-n=auto --dist=loadfile --maxfail=10 --durations=30 --showlocals"
+
 [tool.ruff]
 fix = true
 line-length = 100
