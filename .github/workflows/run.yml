@@ -22,8 +22,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install ansitest, includes tox
-        run: python -m pip install git+https://github.com/cidrblock/ansitest.git
+      - name: Install tox-ansible, includes tox
+        run: python -m pip install git+https://github.com/tox-dev/tox-ansible.git
 
       - name: Generate matrix
         id: generate-matrix

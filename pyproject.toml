@@ -7,10 +7,10 @@ requires = [
 ]
 
 [project]
-name = "ansitest"
+name = "tox-ansible"
 description = "A radical approach to testing ansible content"
 readme = "README.md"
-keywords = ["ansible"]
+keywords = ["ansible", "collections", "tox"]
 license = { text = "MIT" }
 maintainers = [{ "name" = "Ansible by Red Hat", "email" = "info@ansible.com" }]
 authors = [{ "name" = "Bradley A. Thornton", "email" = "bthornto@redhat.com" }]
@@ -36,7 +36,7 @@ classifiers = [
 dynamic = ["dependencies", "optional-dependencies", "version"]
 
 [project.entry-points.tox]
-ansitest = "tox-ansible.plugin"
+tox-ansible = "tox_ansible.plugin"
 
 [tool.setuptools.dynamic]
 optional-dependencies.test = { file = [".config/requirements-test.txt"] }
@@ -46,7 +46,7 @@ dependencies = { file = [".config/requirements.in"] }
 
 [tool.setuptools_scm]
 local_scheme = "no-local-version"
-write_to = "src/ansitest/_version.py"
+write_to = "src/tox_ansible/_version.py"
 
 [tool.black]
 line-length = 100

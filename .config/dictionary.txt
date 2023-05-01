@@ -1,4 +1,3 @@
-ansitest
 basepython
 cidrblock
 devel
