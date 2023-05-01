@@ -1,11 +1,11 @@
 """Basic tests."""
 import json
+import os
 import subprocess
 
 from pathlib import Path
 from typing import Annotated
 
-import os
 import pytest
 
 
