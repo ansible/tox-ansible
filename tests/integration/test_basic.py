@@ -35,7 +35,7 @@ def test_ansible_environments(module_fixture_dir: FixturePath) -> None:
 
 
 def test_gh_matrix(
-    module_fixture_dir: "FixturePath",
+    module_fixture_dir: FixturePath,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the ansible github matrix generation.

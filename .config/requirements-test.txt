@@ -1,4 +1,6 @@
-pytest
-pytest-xdist
-pre-commit
 coverage
+devpi_process
+pre-commit
+pytest
+pytest_mock
+pytest-xdist
