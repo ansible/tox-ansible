@@ -19,7 +19,7 @@ def module_fixture_dir(request: pytest.FixtureRequest) -> Path:
 
 
 @pytest.fixture(autouse=True)
-def tox_in_tox(monkeypatch: pytest.MonkeyPatch) -> None:
+def _tox_in_tox(monkeypatch: pytest.MonkeyPatch) -> None:
     """Enable tox-in-tox.
 
     :param monkeypatch: pytest fixture to patch modules
