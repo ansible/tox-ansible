@@ -37,11 +37,16 @@ def test_ansible_environments(module_fixture_dir: Annotated[Path, pytest.fixture
 
 def test_gh_matrix(
     module_fixture_dir: Annotated[Path, pytest.fixture],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the ansible github matrix generation.
 
+    Remove the GITHUB_OUTPUT environment variable to test the default output.
+
     :param module_fixture_dir: pytest fixture to get the fixtures directory
+    :param monkeypatch: pytest fixture to patch modules
     """
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     proc = subprocess.run(
         f"tox --ansible --gh-matrix --root {module_fixture_dir}",
         capture_output=True,
