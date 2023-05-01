@@ -3,13 +3,12 @@ import json
 import os
 import subprocess
 
-from pathlib import Path
-from typing import Annotated
-
 import pytest
 
+from ..types import FixturePath
 
-def test_ansible_environments(module_fixture_dir: Annotated[Path, pytest.fixture]) -> None:
+
+def test_ansible_environments(module_fixture_dir: FixturePath) -> None:
     """Test that the ansible environments are available.
 
     :param module_fixture_dir: pytest fixture to get the fixtures directory
@@ -36,7 +35,7 @@ def test_ansible_environments(module_fixture_dir: Annotated[Path, pytest.fixture
 
 
 def test_gh_matrix(
-    module_fixture_dir: Annotated[Path, pytest.fixture],
+    module_fixture_dir: "FixturePath",
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the ansible github matrix generation.

@@ -45,7 +45,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.261"
+    rev: "v0.0.263"
     hooks:
       - id: ruff
         args:
@@ -88,5 +88,6 @@ repos:
           - types-PyYAML
         args:
           - src
-          - --python-version=3.10
+          - tests
+          - --python-version=3.8
         pass_filenames: false
