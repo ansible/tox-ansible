@@ -25,6 +25,8 @@ ignorePaths:
   - requirements.txt
   # The tox configuration file
   - tox.ini
+  # Sample tox configurations
+  - docs/*.ini
 
 languageSettings:
   - languageId: python

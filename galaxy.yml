@@ -1,0 +1,35 @@
+---
+authors:
+  - Ansible Network Community (ansible-network)
+dependencies:
+  "ansible.utils": ">=2.6.1"
+license_file: LICENSE
+name: scm
+namespace: ansible
+description: A collection of scm utilities
+readme: README.md
+repository: https://github.com/ansible-collections/ansible.scm
+issues: https://github.com/ansible-collections/ansible.scm/issues
+tags:
+  - application
+  - cloud
+  - database
+  - infrastructure
+  - linux
+  - monitoring
+  - networking
+  - security
+  - storage
+  - tools
+  - windows
+version: 1.0.7
+build_ignore:
+  - .github
+  - .gitignore
+  - .isort.cfg
+  - .pre-commit-config.yaml
+  - mypy.ini
+  - pyproject.toml
+  - tox.ini
+  - toxfile.py
+  - .vscode

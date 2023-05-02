@@ -140,6 +140,12 @@ Note: The specific python interpreter will need to be pre-installed on you syste
 sudo dnf install python3.9
 ```
 
+To review the specific commands and configuration for each of the integration, sanity, and unit factors:
+
+```bash
+tox config --ansible
+```
+
 ## Configuration
 
 `tox-ansible` can be configured using the `tox.ini` file. The following options are available:
@@ -152,6 +158,53 @@ skip =
 ```
 
 This will skip tests in any environment that uses ansible 2.10 or 2.11. The list of strings are used for a simply string in string comparison of environment names.
+
+## Overriding the configuration
+
+Any configuration in either the `[testenv]` section or am environment section `[testenv:integration-py3.11-{devel,milestone}]` can override all or some of the `tox-ansible` environment configurations.
+
+For example
+
+```ini
+
+[testenv]
+commands_pre =
+    true
+
+[testenv:integration-py3.11-{devel,milestone}]
+commands =
+    true
+```
+
+will result in:
+
+```ini
+[testenv:integration-py3.11-devel]
+set_env =
+  NOCOLOR=true
+  # tox defaults removed
+pass_env =
+  TERM
+  # tox defaults removed
+commands_pre = true
+commands = true
+```
+
+Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
+
+If additional tox environments need to be defined in the `tox.ini`, using environment specific section will reduce the probability of unexpected behavior.
+
+For example:
+
+```ini
+[testenv:lint]
+description = Enforce quality standards
+deps =
+    --editable .
+    pre-commit
+commands =
+    pre-commit run --show-diff-on-failure --all-files
+```
 
 ## Usage in a CI/CD pipeline
 
@@ -180,6 +233,24 @@ jobs:
     uses: tox-dev/tox-ansible/.github/workflows/run.yml@main
 ```
 
+Sample `json`
+
+```json
+[
+  // All environments will follow this pattern
+  {
+    "factors": ["unit", "py3.11", "devel"],
+    "name": "unit-py3.11-devel",
+    "python": "3.11"
+  },
+  {
+    "factors": ["unit", "py3.11", "milestone"],
+    "name": "unit-py3.11-milestone",
+    "python": "3.11"
+  }
+]
+```
+
 ## How does it work?
 
 `tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
@@ -188,6 +259,14 @@ jobs:
 
 `pytest` is ued to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
+
+For a full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environments variables being set and passed, see the following:
+
+- [integration](docs/integration.ini)
+- [sanity](docs/sanity.ini)
+- [unit](docs/unit.ini)
+
+See the [tox documentation](https://tox.readthedocs.io/en/latest/) for more information on tox.
 
 ## License
 

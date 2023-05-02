@@ -1,0 +1,35 @@
+---
+authors:
+  - Ansible Network Community (ansible-network)
+dependencies:
+  "ansible.utils": ">=2.6.1"
+license_file: LICENSE
+name: sample
+namespace: ansible
+description: A sample galaxy.yml
+readme: README.md
+repository: https://github.com/ansible-collections/ansible.sample
+issues: https://github.com/ansible-collections/ansible.sample/issues
+tags:
+  - application
+  - cloud
+  - database
+  - infrastructure
+  - linux
+  - monitoring
+  - networking
+  - security
+  - storage
+  - tools
+  - windows
+version: 1.0.0
+build_ignore:
+  - .github
+  - .gitignore
+  - .isort.cfg
+  - .pre-commit-config.yaml
+  - mypy.ini
+  - pyproject.toml
+  - tox.ini
+  - toxfile.py
+  - .vscode
