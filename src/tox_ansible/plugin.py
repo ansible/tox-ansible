@@ -183,25 +183,8 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         setenv=conf_setenv(env_conf),
         skip_install=True,
     )
-    # Add any user provided configuration
-    u_allowlist_externals = env_conf["allowlist_externals"]
-    u_commands_pre = [cmd.shell for cmd in env_conf["commands_pre"]]
-    u_commands = [cmd.shell for cmd in env_conf["commands"]]
-    u_deps = "\n".join(env_conf["deps"].as_root_args)
-    u_passenv = env_conf["pass_env"]
-    # pylint: disable=protected-access
-    u_setenv = "\n".join([f"{k}={v}" for k, v in env_conf["set_env"]._raw.items()])  # noqa: SLF001
-    # pylint: enable=protected-access
-
-    conf.allowlist_externals.extend(u_allowlist_externals)
-    conf.commands_pre.extend(u_commands_pre)
-    conf.commands.extend(u_commands)
-    conf.deps = f"{conf.deps}\n{u_deps}"
-    conf.passenv.extend(u_passenv)
-    conf.setenv = f"{conf.setenv}\n{u_setenv}"
-
     loader = MemoryLoader(**asdict(conf))
-    env_conf.loaders.insert(0, loader)
+    env_conf.loaders.append(loader)
 
 
 def in_action() -> bool:

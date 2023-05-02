@@ -1,6 +1,5 @@
 """Basic tests."""
 import json
-import os
 import subprocess
 
 import pytest
@@ -13,9 +12,6 @@ def test_ansible_environments(module_fixture_dir: FixturePath) -> None:
 
     :param module_fixture_dir: pytest fixture to get the fixtures directory
     """
-    for envvar in os.environ:
-        if envvar.startswith("TOX_"):
-            print(f"{envvar}={os.environ[envvar]}")
     try:
         proc = subprocess.run(
             f"tox -l --ansible  --root {module_fixture_dir}",
