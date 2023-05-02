@@ -2,12 +2,12 @@
 import json
 import subprocess
 
+from pathlib import Path
+
 import pytest
 
-from ..types import FixturePath
 
-
-def test_ansible_environments(module_fixture_dir: FixturePath) -> None:
+def test_ansible_environments(module_fixture_dir: Path) -> None:
     """Test that the ansible environments are available.
 
     :param module_fixture_dir: pytest fixture to get the fixtures directory
@@ -31,7 +31,7 @@ def test_ansible_environments(module_fixture_dir: FixturePath) -> None:
 
 
 def test_gh_matrix(
-    module_fixture_dir: FixturePath,
+    module_fixture_dir: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test that the ansible github matrix generation.
