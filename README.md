@@ -192,7 +192,7 @@ commands = true
 
 Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
 
-If additional tox environments need to be defined in the `tox.ini`, using environment specific section will reduce the probability of unexpected behavior.
+If additional tox environments need to be defined in the `tox.ini`, using an environment specific section will reduce the probability of unexpected behavior.
 
 For example:
 
