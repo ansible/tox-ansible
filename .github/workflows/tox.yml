@@ -60,7 +60,7 @@ jobs:
 
       - name: "tox -e ${{ matrix.passed_name }}"
         continue-on-error: ${{ matrix.devel || false }}
-        run: python3 -m tox -e ${{ matrix.passed_name }}-test
+        run: python3 -m tox -e ${{ matrix.passed_name }}
 
       # - name: Upload coverage data
       #   if: ${{ startsWith(matrix.passed_name, 'py') }}
