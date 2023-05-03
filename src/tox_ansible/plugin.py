@@ -479,9 +479,6 @@ def conf_commands_pre(
         if in_action():
             commands.append(end_group)
 
-    # echo the current environment variables
-    commands.append("env")
-
     return commands
 
 
