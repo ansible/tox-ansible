@@ -36,8 +36,8 @@ ALLOWED_EXTERNALS = [
     "echo",
 ]
 ENV_LIST = """
-{integration, sanity, unit}-py3.8-{2.9, 2.10, 2.11, 2.12, 2.13}
-{integration, sanity, unit}-py3.9-{2.10, 2.11, 2.12, 2.13, 2.14, milestone, devel}
+{integration, sanity, unit}-py3.8-{2.9, 2.12, 2.13}
+{integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, milestone, devel}
 {integration, sanity, unit}-py3.10-{2.12, 2.13, 2.14, milestone, devel}
 {integration, sanity, unit}-py3.11-{2.14, milestone, devel}
 """
@@ -68,6 +68,7 @@ class AnsibleConfigSet(ConfigSet):
 class AnsibleTestConf:
     """Ansible test configuration."""
 
+    description: str
     deps: str
     setenv: str
     skip_install: bool
@@ -129,6 +130,7 @@ def tox_add_core_config(
     :param core_conf: The core configuration object.
     :param state: The state object.
     """
+
     if state.conf.options.gh_matrix and not state.conf.options.ansible:
         err = "The --gh-matrix option requires --ansible"
         logging.critical(err)
@@ -136,6 +138,15 @@ def tox_add_core_config(
 
     if not state.conf.options.ansible:
         return
+
+    if state.conf.src_path.name == "tox.ini":
+        msg = (
+            "Using a default tox.ini file with tox-ansible plugin is not recommended."
+            " Consider using a tox-ansible.ini file and specify it on the command line"
+            " (`tox --ansible -c tox-ansible.ini`) to avoid unintentionally overriding"
+            " the tox-ansible environment configurations."
+        )
+        logging.warning(msg)
 
     global TOX_WORK_DIR  # pylint: disable=global-statement # noqa: PLW0603
     TOX_WORK_DIR = state.conf.work_dir
@@ -158,8 +169,8 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     if not state.conf.options.ansible:
         return
 
-    test_type = env_conf.name.split("-")[0]
-    if test_type not in ["integration", "sanity", "unit"]:
+    factors = env_conf.name.split("-")
+    if len(factors) != 3 or factors[0] not in ["integration", "sanity", "unit"]:
         return
 
     galaxy_path = TOX_WORK_DIR / "galaxy.yml"
@@ -176,15 +187,34 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             c_name=c_name,
             c_namespace=c_namespace,
             env_conf=env_conf,
-            test_type=test_type,
+            test_type=factors[0],
         ),
-        deps=conf_deps(env_conf=env_conf, test_type=test_type),
+        description=desc_for_env(env_conf.name),
+        deps=conf_deps(env_conf=env_conf, test_type=factors[0]),
         passenv=conf_passenv(),
         setenv=conf_setenv(env_conf),
         skip_install=True,
     )
     loader = MemoryLoader(**asdict(conf))
     env_conf.loaders.append(loader)
+
+
+def desc_for_env(env: str) -> str:
+    """Generate a description for an environment.
+
+    :param env: The environment name.
+    :return: The environment description.
+    """
+    test_type, python, core = env.split("-")
+    if core == "2.9":
+        ansible_pkg = "ansible"
+    else:
+        ansible_pkg = "ansible-core"
+
+    description = (
+        f"{test_type.capitalize()} tests using" f" {ansible_pkg} {core} and python {python[2:]}"
+    )
+    return description
 
 
 def in_action() -> bool:
@@ -212,8 +242,7 @@ def add_ansible_matrix(state: State) -> EnvList:
         env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
     ]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
-    state.conf.core.loaders.insert(
-        0,
+    state.conf.core.loaders.append(
         MemoryLoader(env_list=env_list),
     )
     return env_list
@@ -247,8 +276,9 @@ def generate_gh_matrix(env_list: EnvList) -> None:
             version = f"{candidates[0][0]}.{candidates[0][1:]}"
         results.append(
             {
-                "name": env_name,
+                "description": desc_for_env(env_name),
                 "factors": factors,
+                "name": env_name,
                 "python": version,
             },
         )

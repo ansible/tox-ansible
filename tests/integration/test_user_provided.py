@@ -16,7 +16,7 @@ def test_user_provided(
     """
     try:
         proc = subprocess.run(
-            f"tox config --ansible --root {module_fixture_dir}",
+            f"tox config --ansible --root {module_fixture_dir} --conf tox-ansible.ini",
             capture_output=True,
             cwd=str(module_fixture_dir),
             text=True,

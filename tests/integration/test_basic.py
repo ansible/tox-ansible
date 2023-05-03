@@ -14,7 +14,7 @@ def test_ansible_environments(module_fixture_dir: Path) -> None:
     """
     try:
         proc = subprocess.run(
-            f"tox -l --ansible  --root {module_fixture_dir}",
+            f"tox -l --ansible  --root {module_fixture_dir} --conf tox-ansible.ini",
             capture_output=True,
             cwd=str(module_fixture_dir),
             text=True,
@@ -44,7 +44,7 @@ def test_gh_matrix(
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     proc = subprocess.run(
-        f"tox --ansible --gh-matrix --root {module_fixture_dir}",
+        f"tox --ansible --gh-matrix --root {module_fixture_dir} --conf tox-ansible.ini",
         capture_output=True,
         cwd=str(module_fixture_dir),
         text=True,
@@ -55,7 +55,8 @@ def test_gh_matrix(
     assert isinstance(structured, list)
     assert structured
     for entry in structured:
-        assert tuple(sorted(entry)) == ("factors", "name", "python")
+        assert tuple(sorted(entry)) == ("description", "factors", "name", "python")
+        assert isinstance(entry["description"], str)
         assert isinstance(entry["factors"], list)
         assert isinstance(entry["name"], str)
         assert isinstance(entry["python"], str)

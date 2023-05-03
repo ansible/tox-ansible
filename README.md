@@ -48,89 +48,56 @@ The `pytest-ansible-units` package is required for `tox-ansible` to run unit tes
 
 ## Usage
 
-From the root of your collection run the following command:
+From the root of your collection, create an empty `tox-ansible.ini` file and run the following command:
 
 ```bash
-tox -l --ansible
+touch tox-ansible.ini
+tox list --ansible --conf tox-ansible.ini
 ```
 
 A list of dynamically generated ansible environments will be displayed:
 
 ```bash
-integration-py3.8-2.9
-integration-py3.8-2.12
-integration-py3.8-2.13
-integration-py3.9-2.12
-integration-py3.9-2.13
-integration-py3.9-2.14
-integration-py3.9-devel
-integration-py3.9-milestone
-integration-py3.10-2.12
-integration-py3.10-2.13
-integration-py3.10-2.14
-integration-py3.10-devel
-integration-py3.10-milestone
-integration-py3.11-2.14
-integration-py3.11-devel
-integration-py3.11-milestone
-sanity-py3.8-2.9
-sanity-py3.8-2.12
-sanity-py3.8-2.13
-sanity-py3.9-2.12
-sanity-py3.9-2.13
-sanity-py3.9-2.14
-sanity-py3.9-devel
-sanity-py3.9-milestone
-sanity-py3.10-2.12
-sanity-py3.10-2.13
-sanity-py3.10-2.14
-sanity-py3.10-devel
-sanity-py3.10-milestone
-sanity-py3.11-2.14
-sanity-py3.11-devel
-sanity-py3.11-milestone
-unit-py3.8-2.9
-unit-py3.8-2.12
-unit-py3.8-2.13
-unit-py3.9-2.12
-unit-py3.9-2.13
-unit-py3.9-2.14
-unit-py3.9-devel
-unit-py3.9-milestone
-unit-py3.10-2.12
-unit-py3.10-2.13
-unit-py3.10-2.14
-unit-py3.10-devel
-unit-py3.10-milestone
-unit-py3.11-2.14
-unit-py3.11-devel
-unit-py3.11-milestone
+
+default environments:
+...
+integration-py3.11-2.14      -> Integration tests for ansible.scm using ansible-core 2.14 and python 3.11
+integration-py3.11-devel     -> Integration tests for ansible.scm using ansible-core devel and python 3.11
+integration-py3.11-milestone -> Integration tests for ansible.scm using ansible-core milestone and python 3.11
+...
+sanity-py3.11-2.14           -> Sanity tests for ansible.scm using ansible-core 2.14 and python 3.11
+sanity-py3.11-devel          -> Sanity tests for ansible.scm using ansible-core devel and python 3.11
+sanity-py3.11-milestone      -> Sanity tests for ansible.scm using ansible-core milestone and python 3.11
+...
+unit-py3.11-2.14             -> Unit tests for ansible.scm using ansible-core 2.14 and python 3.11
+unit-py3.11-devel            -> Unit tests for ansible.scm using ansible-core devel and python 3.11
+unit-py3.11-milestone        -> Unit tests for ansible.scm using ansible-core milestone and python 3.11
 ```
 
-These represent the testing environments that are available to you. Each denotes the type of tests that will be run, the python interpreter used to run the tests, and the ansible version used to run the tests.
+These represent the testing environments that are available. Each denotes the type of tests that will be run, the python interpreter used to run the tests, and the ansible version used to run the tests.
 
 To run tests with a single environment, simply run the following command:
 
 ```bash
-tox -e sanity-py3.11-2.14 --ansible
+tox -e sanity-py3.11-2.14 --ansible --conf tox-ansible.ini
 ```
 
 To run tests with multiple environments, simply add the environment names to the command:
 
 ```bash
-tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible
+tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible --conf tox-ansible.ini
 ```
 
 To run all tests of a specific type in all available environments, use the factor `-f` flag:
 
 ```bash
-tox -f unit --ansible -p auto
+tox -f unit --ansible -p auto --conf tox-ansible.ini
 ```
 
 To run all tests across all available environments:
 
 ```bash
-tox --ansible -p auto
+tox --ansible -p auto --conf tox-ansible.ini
 ```
 
 Note: The `-p auto` flag will run multiple tests in parallel.
@@ -143,25 +110,26 @@ sudo dnf install python3.9
 To review the specific commands and configuration for each of the integration, sanity, and unit factors:
 
 ```bash
-tox config --ansible
+tox config --ansible --conf tox-ansible.ini
 ```
 
 ## Configuration
 
-`tox-ansible` can be configured using the `tox.ini` file. The following options are available:
+`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty, but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword is available:
 
 ```ini
+# tox-ansible.ini
 [ansible]
 skip =
-    2.10
-    2.11
+    2.9
+    devel
 ```
 
-This will skip tests in any environment that uses ansible 2.10 or 2.11. The list of strings are used for a simply string in string comparison of environment names.
+This will skip tests in any environment that use ansible 2.9 or the devel branch. The list of strings are used for a simple string in string comparison of environment names.
 
 ## Overriding the configuration
 
-Any configuration in either the `[testenv]` section or am environment section `[testenv:integration-py3.11-{devel,milestone}]` can override all or some of the `tox-ansible` environment configurations.
+Any configuration in either the `[testenv]` section or am environment section `[testenv:integration-py3.11-{devel,milestone}]` can override some or all of the `tox-ansible` environment configurations.
 
 For example
 
@@ -179,36 +147,18 @@ commands =
 will result in:
 
 ```ini
+# tox-ansible.ini
 [testenv:integration-py3.11-devel]
-set_env =
-  NOCOLOR=true
-  # tox defaults removed
-pass_env =
-  TERM
-  # tox defaults removed
 commands_pre = true
 commands = true
 ```
 
 Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
 
-If additional tox environments need to be defined in the `tox.ini`, using an environment specific section will reduce the probability of unexpected behavior.
-
-For example:
-
-```ini
-[testenv:lint]
-description = Enforce quality standards
-deps =
-    --editable .
-    pre-commit
-commands =
-    pre-commit run --show-diff-on-failure --all-files
-```
 
 ## Usage in a CI/CD pipeline
 
-The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox.ini` file.
+The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox-ansible.ini` file.
 
 Each environment will be run in a separate job. The workflow will run all jobs in parallel.
 
@@ -237,18 +187,22 @@ Sample `json`
 
 ```json
 [
-  // All environments will follow this pattern
+  // ...
   {
-    "factors": ["unit", "py3.11", "devel"],
-    "name": "unit-py3.11-devel",
+    "description": "Integration tests using ansible-core devel and python 3.11",
+    "factors": [
+      "integration",
+      "py3.11",
+      "devel"
+    ],
+    "name": "integration-py3.11-devel",
     "python": "3.11"
   },
-  {
-    "factors": ["unit", "py3.11", "milestone"],
-    "name": "unit-py3.11-milestone",
-    "python": "3.11"
-  }
+  // ...
 ]
+
+
+
 ```
 
 ## How does it work?
