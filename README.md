@@ -48,7 +48,7 @@ The `pytest-ansible-units` package is required for `tox-ansible` to run unit tes
 
 ## Usage
 
-From the root of your collection, create an empty `tox-ansible.ini` file and run the following command:
+From the root of your collection, create an empty `tox-ansible.ini` file and list the available environments:
 
 ```bash
 touch tox-ansible.ini
@@ -57,7 +57,7 @@ tox list --ansible --conf tox-ansible.ini
 
 A list of dynamically generated ansible environments will be displayed:
 
-```bash
+```
 
 default environments:
 ...
