@@ -130,7 +130,6 @@ def tox_add_core_config(
     :param core_conf: The core configuration object.
     :param state: The state object.
     """
-
     if state.conf.options.gh_matrix and not state.conf.options.ansible:
         err = "The --gh-matrix option requires --ansible"
         logging.critical(err)
@@ -206,10 +205,7 @@ def desc_for_env(env: str) -> str:
     :return: The environment description.
     """
     test_type, python, core = env.split("-")
-    if core == "2.9":
-        ansible_pkg = "ansible"
-    else:
-        ansible_pkg = "ansible-core"
+    ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
 
     description = (
         f"{test_type.capitalize()} tests using" f" {ansible_pkg} {core} and python {python[2:]}"

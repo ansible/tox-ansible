@@ -155,7 +155,6 @@ commands = true
 
 Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
 
-
 ## Usage in a CI/CD pipeline
 
 The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox-ansible.ini` file.
@@ -190,19 +189,12 @@ Sample `json`
   // ...
   {
     "description": "Integration tests using ansible-core devel and python 3.11",
-    "factors": [
-      "integration",
-      "py3.11",
-      "devel"
-    ],
+    "factors": ["integration", "py3.11", "devel"],
     "name": "integration-py3.11-devel",
     "python": "3.11"
-  },
+  }
   // ...
 ]
-
-
-
 ```
 
 ## How does it work?
