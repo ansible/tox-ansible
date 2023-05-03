@@ -65,7 +65,7 @@ class AnsibleConfigSet(ConfigSet):
 
 
 @dataclass
-class AnsibleTestConf:
+class AnsibleTestConf:  # pylint: disable=too-many-instance-attributes
     """Ansible test configuration."""
 
     description: str
@@ -169,7 +169,8 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         return
 
     factors = env_conf.name.split("-")
-    if len(factors) != 3 or factors[0] not in ["integration", "sanity", "unit"]:
+    expected_factors = 3
+    if len(factors) != expected_factors or factors[0] not in ["integration", "sanity", "unit"]:
         return
 
     galaxy_path = TOX_WORK_DIR / "galaxy.yml"
@@ -208,7 +209,7 @@ def desc_for_env(env: str) -> str:
     ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
 
     description = (
-        f"{test_type.capitalize()} tests using" f" {ansible_pkg} {core} and python {python[2:]}"
+        f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
     )
     return description
 
