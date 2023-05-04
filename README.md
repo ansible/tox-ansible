@@ -41,7 +41,7 @@ pip install tox-ansible
 Add the following to a `test-requirements.txt` file in the root of your collection:
 
 ```bash
-git+https://github.com/ansible-community/pytest-ansible-units.git
+git+https://github.com/ansible-community/pytest-ansible.git
 ```
 
 The `pytest-ansible-units` package is required for `tox-ansible` to run unit tests.

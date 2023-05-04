@@ -45,7 +45,7 @@ TOX_WORK_DIR = Path()
 OUR_DEPS = [
     "pytest",
     "pytest-xdist",
-    "git+https://github.com/ansible-community/pytest-ansible-units.git",
+    "git+https://github.com/ansible-community/pytest-ansible.git",
 ]
 
 T = TypeVar("T", bound=ConfigSet)
@@ -170,7 +170,11 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
 
     factors = env_conf.name.split("-")
     expected_factors = 3
-    if len(factors) != expected_factors or factors[0] not in ["integration", "sanity", "unit"]:
+    if len(factors) != expected_factors or factors[0] not in [
+        "integration",
+        "sanity",
+        "unit",
+    ]:
         return
 
     galaxy_path = TOX_WORK_DIR / "galaxy.yml"
@@ -371,7 +375,7 @@ def conf_commands_for_integration_unit(
     envtmpdir = env_conf["envtmpdir"]
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python -m pytest --inject-only {TOX_WORK_DIR}/tests/{test_type}"
+    command = f"python -m pytest --ansible-unit-inject-only {TOX_WORK_DIR}/tests/{test_type}"
     unit_ch_dir = f"{envtmpdir}/collections/"
     if test_type == "unit":
         commands.append(f"bash -c 'cd {unit_ch_dir} && {command}'")
