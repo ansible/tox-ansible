@@ -1,4 +1,5 @@
 pytest
+pytest-ansible>=3.1.0
 pytest-xdist
 pyyaml
 tox>4.4.8

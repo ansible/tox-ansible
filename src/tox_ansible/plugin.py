@@ -375,7 +375,7 @@ def conf_commands_for_integration_unit(
     envtmpdir = env_conf["envtmpdir"]
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python -m pytest --ansible-unit-inject-only {TOX_WORK_DIR}/tests/{test_type}"
+    command = f"python -m pytest {TOX_WORK_DIR}/tests/{test_type}"
     unit_ch_dir = f"{envtmpdir}/collections/"
     if test_type == "unit":
         commands.append(f"bash -c 'cd {unit_ch_dir} && {command}'")

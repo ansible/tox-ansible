@@ -34,17 +34,15 @@ Install from pypi:
 pip install tox-ansible
 ```
 
-`tox-ansible` will install `tox` as a dependency if necessary.
+## Dependencies
 
-## Collection dependencies
+`tox-ansible` will install additional dependencies if necessary:
 
-Add the following to a `test-requirements.txt` file in the root of your collection:
-
-```bash
-git+https://github.com/ansible-community/pytest-ansible.git
-```
-
-The `pytest-ansible-units` package is required for `tox-ansible` to run unit tests.
+- `tox` version 4.0 or greater.
+- `pytest-ansible` version 3.1.0 or greater.
+- `pytest`
+- `pytest-xdist`
+- `pyyaml`
 
 ## Usage
 
