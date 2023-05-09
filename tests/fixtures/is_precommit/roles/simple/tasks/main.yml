@@ -1,2 +1,0 @@
-- name: say hello
-  debug: msg='tox-ansible is the best'

@@ -1,0 +1,70 @@
+name: tox-ansible
+
+on:
+  pull_request:
+    branches:
+      - main
+      - "releases/**"
+      - "stable/**"
+  workflow_call:
+
+jobs:
+  tox-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.5.0
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install tox-ansible, includes tox
+        run: python -m pip install git+https://github.com/tox-dev/tox-ansible.git@uplift_v2
+
+      - name: Generate matrix
+        id: generate-matrix
+        run: |
+          python -m tox --ansible --gh-matrix --conf tox-ansible.ini
+
+    outputs:
+      envlist: ${{ steps.generate-matrix.outputs.envlist }}
+
+  test:
+    needs: tox-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJson(needs.tox-matrix.outputs.envlist) }}
+    name: ${{ matrix.entry.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.5.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.entry.python }}
+
+      - name: Install deps
+        run: python -m pip install -r test-requirements.txt
+
+      - name: Run tox test
+        run: python -m tox --ansible -e ${{ matrix.entry.name }} --conf tox-ansible.ini
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test_passed:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: >-
+          python -c "assert set([
+          '${{ needs.test.result }}',
+          ]) == {'success'}"

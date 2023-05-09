@@ -1,0 +1,17 @@
+autouse
+basepython
+cidrblock
+delenv
+devel
+endgroup
+envtmpdir
+envtmpdir
+fileh
+nocolor
+passenv
+setenv
+testenv
+toxfile
+toxinidir
+workdir
+xdist

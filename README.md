@@ -1,320 +1,217 @@
-[![CI/CD Builds](https://github.com/tox-dev/tox-ansible/workflows/tox/badge.svg)](https://github.com/tox-dev/tox-ansible/actions)
-[![codecov](https://codecov.io/gh/tox-dev/tox-ansible/branch/main/graph/badge.svg)](https://codecov.io/gh/tox-dev/tox-ansible)
-[![PyPI version](https://badge.fury.io/py/tox-ansible.svg)](https://badge.fury.io/py/tox-ansible)
+# tox-ansible
 
-tox-ansible
-===========
+## Note to version 1.x users
 
-This plugin for tox auto-generates tox environments for running
-quality assurance tools like ansible-test or molecule. Optionally, you can
-decide to filter the environments down to only a subset of them.
-The tool is rather tightly integrated for the official [Molecule](https://github.com/ansible/molecule)
-testing tool that integrates with [Ansible](https://github.com/ansible/ansible).
+Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
 
-ansible-test
-------------
+The rewritten plugin will feature additional options for facilitating running tests of any repository with Ansible content:
 
-This plugin saves you this trouble by allowing you the freedom to run
-these commands tranparently. For example you can run `tox -e sanity` which
-will install the collection, change current directory and execute
-`ansible-test sanity --python X.Y`. You can even add posargs that end up being
-passed to the executed command, like `tox -e sanity -- --help`.
+Ability to run molecule scenarios (planned)
 
-By default, tox-ansible will also limit execution of ansible-test to the
-current python version used by tox. In addition, tox-ansible will try to
-automatically determine the best environment to run these tests in
-(docker if present on the host, virtualenv, etc.).
+Close-to-zero configuration goals (in progress)
 
-You can disable this auto-detection feature in the `tox.ini`, see below for details.
+Focus on testing collections (initial implementation)
 
-```shell
-$ tox -va
+## Introduction
+
+`tox-ansible` is a utility designed to simplify the testing of ansible content collections.
+
+Implemented as `tox` plugin, `tox-ansible` provides a simple way to test ansible content collections across multiple python interpreter and ansible versions.
+
+`tox-ansible` uses familiar python testing tools to perform the actual testing. It uses `tox` to create and manage the testing environments, `ansible-test sanity` to run the sanity tests, and `pytest` to run the unit and integration tests. This eliminated the black box nature of other approaches and allows for more control over the testing process.
+
+When used on a local development system, each of the environments are left intact after a test run. This allows for easy debugging of failed tests for a given test type, python interpreter and ansible version.
+
+By using `tox` to create and manage the testing environments, Test outcomes should always be the same on a local development system as they are in a CI/CD pipeline.
+
+`tox` virtual environments are created in the `.tox` directory. These are easily deleted and recreated if needed.
+
+## Installation
+
+Install from pypi:
+
+```bash
+pip install tox-ansible
+```
+
+## Dependencies
+
+`tox-ansible` will install additional dependencies if necessary:
+
+- `tox` version 4.0 or greater.
+- `pytest-ansible` version 3.1.0 or greater.
+- `pytest`
+- `pytest-xdist`
+- `pyyaml`
+
+## Usage
+
+From the root of your collection, create an empty `tox-ansible.ini` file and list the available environments:
+
+```bash
+touch tox-ansible.ini
+tox list --ansible --conf tox-ansible.ini
+```
+
+A list of dynamically generated ansible environments will be displayed:
+
+```
+
 default environments:
-sanity       -> Auto-generated for: ansible-test sanity
+...
+integration-py3.11-2.14      -> Integration tests for ansible.scm using ansible-core 2.14 and python 3.11
+integration-py3.11-devel     -> Integration tests for ansible.scm using ansible-core devel and python 3.11
+integration-py3.11-milestone -> Integration tests for ansible.scm using ansible-core milestone and python 3.11
+...
+sanity-py3.11-2.14           -> Sanity tests for ansible.scm using ansible-core 2.14 and python 3.11
+sanity-py3.11-devel          -> Sanity tests for ansible.scm using ansible-core devel and python 3.11
+sanity-py3.11-milestone      -> Sanity tests for ansible.scm using ansible-core milestone and python 3.11
+...
+unit-py3.11-2.14             -> Unit tests for ansible.scm using ansible-core 2.14 and python 3.11
+unit-py3.11-devel            -> Unit tests for ansible.scm using ansible-core devel and python 3.11
+unit-py3.11-milestone        -> Unit tests for ansible.scm using ansible-core milestone and python 3.11
 ```
 
-Only those enviroments that are detected will be listed. At least sanity will
-always be visible as it does not require adding new files.
+These represent the testing environments that are available. Each denotes the type of tests that will be run, the python interpreter used to run the tests, and the ansible version used to run the tests.
 
-
-More details
-------------
-
-This plugin is designed to support auto-discovery of Molecule scenarios. When it has done so, the plugin
-will then create a tox environment, if one does not already
-exist, that contains factors matching against the scenario path. For example, if you have scenarios
-that live at `molecule/scenario`, `roles/somerole/molecule/default`, and `roles/otherrole/molecule/default`,
-then tox environments will be named `["scenario", "roles-somerole-default", "roles-otherrole-default"]`.
-
-Additional configuration options exist to expand this matrix automatically. For instance, you can have
-it auto-generate version with tox factors for different versions of python (e.g.
-['py27-user-default', 'py38-user-default']). Additional options can also be added for different versions
-of Ansible (e.g. ['ansible27-user-default', 'ansible28-user-default'])
-
-There are also options to filter the list of environments executed. The execution can be filtered to
-limit itself to only scenarios with a particular name, to only certain Molecule drivers, or a combination
-of the two options. Of course, tox can still be used to execute only one environment by passing the
-name directly via e.g. `tox -e roles-myrole-scenario`.
-
-If an environment already exists that matches the generated environment name, then this plugin
-will not override settings specified directly in the tox.ini for that environment. Thus, if you need to customize
-a particular run, then you can do so, but still take advantage of the filtering options and
-auto-generation of the environments for other scenarios and options. Dependencies defined in the standard
-way in tox.ini for any name collision environments will be augmented with the ones needed for
-running Molecule and lint.
-
-Configuration
-=============
-
-tox.ini
--------
-
-Any values in the `envlist` will be left in the default envlist by this plugin. So if you want to have
-several envs that do things other than run `molecule ...` commands, you can configure those directly
-in the tox.ini file.
-
-To add global options to the molecule commands, add the arguments in a line list to the "[ansible]"
-section key "molecule\_opts".
-
-To test each scenario with specified versions of either Ansible or Python, you can add version
-numbers to the keys `ansible` and `python` under the `[ansible]` section of the ini. These versions
-take the same format as the `envlist` version familiar to Python users. So, if you want to test on
-Ansible 2.9, 2.10, and 3.0 as well as with Python 2.7 and 3.8 then you can add this snippet (values can
-be separated by a mix of commas and newlines):
-
-```ini
-[ansible]
-ansible = 2.{9,10},3.0
-python = 2.7,3.8
-# To change how tox env name is build for scanrios, you can use vars like:
-# $path - paths under which molecule file is hosted (can be empty string)
-# $parent - only the parent folder under which is hosted (can be empty string)
-# $name - this is the name of the scenario (folder under molecule/)
-# $nondefault_name - same as name but when scenario is named 'default' it becomes empty string
-#
-# scenario_format = $path-$role-$name
-
-```
-
-If you find the default environment names generated for scenarios too long,
-you can configure `scenario_format = $parent-$nondefault_name` which should
-produce very short names, regardless if your scenarios are in repository root
-or under the roles. That works nicely as long you do not have duplicate
-scenario names.
-
-To pass a configuration file to "[ansible-lint](https://github.com/ansible-community/ansible-lint)",
-add the option "ansible\_lint\_config". Similarly to pass a config file option to
-"[yamllint](https://github.com/adrienverge/yamllint)", set the option "yamllint\_config" in
-the "[ansible]" section. Flake8 can be configured per its normal segment in your tox.ini file. All
-three of these commands are run as part of the "lint\_all" environment that this plugin creates.
-
-requirements.txt
-----------------
-
-If a particular scenario requires a select set of Python packages to be installed in the virtualenv with
-molecule and the like, you can add a "requirements.txt" file to the molecule scenario directory, and that
-will be appended to the list of built-in scenario requirements.
-
-Examples
-========
-
-## Basic Example
-
-The following Collections structure
-
-<pre><font color="#3465A4"><b>.</b></font>
-├── galaxy.yml
-├── <font color="#3465A4"><b>molecule</b></font>
-│   ├── <font color="#3465A4"><b>one</b></font>
-│   │   └── molecule.yml
-│   └── <font color="#3465A4"><b>two</b></font>
-│       └── molecule.yml
-├── <font color="#3465A4"><b>roles</b></font>
-│   ├── <font color="#3465A4"><b>my_role</b></font>
-│   │   └── <font color="#3465A4"><b>molecule</b></font>
-│   │       ├── <font color="#3465A4"><b>otherscenario</b></font>
-│   │       │   └── molecule.yml
-│   │       └── <font color="#3465A4"><b>somescenario</b></font>
-│   │           └── molecule.yml
-│   └── <font color="#3465A4"><b>other_role</b></font>
-│       └── <font color="#3465A4"><b>molecule</b></font>
-│           ├── <font color="#3465A4"><b>basic</b></font>
-│           │   └── molecule.yml
-│           ├── <font color="#3465A4"><b>default</b></font>
-│           │   └── molecule.yml
-│           └── <font color="#3465A4"><b>somescenario</b></font>
-│               └── molecule.yml
-└── tox.ini
-</pre>
-
-With the following tox.ini file:
-
-```ini
-[tox]
-envlist =
-```
-Tox-ansible will auto-generate the following environments:
+To run tests with a single environment, simply run the following command:
 
 ```bash
-$ tox -l
-lint_all
-one
-python
-roles-my_role-otherscenario
-roles-my_role-somescenario
-roles-other_role-basic
-roles-other_role-default
-roles-other_role-somescenario
-two
+tox -e sanity-py3.11-2.14 --ansible --conf tox-ansible.ini
 ```
 
-Note that the "python" environment is a default behavior of Tox, if there are no
-environments specified in the config file. To suppress it, specify at least one element
-in the envlist entry within tox.ini
-
-### tox.ini examples
-The `ansible_test_platform` option controls the platform (docker, venv, python version) that ansible-test targets run in.
-By default, this is set to `auto` for automatic detection. You can also set this option
-to `docker` or `venv` explicitly, or disable the Python and platform auto-detection by setting
-this option to `posargs`:
-
-```ini
-[ansible]
-ansible_test_platform = posargs # Disable auto-detection
-```
-
-Note that if you do this, you will have to add your own platform parameters to ansible-test via posargs,
-as discussed above. For example, to use a separate container for the controller and target hosts,
-you can use the following command:
-
-`$ tox -e integration -- --controller docker:default --target docker:centos7`
-
-
-To add arguments to every molecule invocation, add the
-following segment to tox.ini. Each argument needs to be on a separate line, which allows
-spaces and other special characters to be used without needing shell-style escapes:
-```ini
-[ansible]
-molecule_opts =
-    --debug
-```
-
-If you use a global molecule configuration file at the project level
-(`<project_name>/.config/molecule/config.yml`), it will be detected
-automatically and will be the reference in order to determine the default driver
-name used for your molecule scenarios.
-
-If you want pass one or multiple base configuration file(s) to
-"[molecule](https://github.com/ansible-community/molecule)", add the option
-"molecule\_config\_files" to the Ansible section and list them as follows.
-```ini
-[ansible]
-molecule_opts =
-    --debug
-molecule_config_files =
-    {toxinidir}/tests/molecule_one.yml
-    {toxinidir}/tests/molecule_two.yml
-```
-
-Sometimes there are paths you will want to ignore running tests in. Particularly if you
-install other roles or collections underneath of your source tree. You can ignore these paths
-with the following tox.ini bit:
-```ini
-[ansible]
-ignore_path =
-    dist
-    generated_paths_to_ignore
-```
-This field is very simple, and should list folder names, anywhere in the tree, to ignore.
-It does not do specialized glob matching or sub-path matching at this time. Anything living under
-any folder whose name appears in this list will be ignored.
-
-To test with ansible versions 2.7.\*, 2.8.\*, and 2.9.\* across every role and scenario:
-```ini
-[ansible]
-ansible = 2.{7,8,9}
-```
-
-Now the output will look like this:
-```bash
-$ tox -l
-ansible27-lint_all
-ansible27-one
-ansible27-roles-my_role-otherscenario
-ansible27-roles-my_role-somescenario
-ansible27-roles-other_role-basic
-ansible27-roles-other_role-default
-ansible27-roles-other_role-somescenario
-ansible27-two
-ansible28-lint_all
-ansible28-one
-ansible28-roles-my_role-otherscenario
-ansible28-roles-my_role-somescenario
-ansible28-roles-other_role-basic
-ansible28-roles-other_role-default
-ansible28-roles-other_role-somescenario
-ansible28-two
-ansible29-lint_all
-ansible29-one
-ansible29-roles-my_role-otherscenario
-ansible29-roles-my_role-somescenario
-ansible29-roles-other_role-basic
-ansible29-roles-other_role-default
-ansible29-roles-other_role-somescenario
-ansible29-two
-python
-```
-
-If you want multiple Python versions, you can also specify that:
-
-```ini
-[ansible]
-python = 2.7,3.8
-```
+To run tests with multiple environments, simply add the environment names to the command:
 
 ```bash
-$ tox -l
-py27-lint_all
-py27-one
-py27-roles-my_role-otherscenario
-py27-roles-my_role-somescenario
-py27-roles-other_role-basic
-py27-roles-other_role-default
-py27-roles-other_role-somescenario
-py27-two
-py38-lint_all
-py38-one
-py38-roles-my_role-otherscenario
-py38-roles-my_role-somescenario
-py38-roles-other_role-basic
-py38-roles-other_role-default
-py38-roles-other_role-somescenario
-py38-two
-python
+tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible --conf tox-ansible.ini
 ```
 
-Under the hood
---------------
+To run all tests of a specific type in all available environments, use the factor `-f` flag:
 
-The plugin will glob the current directory and look for any files matching the glob pattern
-`molecule/*/molecule.yml` and make the assumption that these represent Molecule scenarios.
+```bash
+tox -f unit --ansible -p auto --conf tox-ansible.ini
+```
 
-It then generates new environments for any discovered scenarios that do not already exist
-in the tox environment list. These names will include the full path to the scenario folder
-with the exception of the `molecule` directory name. So a scenario rooted at `roles/foo/molecule/bar`
-will be named `roles-foo-bar`. Similarly one that lives at `molecule/bar` will be named just `bar`.
+To run all tests across all available environments:
 
-Generated environments are added to the default execution envlist with a dependency on
-Molecule. This list will be expanded by any configured matrix axes with appropriate dependencies and
-configurations made. Each one will execute the command "molecule test -s {scenario}" if it passes the
-filter step.
+```bash
+tox --ansible -p auto --conf tox-ansible.ini
+```
 
-Environments are configured with the following values, by default, unless they are explicitly specified
-in the tox.ini file:
-* dependencies
-* commands
-* working directory
-* basepython (if specified in the `[ansible]` expand matrix)
-By use of the defined factors in a name, some values can be given in the general tox environment config
-section, but the above values will be explicitly specified. So do not rely on setting those values
-through the use of factor expansion in a generic section.
+Note: The `-p auto` flag will run multiple tests in parallel.
+Note: The specific python interpreter will need to be pre-installed on you system, e.g.:
+
+```bash
+sudo dnf install python3.9
+```
+
+To review the specific commands and configuration for each of the integration, sanity, and unit factors:
+
+```bash
+tox config --ansible --conf tox-ansible.ini
+```
+
+## Configuration
+
+`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty, but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword is available:
+
+```ini
+# tox-ansible.ini
+[ansible]
+skip =
+    2.9
+    devel
+```
+
+This will skip tests in any environment that use ansible 2.9 or the devel branch. The list of strings are used for a simple string in string comparison of environment names.
+
+## Overriding the configuration
+
+Any configuration in either the `[testenv]` section or am environment section `[testenv:integration-py3.11-{devel,milestone}]` can override some or all of the `tox-ansible` environment configurations.
+
+For example
+
+```ini
+
+[testenv]
+commands_pre =
+    true
+
+[testenv:integration-py3.11-{devel,milestone}]
+commands =
+    true
+```
+
+will result in:
+
+```ini
+# tox-ansible.ini
+[testenv:integration-py3.11-devel]
+commands_pre = true
+commands = true
+```
+
+Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
+
+## Usage in a CI/CD pipeline
+
+The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox-ansible.ini` file.
+
+Each environment will be run in a separate job. The workflow will run all jobs in parallel.
+
+The github matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
+
+A sample use of the github workflow might look like this:
+
+```yaml
+name: Test collection
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  tox-ansible:
+    uses: tox-dev/tox-ansible/.github/workflows/run.yml@main
+```
+
+Sample `json`
+
+```json
+[
+  // ...
+  {
+    "description": "Integration tests using ansible-core devel and python 3.11",
+    "factors": ["integration", "py3.11", "devel"],
+    "name": "integration-py3.11-devel",
+    "python": "3.11"
+  }
+  // ...
+]
+```
+
+## How does it work?
+
+`tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
+
+`tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATHS` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATHS` environment variable into the collection loader so ansible-core can locate the collection.
+
+`pytest` is ued to run both the `unit` and `integration tests`.
+`ansible-test sanity` is used to run the `sanity` tests.
+
+For a full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environments variables being set and passed, see the following:
+
+- [integration](docs/integration.ini)
+- [sanity](docs/sanity.ini)
+- [unit](docs/unit.ini)
+
+See the [tox documentation](https://tox.readthedocs.io/en/latest/) for more information on tox.
+
+## License
+
+MIT
