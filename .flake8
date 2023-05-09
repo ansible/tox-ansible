@@ -33,6 +33,8 @@ extend-exclude =
   pip-wheel-metadata,
   # adjacent venv
   venv
+  # project tox directory
+  .tox
 
 # IMPORTANT: avoid using ignore option, always use extend-ignore instead
 # Completely and unconditionally ignore the following errors:
