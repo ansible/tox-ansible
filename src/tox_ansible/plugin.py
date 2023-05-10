@@ -45,7 +45,7 @@ TOX_WORK_DIR = Path()
 OUR_DEPS = [
     "pytest",
     "pytest-xdist",
-    "git+https://github.com/ansible-community/pytest-ansible.git",
+    "pytest-ansible",
 ]
 
 T = TypeVar("T", bound=ConfigSet)
@@ -212,9 +212,7 @@ def desc_for_env(env: str) -> str:
     test_type, python, core = env.split("-")
     ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
 
-    description = (
-        f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
-    )
+    description = f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
     return description
 
 
@@ -240,7 +238,9 @@ def add_ansible_matrix(state: State) -> EnvList:
     )
     env_list = StrConvert().to_env_list(ENV_LIST)
     env_list.envs = [
-        env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
+        env
+        for env in env_list.envs
+        if all(skip not in env for skip in ansible_config["skip"])
     ]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.append(
@@ -429,7 +429,9 @@ def conf_commands_pre(
     # Define some directories"
     envtmpdir = env_conf["envtmpdir"]
     collections_root = f"{envtmpdir}/collections"
-    collection_installed_at = f"{collections_root}/ansible_collections/{c_namespace}/{c_name}"
+    collection_installed_at = (
+        f"{collections_root}/ansible_collections/{c_namespace}/{c_name}"
+    )
     galaxy_build_dir = f"{envtmpdir}/collection_build"
     end_group = "echo ::endgroup::"
 
