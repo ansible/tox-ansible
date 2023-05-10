@@ -45,7 +45,7 @@ TOX_WORK_DIR = Path()
 OUR_DEPS = [
     "pytest",
     "pytest-xdist",
-    "git+https://github.com/ansible-community/pytest-ansible.git",
+    "pytest-ansible",
 ]
 
 T = TypeVar("T", bound=ConfigSet)
