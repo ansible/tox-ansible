@@ -1,6 +1,5 @@
 ansible-core
 coverage
-devpi_process
 pre-commit
 pytest
 pytest_mock
