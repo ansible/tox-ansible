@@ -1,3 +1,4 @@
+ansible-core
 coverage
 devpi_process
 pre-commit
