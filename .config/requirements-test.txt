@@ -1,6 +1,5 @@
 ansible-core
 coverage
-pre-commit
 pytest
 pytest_mock
 pytest-xdist
