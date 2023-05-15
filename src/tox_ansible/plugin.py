@@ -37,9 +37,9 @@ ALLOWED_EXTERNALS = [
 ]
 ENV_LIST = """
 {integration, sanity, unit}-py3.8-{2.9, 2.12, 2.13}
-{integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, milestone, devel}
-{integration, sanity, unit}-py3.10-{2.12, 2.13, 2.14, milestone, devel}
-{integration, sanity, unit}-py3.11-{2.14, milestone, devel}
+{integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, 2.15, milestone, devel}
+{integration, sanity, unit}-py3.10-{2.12, 2.13, 2.14, 2.15, milestone, devel}
+{integration, sanity, unit}-py3.11-{2.14, 2.15, milestone, devel}
 """
 TOX_WORK_DIR = Path()
 OUR_DEPS = [
