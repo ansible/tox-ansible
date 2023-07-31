@@ -38,7 +38,7 @@ ALLOWED_EXTERNALS = [
 ENV_LIST = """
 {integration, sanity, unit}-py3.7-2.9
 {integration, sanity, unit}-py3.8-{2.9, 2.12, 2.13}
-{integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, 2.15, milestone, devel}
+{integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, 2.15}
 {integration, sanity, unit}-py3.10-{2.12, 2.13, 2.14, 2.15, milestone, devel}
 {integration, sanity, unit}-py3.11-{2.14, 2.15, milestone, devel}
 """
@@ -534,5 +534,5 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     """
     envtmpdir = env_conf["envtmpdir"]
     setenv = []
-    setenv.append(f"ANSIBLE_COLLECTIONS_PATHS={envtmpdir}/collections/")
+    setenv.append(f"ANSIBLE_COLLECTIONS_PATH={envtmpdir}/collections/")
     return "\n".join(setenv)
