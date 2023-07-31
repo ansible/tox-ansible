@@ -536,5 +536,5 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     """
     envtmpdir = env_conf["envtmpdir"]
     setenv = []
-    setenv.append(f"ANSIBLE_COLLECTIONS_PATHS={envtmpdir}/collections/")
+    setenv.append(f"ANSIBLE_COLLECTIONS_PATH={envtmpdir}/collections/")
     return "\n".join(setenv)
