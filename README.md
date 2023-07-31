@@ -199,7 +199,7 @@ Sample `json`
 
 `tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
 
-`tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATHS` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATHS` environment variable into the collection loader so ansible-core can locate the collection.
+`tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
 `pytest` is ued to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
