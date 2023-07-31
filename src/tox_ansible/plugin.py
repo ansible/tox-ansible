@@ -400,9 +400,7 @@ def conf_commands_for_sanity(
     commands = []
     envtmpdir = env_conf["envtmpdir"]
 
-    py_ver = env_conf["basepython"][0].replace("py", "")
-    if "." not in py_ver:
-        py_ver = f"{py_ver[0]}.{py_ver[1:]}"
+    py_ver = env_conf.name.split("-")[1].replace("py", "")
 
     command = f"ansible-test sanity --local --requirements --python {py_ver}"
     ch_dir = f"cd {envtmpdir}/collections/ansible_collections/{c_namespace}/{c_name}"
@@ -536,5 +534,5 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     """
     envtmpdir = env_conf["envtmpdir"]
     setenv = []
-    setenv.append(f"ANSIBLE_COLLECTIONS_PATHS={envtmpdir}/collections/")
+    setenv.append(f"ANSIBLE_COLLECTIONS_PATH={envtmpdir}/collections/")
     return "\n".join(setenv)
