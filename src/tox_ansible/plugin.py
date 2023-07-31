@@ -1,6 +1,8 @@
 # cspell:ignore envlist
 """tox plugin to emit a github matrix."""
 
+from __future__ import annotations
+
 import json
 import logging
 import os
@@ -10,19 +12,22 @@ import uuid
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import List, Tuple, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import yaml
 
-from tox.config.cli.parser import ToxParser
 from tox.config.loader.memory import MemoryLoader
 from tox.config.loader.section import Section
 from tox.config.loader.str_convert import StrConvert
 from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
-from tox.config.types import EnvList
 from tox.plugin import impl
-from tox.session.state import State
 from tox.tox_env.python.api import PY_FACTORS_RE
+
+
+if TYPE_CHECKING:
+    from tox.config.cli.parser import ToxParser
+    from tox.config.types import EnvList
+    from tox.session.state import State
 
 
 ALLOWED_EXTERNALS = [
@@ -59,7 +64,7 @@ class AnsibleConfigSet(ConfigSet):
         """Register the ansible configuration."""
         self.add_config(
             "skip",
-            of_type=List[str],
+            of_type=list,
             default=[],
             desc="ansible configuration",
         )
@@ -73,13 +78,13 @@ class AnsibleTestConf:  # pylint: disable=too-many-instance-attributes
     deps: str
     setenv: str
     skip_install: bool
-    allowlist_externals: List[str] = field(default_factory=list)
-    commands_pre: List[str] = field(default_factory=list)
-    commands: List[str] = field(default_factory=list)
-    passenv: List[str] = field(default_factory=list)
+    allowlist_externals: list[str] = field(default_factory=list)
+    commands_pre: list[str] = field(default_factory=list)
+    commands: list[str] = field(default_factory=list)
+    passenv: list[str] = field(default_factory=list)
 
 
-def custom_sort(string: str) -> Tuple[int, ...]:
+def custom_sort(string: str) -> tuple[int, ...]:
     """Convert a env name into a tuple of ints.
 
     In the case of a string, use the ord() of the first two characters.
@@ -94,7 +99,7 @@ def custom_sort(string: str) -> Tuple[int, ...]:
             continue
         try:
             converted.append(int(part))
-        except ValueError:
+        except ValueError:  # noqa: PERF203
             num_part = "".join((str(ord(char)).rjust(3, "0")) for char in part[0:2])
             converted.append(int(num_part))
     return tuple(converted)
@@ -308,7 +313,7 @@ def generate_gh_matrix(env_list: EnvList) -> None:
         fileh.write(encoded)
 
 
-def get_collection_name(galaxy_path: Path) -> Tuple[str, str]:
+def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
     """Extract collection information from the galaxy.yml file.
 
     :param galaxy_path: The path to the galaxy.yml file.
@@ -337,7 +342,7 @@ def conf_commands(
     c_namespace: str,
     env_conf: EnvConfigSet,
     test_type: str,
-) -> List[str]:
+) -> list[str]:
     """Build the commands for the tox environment.
 
     :param c_name: The collection name.
@@ -365,7 +370,7 @@ def conf_commands(
 def conf_commands_for_integration_unit(
     env_conf: EnvConfigSet,
     test_type: str,
-) -> List[str]:
+) -> list[str]:
     """Build the commands for integration and unit tests.
 
     :param env_conf: The tox environment configuration object.
@@ -389,7 +394,7 @@ def conf_commands_for_sanity(
     c_name: str,
     c_namespace: str,
     env_conf: EnvConfigSet,
-) -> List[str]:
+) -> list[str]:
     """Add commands for sanity tests.
 
     :param c_name: The collection name.
@@ -413,7 +418,7 @@ def conf_commands_pre(
     env_conf: EnvConfigSet,
     c_name: str,
     c_namespace: str,
-) -> List[str]:
+) -> list[str]:
     """Build and install the collection.
 
     :param env_conf: The tox environment configuration object.
@@ -516,7 +521,7 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     return "\n".join(deps)
 
 
-def conf_passenv() -> List[str]:
+def conf_passenv() -> list[str]:
     """Build the pass environment variables for the tox environment.
 
     :return: The pass environment variables.
