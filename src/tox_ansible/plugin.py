@@ -534,10 +534,17 @@ def conf_passenv() -> list[str]:
 def conf_setenv(env_conf: EnvConfigSet) -> str:
     """Build the set environment variables for the tox environment.
 
+    ansible 2.9 did not support the ANSIBLE_COLLECTION_PATH environment variable
+    ansible 2.16 has it marked for deprecation in 2.19
+
     :param env_conf: The environment configuration.
     :return: The set environment variables.
     """
+    if env_conf.name.endswith("2.9"):
+        envvar_name = "ANSIBLE_COLLECTIONS_PATHS"
+    else:
+        envvar_name = "ANSIBLE_COLLECTIONS_PATH"
     envtmpdir = env_conf["envtmpdir"]
     setenv = []
-    setenv.append(f"ANSIBLE_COLLECTIONS_PATH={envtmpdir}/collections/")
+    setenv.append(f"{envvar_name}={envtmpdir}/collections/")
     return "\n".join(setenv)
