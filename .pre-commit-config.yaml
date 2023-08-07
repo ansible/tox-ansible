@@ -19,13 +19,13 @@ repos:
           - --py36-plus
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-    rev: v1.5.1
+    rev: v1.5.3
     hooks:
       - id: remove-tabs
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     # keep it before yamllint
-    rev: v3.0.0
+    rev: v3.0.1
     hooks:
       - id: prettier
         always_run: true
@@ -45,7 +45,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.0.280"
+    rev: "v0.0.282"
     hooks:
       - id: ruff
         args:
