@@ -6,7 +6,7 @@ from ..conftest import ToxEnvironment
 def test_environment_config(
     skip_environment: ToxEnvironment,
 ) -> None:
-    """Test that the user skip config is used for enviroment generation.
+    """Test that the user skip config is used for environment generation.
 
     :param skip_environment: A dict representing the environment configuration
     """
