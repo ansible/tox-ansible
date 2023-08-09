@@ -59,8 +59,8 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
         basic_dir = cwd / "fixtures" / "integration" / "test_basic"
         try:
             cmd = (
-                f"{sys.executable} -m tox config --ansible ",
-                f"--root {basic_dir} --conf tox-ansible.ini",
+                f"{sys.executable} -m tox config --ansible "
+                f"--root {basic_dir} --conf tox-ansible.ini"
             )
             proc = subprocess.run(
                 args=cmd,
