@@ -52,8 +52,8 @@ jobs:
         with:
           python-version: ${{ matrix.entry.python }}
 
-      - name: Install deps
-        run: python -m pip install -r test-requirements.txt
+      - name: Install tox-ansible, includes tox
+        run: python -m pip install tox-ansible
 
       - name: Run tox test
         run: python -m tox --ansible -e ${{ matrix.entry.name }} --conf tox-ansible.ini
