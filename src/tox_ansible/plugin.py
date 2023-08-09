@@ -536,6 +536,7 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
 
     ansible 2.9 did not support the ANSIBLE_COLLECTION_PATH environment variable
     ansible 2.16 has it marked for deprecation in 2.19
+    Set the XDG_CACHE_HOME to the environment directory to isolate it
 
     :param env_conf: The environment configuration.
     :return: The set environment variables.
@@ -545,6 +546,9 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     else:
         envvar_name = "ANSIBLE_COLLECTIONS_PATH"
     envtmpdir = env_conf["envtmpdir"]
-    setenv = []
-    setenv.append(f"{envvar_name}={envtmpdir}/collections/")
+
+    setenv = [
+        f"{envvar_name}={envtmpdir}/collections/",
+        f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache",
+    ]
     return "\n".join(setenv)
