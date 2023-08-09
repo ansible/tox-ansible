@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import configparser
+import os
 import subprocess
 import sys
 
@@ -62,12 +63,17 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
                 f"{sys.executable} -m tox config --ansible "
                 f"--root {basic_dir} --conf tox-ansible.ini"
             )
+            env = os.environ
+            env.pop("TOX_ENV_DIR", None)
+            env.pop("TOX_ENV_NAME", None)
+            env.pop("TOX_WORK_DIR", None)
+
             proc = subprocess.run(
                 args=cmd,
                 capture_output=True,
                 check=True,
                 cwd=str(basic_dir),
-                env={},
+                env=env,
                 shell=True,
                 text=True,
             )
