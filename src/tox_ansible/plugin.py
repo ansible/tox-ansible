@@ -67,6 +67,12 @@ class AnsibleConfigSet(ConfigSet):
             default=[],
             desc="ansible configuration",
         )
+        self.add_config(
+            "skip_collection_build_install",
+            of_type=List[str],
+            default=[],
+            desc="Skip the build and install collection",
+        )
 
 
 @dataclass
@@ -182,6 +188,9 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     ]:
         return
 
+    ansible_config = get_ansible_config(state)
+    skip_collection_for = ansible_config["skip_collection_build_install"]
+
     galaxy_path = TOX_WORK_DIR / "galaxy.yml"
     c_name, c_namespace = get_collection_name(galaxy_path=galaxy_path)
 
@@ -191,6 +200,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             c_name=c_name,
             c_namespace=c_namespace,
             env_conf=env_conf,
+            skip_collection_for=skip_collection_for,
         ),
         commands=conf_commands(
             c_name=c_name,
@@ -201,7 +211,10 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         description=desc_for_env(env_conf.name),
         deps=conf_deps(env_conf=env_conf, test_type=factors[0]),
         passenv=conf_passenv(),
-        setenv=conf_setenv(env_conf),
+        setenv=conf_setenv(
+            env_conf=env_conf,
+            skip_collection_for=skip_collection_for,
+        ),
         skip_install=True,
     )
     loader = MemoryLoader(**asdict(conf))
@@ -237,12 +250,7 @@ def add_ansible_matrix(state: State) -> EnvList:
     :param state: The state object.
     :return: The environment list.
     """
-    ansible_config = state.conf.get_section_config(
-        Section(None, "ansible"),
-        base=[],
-        of_type=AnsibleConfigSet,
-        for_env=None,
-    )
+    ansible_config = get_ansible_config(state)
     env_list = StrConvert().to_env_list(ENV_LIST)
     env_list.envs = [
         env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
@@ -252,6 +260,21 @@ def add_ansible_matrix(state: State) -> EnvList:
         MemoryLoader(env_list=env_list),
     )
     return env_list
+
+
+def get_ansible_config(state: State) -> AnsibleConfigSet:
+    """Retrieve the ansible configuration for the ini file.
+
+    :param state: The state object
+    :returns: The ansible configuration
+    """
+    ansible_config = state.conf.get_section_config(
+        Section(None, "ansible"),
+        base=[],
+        of_type=AnsibleConfigSet,
+        for_env=None,
+    )
+    return ansible_config
 
 
 def generate_gh_matrix(env_list: EnvList) -> None:
@@ -417,17 +440,23 @@ def conf_commands_pre(
     env_conf: EnvConfigSet,
     c_name: str,
     c_namespace: str,
+    skip_collection_for: list[str],
 ) -> list[str]:
     """Build and install the collection.
 
     :param env_conf: The tox environment configuration object.
     :param c_name: The collection name.
     :param c_namespace: The collection namespace.
+    :param skip_collection_for: Skip collection install for these environments
     :return: The commands to pre run.
     """
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
-    commands = []
+
+    commands: list[str] = []
+
+    if any(skip in env_conf.name for skip in skip_collection_for):
+        return commands
 
     # Define some directories"
     envtmpdir = env_conf["envtmpdir"]
@@ -530,7 +559,7 @@ def conf_passenv() -> list[str]:
     return passenv
 
 
-def conf_setenv(env_conf: EnvConfigSet) -> str:
+def conf_setenv(env_conf: EnvConfigSet, skip_collection_for: list[str]) -> str:
     """Build the set environment variables for the tox environment.
 
     ansible 2.9 did not support the ANSIBLE_COLLECTION_PATH environment variable
@@ -538,16 +567,20 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     Set the XDG_CACHE_HOME to the environment directory to isolate it
 
     :param env_conf: The environment configuration.
+    :param skip_collection_for: Skip collection install for these environments
+
     :return: The set environment variables.
     """
+    setenv = [f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache"]
+
+    if any(skip in env_conf.name for skip in skip_collection_for):
+        return "\n".join(setenv)
+
     if env_conf.name.endswith("2.9"):
         envvar_name = "ANSIBLE_COLLECTIONS_PATHS"
     else:
         envvar_name = "ANSIBLE_COLLECTIONS_PATH"
     envtmpdir = env_conf["envtmpdir"]
 
-    setenv = [
-        f"{envvar_name}={envtmpdir}/collections/",
-        f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache",
-    ]
+    setenv.append(f"{envvar_name}={envtmpdir}/collections/")
     return "\n".join(setenv)

@@ -13,7 +13,7 @@ import pytest
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..conftest import BasicEnvironment
+    from ..conftest import ToxEnvironment
 
 
 def test_ansible_environments(module_fixture_dir: Path) -> None:
@@ -72,7 +72,7 @@ def test_gh_matrix(
 
 
 def test_environment_config(
-    basic_environment: BasicEnvironment,
+    basic_environment: ToxEnvironment,
 ) -> None:
     """Test that the ansible environment configurations are generated.
 

@@ -113,7 +113,9 @@ tox config --ansible --conf tox-ansible.ini
 
 ## Configuration
 
-`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty, but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword is available:
+`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty, but should be present. In addition to all `tox` supported keywords the `ansible` section and some plugin specific keywords are additionally available.
+
+**Skipping some environments:**
 
 ```ini
 # tox-ansible.ini
@@ -123,7 +125,18 @@ skip =
     devel
 ```
 
-This will skip tests in any environment that use ansible 2.9 or the devel branch. The list of strings are used for a simple string in string comparison of environment names.
+This will skip tests in any environment that use ansible 2.9 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
+
+**Skipping the collection build and install process:**
+
+```ini
+# tox-ansible.ini
+[ansible]
+skip_collection_build_install =
+    integration
+```
+
+This will skip the build and installation of the collection for all `integration-*` environments. The `ANSIBLE_COLLECTIONS_PATH` environment variable is also not set for these environments. This setting is useful if the specific approach for running certain tests includes the collection build. One example here would be having delegated the collection build and installation to molecule within the ephemeral scenario directory. The list of strings is used for a simple string in string comparison of environment names.
 
 ## Overriding the configuration
 
