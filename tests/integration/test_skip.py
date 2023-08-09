@@ -1,4 +1,4 @@
-"""Test the use of skip provided by the user"""
+"""Test the use of skip provided by the user."""
 
 from ..conftest import ToxEnvironment
 
@@ -7,7 +7,6 @@ def test_environment_config(
     skip_environment: ToxEnvironment,
 ) -> None:
     """Test that the user skip config is used for enviroment generation.
-
 
     :param skip_environment: A dict representing the environment configuration
     """
