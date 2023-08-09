@@ -1,10 +1,19 @@
 """Basic tests."""
+
+from __future__ import annotations
+
 import json
 import subprocess
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from ..conftest import BasicEnvironment
 
 
 def test_ansible_environments(module_fixture_dir: Path) -> None:
@@ -60,3 +69,26 @@ def test_gh_matrix(
         assert isinstance(entry["factors"], list)
         assert isinstance(entry["name"], str)
         assert isinstance(entry["python"], str)
+
+
+def test_environment_config(
+    basic_environment: BasicEnvironment,
+) -> None:
+    """Test that the ansible environment configurations are generated.
+
+    Ensure the environment configurations are generated and look for information unlikely to change
+    as a basic smoke test.
+
+    :param basic_environment: A dict representing the environment configuration
+    """
+    assert "py3" in basic_environment.name
+
+    config = basic_environment.config
+
+    assert config["allowlist_externals"]
+    assert config["commands_pre"]
+    assert config["commands"]
+    assert config["pass_env"]
+
+    assert "https://github.com/ansible/ansible/archive" in config["deps"]
+    assert "XDG_CACHE_HOME" in config["set_env"]
