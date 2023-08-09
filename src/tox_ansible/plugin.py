@@ -98,7 +98,7 @@ def custom_sort(string: str) -> tuple[int, ...]:
             continue
         try:
             converted.append(int(part))
-        except ValueError:  # noqa: PERF203
+        except ValueError:
             num_part = "".join((str(ord(char)).rjust(3, "0")) for char in part[0:2])
             converted.append(int(num_part))
     return tuple(converted)
