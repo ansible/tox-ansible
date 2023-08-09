@@ -5,7 +5,7 @@ from __future__ import annotations
 import configparser
 import subprocess
 import sys
-import os
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
