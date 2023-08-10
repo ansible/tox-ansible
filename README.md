@@ -249,6 +249,7 @@ def test_integration(molecule_scenario: MoleculeScenario) -> None:
     proc = molecule_scenario.test()
     assert proc.returncode == 0
 ```
+
 The `molecule_scenario` fixture parametrizes the `molecule` scenarios found within the collection and creates an individual `pytest` test for each which will be run during any `integration-*` environment.
 
 This approach provides the flexibility of running the `molecule` scenarios directly with `molecule`, `pytest` or `tox`. Additionally, presented as native `pytest` tests, the `molecule` scenarios should show in the `pytest` test tree in the user's IDE.
