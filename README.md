@@ -187,7 +187,7 @@ Sample `json`
 
 Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a powerful tool to run `molecule` scenarios across a matrix of ansible and python versions.
 
-This can be accomplished by presenting molecule scenarios as integration tests available through `pytest` using the [pytest-ansible](https://github.com/ansible-community/pytest-ansible) pytest plugin, which is installed when `tox-ansible` is installed.
+This can be accomplished by presenting molecule scenarios as integration tests available through `pytest` using the [pytest-ansible](https://github.com/ansible-community/pytest-ansible) plugin, which is installed when `tox-ansible` is installed.
 
 Assuming the following collection directory structure:
 
@@ -228,9 +228,9 @@ namespace.name
 └── tox.ini
 ```
 
-Individual molecule scenarios can be added to collection's extension directory to test playbooks, roles, and integration targets.
+Individual `molecule` scenarios can be added to the collection's extension directory to test playbooks, roles, and integration targets.
 
-In order to present each `molecule` scearios as an invididual `pytest` test a new `helper` file is added.
+In order to present each `molecule` sceario as an invididual `pytest` test a new `helper` file is added.
 
 ```python
 # tests/integration/test_integration.py
