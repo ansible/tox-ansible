@@ -230,7 +230,7 @@ namespace.name
 
 Individual `molecule` scenarios can be added to the collection's extension directory to test playbooks, roles, and integration targets.
 
-In order to present each `molecule` sceario as an invididual `pytest` test a new `helper` file is added.
+In order to present each `molecule` scenario as an individual `pytest` test a new `helper` file is added.
 
 ```python
 # tests/integration/test_integration.py
@@ -275,7 +275,7 @@ See the [tox documentation](https://tox.readthedocs.io/en/latest/) for more info
 
 Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
 
-Version 1 of the plugin had native support for molecule. Please see the "Running molecule scnearios" above for an alternative approach.
+Version 1 of the plugin had native support for molecule. Please see the "Running molecule scenarios" above for an alternative approach.
 
 ## License
 
