@@ -184,6 +184,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
 
     galaxy_path = TOX_WORK_DIR / "galaxy.yml"
     c_name, c_namespace = get_collection_name(galaxy_path=galaxy_path)
+    pos_args = state.conf.pos_args(to_path=None)
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
@@ -196,6 +197,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             c_name=c_name,
             c_namespace=c_namespace,
             env_conf=env_conf,
+            pos_args=pos_args,
             test_type=factors[0],
         ),
         description=desc_for_env(env_conf.name),
@@ -340,19 +342,22 @@ def conf_commands(
     c_name: str,
     c_namespace: str,
     env_conf: EnvConfigSet,
+    pos_args: tuple[str, ...] | None,
     test_type: str,
 ) -> list[str]:
     """Build the commands for the tox environment.
 
     :param c_name: The collection name.
     :param c_namespace: The collection namespace.
-    :param test_type: The test type, either "integration", "unit", or "sanity".
     :param env_conf: The tox environment configuration object.
+    :param pos_args: Positional arguments passed to tox command.
+    :param test_type: The test type, either "integration", "unit", or "sanity".
     :return: The commands to run.
     """
     if test_type in ["integration", "unit"]:
         return conf_commands_for_integration_unit(
             env_conf=env_conf,
+            pos_args=pos_args,
             test_type=test_type,
         )
     if test_type == "sanity":
@@ -360,6 +365,7 @@ def conf_commands(
             c_name=c_name,
             c_namespace=c_namespace,
             env_conf=env_conf,
+            pos_args=pos_args,
         )
     err = f"Unknown test type {test_type}"
     logging.critical(err)
@@ -368,19 +374,23 @@ def conf_commands(
 
 def conf_commands_for_integration_unit(
     env_conf: EnvConfigSet,
+    pos_args: tuple[str, ...] | None,
     test_type: str,
 ) -> list[str]:
     """Build the commands for integration and unit tests.
 
     :param env_conf: The tox environment configuration object.
     :param test_type: The test type, either "integration" or "unit".
+    :param pos_args: Positional arguments passed to tox command.
     :return: The command to run.
     """
     commands = []
     envtmpdir = env_conf["envtmpdir"]
+    args = f" {' '.join(pos_args)} " if pos_args else " "
+
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python -m pytest --ansible-unit-inject-only {TOX_WORK_DIR}/tests/{test_type}"
+    command = f"python -m pytest --ansible-unit-inject-only{args}{TOX_WORK_DIR}/tests/{test_type}"
     unit_ch_dir = f"{envtmpdir}/collections/"
     if test_type == "unit":
         commands.append(f"bash -c 'cd {unit_ch_dir} && {command}'")
@@ -393,20 +403,24 @@ def conf_commands_for_sanity(
     c_name: str,
     c_namespace: str,
     env_conf: EnvConfigSet,
+    pos_args: tuple[str, ...] | None,
 ) -> list[str]:
     """Add commands for sanity tests.
 
     :param c_name: The collection name.
     :param c_namespace: The collection namespace.
     :param env_conf: The tox environment configuration object.
+    :param pos_args: Positional arguments passed to tox command.
     :return: The commands to run.
     """
     commands = []
     envtmpdir = env_conf["envtmpdir"]
 
+    args = f" {' '.join(pos_args)}" if pos_args else ""
+
     py_ver = env_conf.name.split("-")[1].replace("py", "")
 
-    command = f"ansible-test sanity --local --requirements --python {py_ver}"
+    command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
     ch_dir = f"cd {envtmpdir}/collections/ansible_collections/{c_namespace}/{c_name}"
     full_command = f"bash -c '{ch_dir} && {command}'"
     commands.append(full_command)
