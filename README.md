@@ -1,17 +1,5 @@
 # tox-ansible
 
-## Note to version 1.x users
-
-Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
-
-The rewritten plugin will feature additional options for facilitating running tests of any repository with Ansible content:
-
-Ability to run molecule scenarios (planned)
-
-Close-to-zero configuration goals (in progress)
-
-Focus on testing collections (initial implementation)
-
 ## Introduction
 
 `tox-ansible` is a utility designed to simplify the testing of ansible content collections.
@@ -194,6 +182,75 @@ Sample `json`
   // ...
 ]
 ```
+## Testing molecule scenarios
+
+Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a power tool to run molecule scenarios across a matrix of ansible and python versions.
+
+This can be accomplished by presenting molecule scenarios as integration tests available through `pytest` using the [pytest-ansible](https://github.com/ansible-community/pytest-ansible) pytest plugin, which is installed when `tox-ansible` is installed.
+
+Assuming the following collection directory structure:
+
+```
+namespace.name
+├── extensions
+│   ├── molecule
+│   │   ├── playbook
+│   │   │   ├── create.yml
+│   │   │   ├── converge.yml
+│   │   │   ├── molecule.yml
+│   │   │   └── verify.yml
+│   │   ├── plugins
+│   │   │   ├── create.yml
+│   │   │   ├── converge.yml
+│   │   │   ├── molecule.yml
+│   │   │   └── verify.yml
+│   │   ├── targets
+│   │   │   ├── create.yml
+│   │   │   ├── converge.yml
+│   │   │   ├── molecule.yml
+│   │   │   └── verify.yml
+├── playbooks
+│   └── site.yaml
+├── plugins
+│   ├── action
+│   │   └── action_plugin.py
+│   ├── modules
+│   │   └── action_plugin.py
+├── tests
+│   ├── integration
+|   |   ├── targets
+│   │   │   ├── success
+│   │   │   │   └── tasks
+│   │   │   │       └── main.yaml
+│   │   └── test_integration.py
+├── tox-ansible.ini
+└── tox.ini
+```
+
+Individual molecule scenarios can be added to collection's extension directory to test playbooks, roles, and integration targets.
+
+In order to present each `molecule` scearios as an invididual `pytest` test a new `helper` file is added.
+
+```python
+# tests/integration/test_integration.py
+
+"""Tests for molecule scenarios."""
+from __future__ import absolute_import, division, print_function
+
+from pytest_ansible.molecule import MoleculeScenario
+
+
+def test_integration(molecule_scenario: MoleculeScenario) -> None:
+    """Run molecule for each scenario.
+
+    :param molecule_scenario: The molecule scenario object
+    """
+    proc = molecule_scenario.test()
+    assert proc.returncode == 0
+```
+The `molecule_scenario` fixture parametrizes the `molecule` scenarios found within the collection and creates an individual `pytest` test for each which will be run during any `integration-*` environment.
+
+This approach provides the flexibility of running the `molecule` scenarios directly with `molecule`, `pytest` or `tox`. Additionally, presented as native `pytest` tests, the `molecule` scenarios should show in the `pytest` test tree in the user's IDE.
 
 ## How does it work?
 
@@ -211,6 +268,12 @@ For a full configuration examples for each of the sanity, integration, and unit 
 - [unit](docs/unit.ini)
 
 See the [tox documentation](https://tox.readthedocs.io/en/latest/) for more information on tox.
+
+## Note to version 1.x users
+
+Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
+
+Version 1 of the plugin had native support for molecule. Please see the "Running molecule scnearios" above for an alternative approach.
 
 ## License
 
