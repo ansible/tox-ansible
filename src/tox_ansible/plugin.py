@@ -356,7 +356,6 @@ def conf_commands(
     """
     if test_type in ["integration", "unit"]:
         return conf_commands_for_integration_unit(
-            env_conf=env_conf,
             pos_args=pos_args,
             test_type=test_type,
         )
@@ -373,30 +372,21 @@ def conf_commands(
 
 
 def conf_commands_for_integration_unit(
-    env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
     test_type: str,
 ) -> list[str]:
     """Build the commands for integration and unit tests.
 
-    :param env_conf: The tox environment configuration object.
     :param test_type: The test type, either "integration" or "unit".
     :param pos_args: Positional arguments passed to tox command.
     :return: The command to run.
     """
-    commands = []
-    envtmpdir = env_conf["envtmpdir"]
     args = f" {' '.join(pos_args)} " if pos_args else " "
 
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
     command = f"python -m pytest --ansible-unit-inject-only{args}{TOX_WORK_DIR}/tests/{test_type}"
-    unit_ch_dir = f"{envtmpdir}/collections/"
-    if test_type == "unit":
-        commands.append(f"bash -c 'cd {unit_ch_dir} && {command}'")
-    else:
-        commands.append(command)
-    return commands
+    return [command]
 
 
 def conf_commands_for_sanity(
