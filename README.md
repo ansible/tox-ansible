@@ -141,6 +141,22 @@ commands = true
 
 Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
 
+## Passing command line arguments to ansible-test / pytest
+
+The behavior of the `ansible-test` (for `sanity-*` environments) or `pytest` (for `unit-*` and `integration-*` environments) commands can be customized by passing further command line arguments to it, e.g., by invoking `tox` like this:
+
+```bash
+tox -f sanity --ansible --conf tox-ansible.ini -- --test validate-modules -vvv
+```
+
+The arguments after the `--` will be passed to the `ansible-test` command. Thus in this example only the `validate-modules` sanity test will run, but with an increased verbosity.
+
+Same can be done to pass arguments to the `pytest` commands for the `unit-*` and `integration-*` environments:
+
+```bash
+tox -e unit-py3.11-2.15 --ansible --conf tox-ansible.ini -- --junit-xml=tests/output/junit/unit.xml
+```
+
 ## Usage in a CI/CD pipeline
 
 The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox-ansible.ini` file.
@@ -191,7 +207,7 @@ This can be accomplished by presenting molecule scenarios as integration tests a
 
 Assuming the following collection directory structure:
 
-```
+```bash
 namespace.name
 ├── extensions
 │   ├── molecule
@@ -216,10 +232,10 @@ namespace.name
 │   ├── action
 │   │   └── action_plugin.py
 │   ├── modules
-│   │   └── action_plugin.py
+│   │   └── module.py
 ├── tests
 │   ├── integration
-|   |   ├── targets
+│   │   │── targets
 │   │   │   ├── success
 │   │   │   │   └── tasks
 │   │   │   │       └── main.yaml
@@ -256,7 +272,7 @@ This approach provides the flexibility of running the `molecule` scenarios direc
 
 ## How does it work?
 
-`tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
+`tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
 
 `tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
