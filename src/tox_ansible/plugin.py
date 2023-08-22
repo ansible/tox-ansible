@@ -509,6 +509,11 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
         except FileNotFoundError:
             pass
         try:
+            with (TOX_WORK_DIR / "requirements-test.txt").open() as fileh:
+                deps.extend(fileh.read().splitlines())
+        except FileNotFoundError:
+            pass
+        try:
             with (TOX_WORK_DIR / "requirements.txt").open() as fileh:
                 deps.extend(fileh.read().splitlines())
         except FileNotFoundError:
