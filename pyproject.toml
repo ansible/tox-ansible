@@ -51,6 +51,12 @@ write_to = "src/tox_ansible/_version.py"
 [tool.black]
 line-length = 100
 
+[tool.pydoclint]
+allow-init-docstring = true
+arg-type-hints-in-docstring = false
+check-return-types = false
+style = 'google'
+
 [tool.pylint]
 
 [tool.pylint.format]
