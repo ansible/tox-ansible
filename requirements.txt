@@ -21,7 +21,7 @@ pre-commit==3.2.2
 pyproject-api==1.5.1
 pytest==7.3.1
 pytest-xdist==3.2.1
-pyyaml==6.0
+pyyaml==6.0.1
 tox==4.5.1
 virtualenv==20.23.0
 
