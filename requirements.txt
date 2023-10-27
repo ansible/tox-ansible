@@ -66,7 +66,7 @@ pytest-mock==3.12.0
 pytest-xdist==3.3.1
 python-dateutil==2.8.2
 python-slugify==8.0.1
-pyyaml==6.0.1
+pyyaml==6.0.1.1
 pyyaml-env-tag==0.1
 regex==2023.8.8
 requests==2.31.0

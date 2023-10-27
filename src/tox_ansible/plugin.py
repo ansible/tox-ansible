@@ -45,6 +45,7 @@ ENV_LIST = """
 {integration, sanity, unit}-py3.9-{2.12, 2.13, 2.14, 2.15}
 {integration, sanity, unit}-py3.10-{2.12, 2.13, 2.14, 2.15, 2.16, milestone, devel}
 {integration, sanity, unit}-py3.11-{2.14, 2.15, 2.16, milestone, devel}
+{integration, sanity, unit}-py3.12-{2.16, milestone, devel}
 """
 TOX_WORK_DIR = Path()
 OUR_DEPS = [
