@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, TypeVar
 
 import yaml
+
 from tox.config.loader.memory import MemoryLoader
 from tox.config.loader.section import Section
 from tox.config.loader.str_convert import StrConvert
