@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, TypeVar
 
 import yaml
-
+# import q
 from tox.config.loader.memory import MemoryLoader
 from tox.config.loader.section import Section
 from tox.config.loader.str_convert import StrConvert
@@ -114,7 +114,9 @@ def tox_add_option(parser: ToxParser) -> None:
         "--gh-matrix",
         action="store_true",
         default=False,
+        # choices=["all", "sanity", "integration", "unit"],
         help="Emit a github matrix",
+        # type=str,
     )
 
     parser.add_argument(
@@ -155,7 +157,7 @@ def tox_add_core_config(
     global TOX_WORK_DIR  # pylint: disable=global-statement # noqa: PLW0603
     TOX_WORK_DIR = state.conf.work_dir
     env_list = add_ansible_matrix(state)
-
+    # q(state.conf.options.gh_matrix)
     if not state.conf.options.gh_matrix:
         return
 
