@@ -60,7 +60,7 @@ unit-py3.11-devel            -> Unit tests for ansible.scm using ansible-core de
 unit-py3.11-milestone        -> Unit tests for ansible.scm using ansible-core milestone and python 3.11
 ```
 
-These represent the testing environments that are available. Each denotes the type of tests that will be run, the Python interpreter used to run the tests, and the Ansible version used to run the tests.
+These represent the available testing environments. Each denotes the type of tests that will be run, the Python interpreter used to run the tests, and the Ansible version used to run the tests.
 
 To run tests with a single environment, simply run the following command:
 
@@ -97,6 +97,40 @@ To review the specific commands and configuration for each of the integration, s
 
 ```bash
 tox config --ansible --conf tox-ansible.ini
+```
+
+Generate specific GitHub action matrix as per scope mentioned with `--matrix-scope`:
+
+```bash
+tox --ansible --gh-matrix --matrix-scope unit --conf tox-ansible.ini
+```
+
+A list of dynamically generated Ansible environments will be displayed specifically for unit tests:
+
+```
+[
+  {
+    "description": "Unit tests using ansible 2.9 and python 3.8",
+    "factors": [
+      "unit",
+      "py3.8",
+      "2.9"
+    ],
+    "name": "unit-py3.8-2.9",
+    "python": "3.8"
+  },
+  ...
+  {
+    "description": "Unit tests using ansible-core milestone and python 3.12",
+    "factors": [
+      "unit",
+      "py3.12",
+      "milestone"
+    ],
+    "name": "unit-py3.12-milestone",
+    "python": "3.12"
+  }
+]
 ```
 
 ## Configuration
