@@ -111,6 +111,13 @@ def tox_add_option(parser: ToxParser) -> None:
     :param parser: The tox CLI parser.
     """
     parser.add_argument(
+        "--matrix-scope",
+        default="all",
+        choices=["all", "sanity", "integration", "unit"],
+        help="Emit a github matrix specific to scope mentioned",
+    )
+
+    parser.add_argument(
         "--gh-matrix",
         action="store_true",
         default=False,
@@ -159,7 +166,7 @@ def tox_add_core_config(
     if not state.conf.options.gh_matrix:
         return
 
-    generate_gh_matrix(env_list=env_list)
+    generate_gh_matrix(env_list=env_list, section=state.conf.options.matrix_scope)
     sys.exit(0)
 
 
@@ -256,14 +263,17 @@ def add_ansible_matrix(state: State) -> EnvList:
     return env_list
 
 
-def generate_gh_matrix(env_list: EnvList) -> None:
+def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     """Generate the github matrix.
 
     :param env_list: The environment list.
+    :param section: The test section to be generated.
     """
     results = []
 
     for env_name in env_list.envs:
+        if section != "all" and not env_name.startswith(section):
+            continue
         candidates = []
         factors = env_name.split("-")
         for factor in factors:

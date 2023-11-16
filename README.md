@@ -2,13 +2,13 @@
 
 ## Introduction
 
-`tox-ansible` is a utility designed to simplify the testing of ansible content collections.
+`tox-ansible` is a utility designed to simplify the testing of Ansible content collections.
 
-Implemented as `tox` plugin, `tox-ansible` provides a simple way to test ansible content collections across multiple python interpreter and ansible versions.
+Implemented as `tox` plugin, `tox-ansible` provides a simple way to test Ansible content collections across multiple Python interpreters and Ansible versions.
 
-`tox-ansible` uses familiar python testing tools to perform the actual testing. It uses `tox` to create and manage the testing environments, `ansible-test sanity` to run the sanity tests, and `pytest` to run the unit and integration tests. This eliminated the black box nature of other approaches and allows for more control over the testing process.
+`tox-ansible` uses familiar python testing tools to perform the actual testing. It uses `tox` to create and manage the testing environments, `ansible-test sanity` to run the sanity tests, and `pytest` to run the unit and integration tests. This eliminated the black box nature of other approaches and allowed for more control over the testing process.
 
-When used on a local development system, each of the environments are left intact after a test run. This allows for easy debugging of failed tests for a given test type, python interpreter and ansible version.
+When used on a local development system, each of the environments are left intact after a test run. This allows for easy debugging of failed tests for a given test type, python interpreter and Ansible version.
 
 By using `tox` to create and manage the testing environments, Test outcomes should always be the same on a local development system as they are in a CI/CD pipeline.
 
@@ -41,7 +41,7 @@ touch tox-ansible.ini
 tox list --ansible --conf tox-ansible.ini
 ```
 
-A list of dynamically generated ansible environments will be displayed:
+A list of dynamically generated Ansible environments will be displayed:
 
 ```
 
@@ -60,7 +60,7 @@ unit-py3.11-devel            -> Unit tests for ansible.scm using ansible-core de
 unit-py3.11-milestone        -> Unit tests for ansible.scm using ansible-core milestone and python 3.11
 ```
 
-These represent the testing environments that are available. Each denotes the type of tests that will be run, the python interpreter used to run the tests, and the ansible version used to run the tests.
+These represent the available testing environments. Each denotes the type of tests that will be run, the Python interpreter used to run the tests, and the Ansible version used to run the tests.
 
 To run tests with a single environment, simply run the following command:
 
@@ -87,7 +87,7 @@ tox --ansible -p auto --conf tox-ansible.ini
 ```
 
 Note: The `-p auto` flag will run multiple tests in parallel.
-Note: The specific python interpreter will need to be pre-installed on you system, e.g.:
+Note: The specific Python interpreter will need to be pre-installed on your system, e.g.:
 
 ```bash
 sudo dnf install python3.9
@@ -99,9 +99,43 @@ To review the specific commands and configuration for each of the integration, s
 tox config --ansible --conf tox-ansible.ini
 ```
 
+Generate specific GitHub action matrix as per scope mentioned with `--matrix-scope`:
+
+```bash
+tox --ansible --gh-matrix --matrix-scope unit --conf tox-ansible.ini
+```
+
+A list of dynamically generated Ansible environments will be displayed specifically for unit tests:
+
+```
+[
+  {
+    "description": "Unit tests using ansible 2.9 and python 3.8",
+    "factors": [
+      "unit",
+      "py3.8",
+      "2.9"
+    ],
+    "name": "unit-py3.8-2.9",
+    "python": "3.8"
+  },
+  ...
+  {
+    "description": "Unit tests using ansible-core milestone and python 3.12",
+    "factors": [
+      "unit",
+      "py3.12",
+      "milestone"
+    ],
+    "name": "unit-py3.12-milestone",
+    "python": "3.12"
+  }
+]
+```
+
 ## Configuration
 
-`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty, but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword is available:
+`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword are available:
 
 ```ini
 # tox-ansible.ini
@@ -111,7 +145,7 @@ skip =
     devel
 ```
 
-This will skip tests in any environment that use ansible 2.9 or the devel branch. The list of strings are used for a simple string in string comparison of environment names.
+This will skip tests in any environment that uses Ansible 2.9 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
 
 ## Overriding the configuration
 
@@ -149,7 +183,7 @@ The behavior of the `ansible-test` (for `sanity-*` environments) or `pytest` (fo
 tox -f sanity --ansible --conf tox-ansible.ini -- --test validate-modules -vvv
 ```
 
-The arguments after the `--` will be passed to the `ansible-test` command. Thus in this example only the `validate-modules` sanity test will run, but with an increased verbosity.
+The arguments after the `--` will be passed to the `ansible-test` command. Thus in this example, only the `validate-modules` sanity test will run, but with an increased verbosity.
 
 Same can be done to pass arguments to the `pytest` commands for the `unit-*` and `integration-*` environments:
 
@@ -159,13 +193,13 @@ tox -e unit-py3.11-2.15 --ansible --conf tox-ansible.ini -- --junit-xml=tests/ou
 
 ## Usage in a CI/CD pipeline
 
-The repo contains a github workflow that can be used in a github actions CI/CD pipeline. The workflow will run all tests across all available environments, unless limited by the `skip` option in the `tox-ansible.ini` file.
+The repo contains a GitHub workflow that can be used in a GitHub actions CI/CD pipeline. The workflow will run all tests across all available environments unless limited by the `skip` option in the `tox-ansible.ini` file.
 
 Each environment will be run in a separate job. The workflow will run all jobs in parallel.
 
-The github matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
+The GitHub matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added to the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
 
-A sample use of the github workflow might look like this:
+A sample use of the GitHub workflow might look like this:
 
 ```yaml
 name: Test collection
@@ -201,7 +235,7 @@ Sample `json`
 
 ## Testing molecule scenarios
 
-Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a powerful tool to run `molecule` scenarios across a matrix of ansible and python versions.
+Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a powerful tool to run `molecule` scenarios across a matrix of Ansible and Python versions.
 
 This can be accomplished by presenting molecule scenarios as integration tests available through `pytest` using the [pytest-ansible](https://github.com/ansible-community/pytest-ansible) plugin, which is installed when `tox-ansible` is installed.
 
@@ -272,14 +306,14 @@ This approach provides the flexibility of running the `molecule` scenarios direc
 
 ## How does it work?
 
-`tox` will, by default, create a python virtual environment for a given environment. `tox-ansible` adds ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
+`tox` will, by default, create a Python virtual environment for a given environment. `tox-ansible` adds Ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any Python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
 
 `tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
 `pytest` is ued to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
 
-For a full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environments variables being set and passed, see the following:
+For full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environment variables being set and passed, see the following:
 
 - [integration](docs/integration.ini)
 - [sanity](docs/sanity.ini)
