@@ -135,35 +135,9 @@ skip =
     devel
 ```
 
-This will skip tests in any environment that uses Ansible 2.9 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
+This will skip tests in any environment that uses Ansible 2.9 or the devel branch. The list of strings is used for a simple string in string comparison of environment names. Here is the [guide] to override `tox-ansible` environment configuration.
 
-## Overriding the configuration
-
-Any configuration in either the `[testenv]` section or am environment section `[testenv:integration-py3.11-{devel,milestone}]` can override some or all of the `tox-ansible` environment configurations.
-
-For example
-
-```ini
-
-[testenv]
-commands_pre =
-    true
-
-[testenv:integration-py3.11-{devel,milestone}]
-commands =
-    true
-```
-
-will result in:
-
-```ini
-# tox-ansible.ini
-[testenv:integration-py3.11-devel]
-commands_pre = true
-commands = true
-```
-
-Used without caution, this configuration can result in unexpected behavior, and possible false positive or false negative test results.
+[guide]: https://ansible.readthedocs.io/projects/tox-ansible/configuration/#overriding-the-configuration
 
 ## How does it work?
 
@@ -171,7 +145,7 @@ Used without caution, this configuration can result in unexpected behavior, and 
 
 `tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
-`pytest` is ued to run both the `unit` and `integration tests`.
+`pytest` is used to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
 
 For full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environment variables being set and passed, see the following:
