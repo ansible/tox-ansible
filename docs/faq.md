@@ -11,8 +11,8 @@
 
 For full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environment variables being set and passed, see the following:
 
-- [integration](docs/integration.ini)
-- [sanity](docs/sanity.ini)
-- [unit](docs/unit.ini)
+- [integration](https://github.com/ansible/tox-ansible/blob/main/docs/integration.ini)
+- [sanity](https://github.com/ansible/tox-ansible/blob/main/docs/sanity.ini)
+- [unit](https://github.com/ansible/tox-ansible/blob/main/docs/unit.ini)
 
 See the [tox documentation](https://tox.readthedocs.io/en/latest/) for more information on tox.
