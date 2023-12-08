@@ -45,7 +45,7 @@ nav:
       - Home: index.md
       - Installation: installation.md
       - Configuration: configuration.md
-      - Usage: usage.md
+      - User Guide: user_guide.md
       - FAQ: faq.md
       - Contributor Guide: contributor_guide.md
 
