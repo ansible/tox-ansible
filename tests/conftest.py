@@ -94,5 +94,5 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
         metafunc.parametrize(
             "basic_environment",
             environment_configs,
-            ids=configs.sections(),
+            ids=[x.replace(":", "-") for x in configs.sections()],
         )
