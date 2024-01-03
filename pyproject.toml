@@ -2,8 +2,7 @@
 build-backend = "setuptools.build_meta"
 requires = [
   "setuptools>=63", # required by pyproject+setuptools_scm integration
-  "setuptools_scm[toml]>=7.0.5", # required for "no-local-version" scheme
-
+  "setuptools_scm[toml]>=7.0.5" # required for "no-local-version" scheme
 ]
 
 [project]
@@ -11,9 +10,9 @@ name = "tox-ansible"
 description = "A radical approach to testing ansible content"
 readme = "README.md"
 keywords = ["ansible", "collections", "tox"]
-license = { text = "MIT" }
-maintainers = [{ "name" = "Ansible by Red Hat", "email" = "info@ansible.com" }]
-authors = [{ "name" = "Bradley A. Thornton", "email" = "bthornto@redhat.com" }]
+license = {text = "MIT"}
+maintainers = [{"name" = "Ansible by Red Hat", "email" = "info@ansible.com"}]
+authors = [{"name" = "Bradley A. Thornton", "email" = "bthornto@redhat.com"}]
 requires-python = ">=3.8"
 classifiers = [
   'Development Status :: 2 - Pre-Alpha',
@@ -32,22 +31,12 @@ classifiers = [
   'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: 3.12',
   'Programming Language :: Python :: Implementation :: CPython',
-  'Programming Language :: Python :: Implementation :: PyPy',
+  'Programming Language :: Python :: Implementation :: PyPy'
 ]
 dynamic = ["dependencies", "optional-dependencies", "version"]
 
 [project.entry-points.tox]
 tox-ansible = "tox_ansible.plugin"
-
-[tool.setuptools.dynamic]
-optional-dependencies.docs = { file = [".config/requirements-docs.txt"] }
-optional-dependencies.dev = { file = [".config/requirements-dev.txt"] }
-optional-dependencies.test = { file = [".config/requirements-test.txt"] }
-dependencies = { file = [".config/requirements.in"] }
-
-[tool.setuptools_scm]
-local_scheme = "no-local-version"
-write_to = "src/tox_ansible/_version.py"
 
 [tool.black]
 line-length = 100
@@ -78,11 +67,10 @@ disable = [
   "fixme",
   "missing-module-docstring",
   "too-few-public-methods",
-  "unsubscriptable-object",
+  "unsubscriptable-object"
 ]
 enable = [
-  "useless-suppression", # Identify unneeded pylint disable statements
-
+  "useless-suppression" # Identify unneeded pylint disable statements
 ]
 
 [tool.pytest.ini_options]
@@ -102,6 +90,9 @@ select = ["ALL"]
 ignore = ["ARG", "FBT", "TID", "C901", "PLR0915", "RET504"]
 target-version = "py37"
 
+[tool.ruff.flake8-pytest-style]
+parametrize-values-type = "tuple"
+
 [tool.ruff.isort]
 lines-after-imports = 2 # Ensures consistency for cases when there's variable vs function/class definitions after imports
 lines-between-types = 1 # Separate import/from with 1 line
@@ -115,5 +106,12 @@ lines-between-types = 1 # Separate import/from with 1 line
 [tool.ruff.pydocstyle]
 convention = "pep257"
 
-[tool.ruff.flake8-pytest-style]
-parametrize-values-type = "tuple"
+[tool.setuptools.dynamic]
+dependencies = {file = [".config/requirements.in"]}
+optional-dependencies.docs = {file = [".config/requirements-docs.txt"]}
+optional-dependencies.dev = {file = [".config/requirements-dev.txt"]}
+optional-dependencies.test = {file = [".config/requirements-test.txt"]}
+
+[tool.setuptools_scm]
+local_scheme = "no-local-version"
+write_to = "src/tox_ansible/_version.py"
