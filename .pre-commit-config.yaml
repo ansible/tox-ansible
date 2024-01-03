@@ -1,4 +1,17 @@
 ---
+ci:
+  # format compatible with commitlint
+  autoupdate_commit_msg: "chore: pre-commit autoupdate"
+  autoupdate_schedule: monthly
+  autofix_commit_msg: |
+    chore: auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  skip:
+    # https://github.com/pre-commit-ci/issues/issues/55
+    - pip-compile
+
+  submodules: true
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -101,3 +114,19 @@ repos:
           - tests
           - --python-version=3.8
         pass_filenames: false
+
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.3.0
+    hooks:
+      - id: pip-compile
+        name: lock
+        alias: lock
+        always_run: true
+        entry: pip-compile --upgrade -q --strip-extras --extra=docs --extra=test --no-annotate --output-file=requirements.txt pyproject.toml
+        files: ^.config\/.*requirements.*$
+        language: python
+        language_version: "3.10" # minimal we support officially
+        pass_filenames: false
+        stages: [manual]
+        additional_dependencies:
+          - pip>=22.3.1
