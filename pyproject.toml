@@ -13,7 +13,7 @@ keywords = ["ansible", "collections", "tox"]
 license = {text = "MIT"}
 maintainers = [{"name" = "Ansible by Red Hat", "email" = "info@ansible.com"}]
 authors = [{"name" = "Bradley A. Thornton", "email" = "bthornto@redhat.com"}]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
   'Development Status :: 2 - Pre-Alpha',
   'Intended Audience :: Developers',
@@ -25,7 +25,6 @@ classifiers = [
   'Programming Language :: Python',
   'Programming Language :: Python :: 3',
   'Programming Language :: Python :: 3 :: Only',
-  'Programming Language :: Python :: 3.8',
   'Programming Language :: Python :: 3.9',
   'Programming Language :: Python :: 3.10',
   'Programming Language :: Python :: 3.11',
