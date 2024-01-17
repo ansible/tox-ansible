@@ -70,7 +70,7 @@ To run all tests of a specific type in all available environments, use the facto
 tox -f unit --ansible -p auto --conf tox-ansible.ini
 ```
 
-To run all tests across all available environments:
+To run all tests across all the available environments:
 
 ```bash
 tox --ansible -p auto --conf tox-ansible.ini
