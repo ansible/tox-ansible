@@ -109,7 +109,7 @@ repos:
         args:
           - src
           - tests
-          - --python-version=3.8
+          - --python-version=3.9
         pass_filenames: false
 
   - repo: https://github.com/jazzband/pip-tools
