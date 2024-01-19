@@ -139,7 +139,7 @@ on:
 
 jobs:
   tox-ansible:
-    uses: tox-dev/tox-ansible/.github/workflows/run.yml@main
+    uses: ansible/tox-ansible/.github/workflows/run.yml@main
 ```
 
 Sample `json`
