@@ -34,6 +34,7 @@ jobs:
 
   tox:
     name: ${{ matrix.name }} / python ${{ matrix.python_version }}
+    environment: test
     runs-on: ubuntu-20.04
     needs: pre
     strategy:
@@ -78,7 +79,8 @@ jobs:
         with:
           name: ${{ matrix.passed_name }}
           token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true # optional (default = false)
+          fail_ci_if_error: true
+          verbose: true
 
       - name: Archive logs
         uses: actions/upload-artifact@v3
