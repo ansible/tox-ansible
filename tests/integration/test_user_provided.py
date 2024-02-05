@@ -1,4 +1,5 @@
 """User provided configuration."""
+
 import subprocess
 
 from configparser import ConfigParser
