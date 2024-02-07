@@ -166,3 +166,5 @@ cython_debug/
 .vscode/
 
 _readthedocs
+
+.DS_Store

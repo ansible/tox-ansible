@@ -3,7 +3,7 @@ site_name: Tox Ansible Documentation
 site_url: https://ansible.readthedocs.io/projects/tox-ansible/
 repo_url: https://github.com/ansible/tox-ansible
 edit_uri: blob/main/docs/
-copyright: Copyright © 2023 Red Hat, Inc.
+copyright: Copyright © 2024 Red Hat, Inc.
 docs_dir: docs
 strict: true
 
