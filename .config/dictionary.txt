@@ -1,5 +1,6 @@
 autouse
 basepython
+calver
 cidrblock
 delenv
 devel

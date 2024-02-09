@@ -139,6 +139,13 @@ This will skip tests in any environment that uses Ansible 2.9 or the devel branc
 
 [guide]: https://ansible.readthedocs.io/projects/tox-ansible/configuration/#overriding-the-configuration
 
+## Release process
+
+`tox-ansible` is released with [CalVer] scheme version numbers. The particular scheme we are using is `YY.MM.MICRO`, meaning that a release in March 2025 will be named `25.3.0`, and if a patch (ie, non-feature) release is required for that release, it will be named 25.3.1, even if it is released in April. The month will not increment until a new version with features or other significant changes is released. More details about calver release process can be seen [here].
+
+[here]: https://ansible.readthedocs.io/projects/team-devtools/guides/calver/
+[CalVer]: https://calver.org/
+
 ## Note to version 1.x users
 
 Users of tox-ansible v1 should use the stable/1.x branch because the default branch is a rewrite of the plugin for tox 4.0+ which is not backward compatible with the old plugin.
