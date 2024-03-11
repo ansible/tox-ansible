@@ -8,3 +8,4 @@ name: ack
 jobs:
   ack:
     uses: ansible/team-devtools/.github/workflows/ack.yml@main
+    secrets: inherit
