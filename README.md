@@ -80,7 +80,7 @@ Note: The `-p auto` flag will run multiple tests in parallel.
 Note: The specific Python interpreter will need to be pre-installed on your system, e.g.:
 
 ```bash
-sudo dnf install python3.9
+sudo dnf install python3.10
 ```
 
 To review the specific commands and configuration for each of the integration, sanity, and unit factors:
