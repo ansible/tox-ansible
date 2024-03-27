@@ -23,12 +23,12 @@ jobs:
           python-version: "3.11"
 
       - name: Install tox-ansible, includes tox
-        run: python -m pip install tox-ansible
+        run: python3 -m pip install tox-ansible
 
       - name: Generate matrix
         id: generate-matrix
         run: |
-          python -m tox --ansible --gh-matrix --conf tox-ansible.ini
+          python3 -m tox --ansible --gh-matrix --conf tox-ansible.ini
 
     outputs:
       envlist: ${{ steps.generate-matrix.outputs.envlist }}
@@ -53,10 +53,10 @@ jobs:
           python-version: ${{ matrix.entry.python }}
 
       - name: Install tox-ansible, includes tox
-        run: python -m pip install tox-ansible
+        run: python3 -m pip install tox-ansible
 
       - name: Run tox test
-        run: python -m tox --ansible -e ${{ matrix.entry.name }} --conf tox-ansible.ini
+        run: python3 -m tox --ansible -e ${{ matrix.entry.name }} --conf tox-ansible.ini
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

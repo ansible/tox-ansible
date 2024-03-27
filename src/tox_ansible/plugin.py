@@ -394,7 +394,7 @@ def conf_commands_for_integration_unit(
 
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python -m pytest --ansible-unit-inject-only{args}{TOX_WORK_DIR}/tests/{test_type}"
+    command = f"python3 -m pytest --ansible-unit-inject-only{args}{TOX_WORK_DIR}/tests/{test_type}"
     return [command]
 
 
