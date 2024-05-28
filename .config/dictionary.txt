@@ -2,6 +2,7 @@ autouse
 basepython
 calver
 cidrblock
+codecov
 delenv
 devel
 endgroup
