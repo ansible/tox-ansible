@@ -87,8 +87,11 @@ def custom_sort(string: str) -> tuple[int, ...]:
 
     In the case of a string, use the ord() of the first two characters.
 
-    :param string: The string to sort.
-    :return: The tuple of converted values.
+    Args:
+        string: The string to sort.
+
+    Returns:
+        The tuple of converted values.
     """
     parts = re.split(r"\.|-|py", string)
     converted = []
@@ -107,7 +110,8 @@ def custom_sort(string: str) -> tuple[int, ...]:
 def tox_add_option(parser: ToxParser) -> None:
     """Add the --gh-matrix option to the tox CLI.
 
-    :param parser: The tox CLI parser.
+    Args:
+        parser: The tox CLI parser.
     """
     parser.add_argument(
         "--matrix-scope",
@@ -138,8 +142,9 @@ def tox_add_core_config(
 ) -> None:
     """Dump the environment list and exit.
 
-    :param core_conf: The core configuration object.
-    :param state: The state object.
+    Args:
+        core_conf: The core configuration object.
+        state: The state object.
     """
     if state.conf.options.gh_matrix and not state.conf.options.ansible:
         err = "The --gh-matrix option requires --ansible"
@@ -173,8 +178,9 @@ def tox_add_core_config(
 def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     """Add the test requirements and ansible-core to the virtual environment.
 
-    :param env_conf: The environment configuration object.
-    :param state: The state object.
+    Args:
+        env_conf: The environment configuration object.
+        state: The state object.
     """
     if not state.conf.options.ansible:
         return
@@ -219,8 +225,11 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
 def desc_for_env(env: str) -> str:
     """Generate a description for an environment.
 
-    :param env: The environment name.
-    :return: The environment description.
+    Args:
+        env: The environment name.
+
+    Returns:
+        The environment description.
     """
     test_type, python, core = env.split("-")
     ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
@@ -231,7 +240,8 @@ def desc_for_env(env: str) -> str:
 def in_action() -> bool:
     """Check if running on Github Actions platform.
 
-    :return: True if running on Github Actions platform
+    Returns:
+        True if running on Github Actions platform.
     """
     return os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -239,8 +249,11 @@ def in_action() -> bool:
 def add_ansible_matrix(state: State) -> EnvList:
     """Add the ansible matrix to the state.
 
-    :param state: The state object.
-    :return: The environment list.
+    Args:
+        state: The state object.
+
+    Returns:
+        The environment list.
     """
     ansible_config = state.conf.get_section_config(
         Section(None, "ansible"),
@@ -262,8 +275,9 @@ def add_ansible_matrix(state: State) -> EnvList:
 def generate_gh_matrix(env_list: EnvList, section: str) -> None:  # noqa: C901
     """Generate the github matrix.
 
-    :param env_list: The environment list.
-    :param section: The test section to be generated.
+    Args:
+        env_list: The environment list.
+        section: The test section to be generated.
     """
     results = []
 
@@ -323,8 +337,11 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:  # noqa: C901
 def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
     """Extract collection information from the galaxy.yml file.
 
-    :param galaxy_path: The path to the galaxy.yml file.
-    :return: The collection name.
+    Args:
+        galaxy_path: The path to the galaxy.yml file.
+
+    Returns:
+        The collection name and namespace.
     """
     try:
         with galaxy_path.open() as galaxy_file:
@@ -353,12 +370,15 @@ def conf_commands(
 ) -> list[str]:
     """Build the commands for the tox environment.
 
-    :param c_name: The collection name.
-    :param c_namespace: The collection namespace.
-    :param env_conf: The tox environment configuration object.
-    :param pos_args: Positional arguments passed to tox command.
-    :param test_type: The test type, either "integration", "unit", or "sanity".
-    :return: The commands to run.
+    Args:
+        c_name: The collection name.
+        c_namespace: The collection namespace.
+        env_conf: The tox environment configuration object.
+        pos_args: Positional arguments passed to tox command.
+        test_type: The test type, either "integration", "unit", or "sanity".
+
+    Returns:
+        The commands to run.
     """
     if test_type in ["integration", "unit"]:
         return conf_commands_for_integration_unit(
@@ -383,9 +403,12 @@ def conf_commands_for_integration_unit(
 ) -> list[str]:
     """Build the commands for integration and unit tests.
 
-    :param test_type: The test type, either "integration" or "unit".
-    :param pos_args: Positional arguments passed to tox command.
-    :return: The command to run.
+    Args:
+        pos_args: Positional arguments passed to tox command.
+        test_type: The test type, either "integration" or "unit".
+
+    Returns:
+        The commands to run.
     """
     args = f" {' '.join(pos_args)} " if pos_args else " "
 
@@ -403,11 +426,14 @@ def conf_commands_for_sanity(
 ) -> list[str]:
     """Add commands for sanity tests.
 
-    :param c_name: The collection name.
-    :param c_namespace: The collection namespace.
-    :param env_conf: The tox environment configuration object.
-    :param pos_args: Positional arguments passed to tox command.
-    :return: The commands to run.
+    Args:
+        c_name: The collection name.
+        c_namespace: The collection namespace.
+        env_conf: The tox environment configuration object.
+        pos_args: Positional arguments passed to tox command.
+
+    Returns:
+        The commands to run.
     """
     commands = []
     envtmpdir = env_conf["envtmpdir"]
@@ -430,10 +456,13 @@ def conf_commands_pre(  # noqa: C901, PLR0915
 ) -> list[str]:
     """Build and install the collection.
 
-    :param env_conf: The tox environment configuration object.
-    :param c_name: The collection name.
-    :param c_namespace: The collection namespace.
-    :return: The commands to pre run.
+    Args:
+        env_conf: The tox environment configuration object.
+        c_name: The collection name.
+        c_namespace: The collection namespace.
+
+    Returns:
+        The commands to pre run.
     """
     commands = []
 
@@ -500,9 +529,12 @@ def conf_commands_pre(  # noqa: C901, PLR0915
 def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     """Add dependencies to the tox environment.
 
-    :param env_conf: The environment configuration.
-    :param test_type: The test type.
-    :return: The dependencies.
+    Args:
+        env_conf: The tox environment configuration object.
+        test_type: The test type, either "integration", "unit", or "sanity".
+
+    Returns:
+        The dependencies.
     """
     deps = []
     if test_type in ["integration", "unit"]:
@@ -536,7 +568,8 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
 def conf_passenv() -> list[str]:
     """Build the pass environment variables for the tox environment.
 
-    :return: The pass environment variables.
+    Returns:
+        The pass environment variables.
     """
     passenv = []
     passenv.append("GITHUB_TOKEN")
@@ -550,8 +583,11 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     ansible 2.16 has it marked for deprecation in 2.19
     Set the XDG_CACHE_HOME to the environment directory to isolate it
 
-    :param env_conf: The environment configuration.
-    :return: The set environment variables.
+    Args:
+        env_conf: The tox environment configuration object.
+
+    Returns:
+        The set environment variables.
     """
     if env_conf.name.endswith("2.9"):
         envvar_name = "ANSIBLE_COLLECTIONS_PATHS"
