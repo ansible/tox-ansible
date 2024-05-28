@@ -27,8 +27,7 @@ def module_fixture_dir(request: pytest.FixtureRequest) -> Path:
     """
     cwd = Path(__file__).parent
     fixture_dir = cwd / "fixtures"
-    test_dir = fixture_dir / request.path.relative_to(cwd).parent / request.path.stem
-    return test_dir
+    return fixture_dir / request.path.relative_to(cwd).parent / request.path.stem
 
 
 @pytest.fixture(autouse=True)

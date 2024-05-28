@@ -12,7 +12,7 @@ import uuid
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, List, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import yaml
 
@@ -62,7 +62,7 @@ class AnsibleConfigSet(ConfigSet):
         """Register the ansible configuration."""
         self.add_config(
             "skip",
-            of_type=List[str],
+            of_type=list[str],
             default=[],
             desc="ansible configuration",
         )
@@ -133,7 +133,7 @@ def tox_add_option(parser: ToxParser) -> None:
 
 @impl
 def tox_add_core_config(
-    core_conf: CoreConfigSet,  # pylint: disable=unused-argument
+    core_conf: CoreConfigSet,  # noqa: ARG001 # pylint: disable=unused-argument
     state: State,
 ) -> None:
     """Dump the environment list and exit.
@@ -225,10 +225,7 @@ def desc_for_env(env: str) -> str:
     test_type, python, core = env.split("-")
     ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
 
-    description = (
-        f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
-    )
-    return description
+    return f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
 
 
 def in_action() -> bool:
@@ -262,7 +259,7 @@ def add_ansible_matrix(state: State) -> EnvList:
     return env_list
 
 
-def generate_gh_matrix(env_list: EnvList, section: str) -> None:
+def generate_gh_matrix(env_list: EnvList, section: str) -> None:  # noqa: C901
     """Generate the github matrix.
 
     :param env_list: The environment list.
@@ -426,7 +423,7 @@ def conf_commands_for_sanity(
     return commands
 
 
-def conf_commands_pre(
+def conf_commands_pre(  # noqa: C901, PLR0915
     env_conf: EnvConfigSet,
     c_name: str,
     c_namespace: str,
@@ -438,8 +435,6 @@ def conf_commands_pre(
     :param c_namespace: The collection namespace.
     :return: The commands to pre run.
     """
-    # pylint: disable=too-many-locals
-    # pylint: disable=too-many-statements
     commands = []
 
     # Define some directories"

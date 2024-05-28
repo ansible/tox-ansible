@@ -15,7 +15,7 @@ from tox_ansible.plugin import conf_passenv
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ..conftest import BasicEnvironment
+    from ..conftest import BasicEnvironment  # noqa: TID252
 
 
 def test_ansible_environments(module_fixture_dir: Path) -> None:

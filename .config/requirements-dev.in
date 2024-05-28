@@ -1,6 +1,0 @@
-black
-pytest
-ruff
-pre-commit
-mypy
-types-pyyaml
