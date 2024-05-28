@@ -21,7 +21,8 @@ if TYPE_CHECKING:
 def test_ansible_environments(module_fixture_dir: Path) -> None:
     """Test that the ansible environments are available.
 
-    :param module_fixture_dir: pytest fixture to get the fixtures directory
+    Args:
+        module_fixture_dir: pytest fixture to get the fixtures directory
     """
     try:
         proc = subprocess.run(
@@ -49,8 +50,9 @@ def test_gh_matrix(
 
     Remove the GITHUB environment variable to test the default output.
 
-    :param module_fixture_dir: pytest fixture to get the fixtures directory
-    :param monkeypatch: pytest fixture to patch modules
+    Args:
+        module_fixture_dir: pytest fixture to get the fixtures directory
+        monkeypatch: pytest fixture to patch modules
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
@@ -81,7 +83,8 @@ def test_environment_config(
     Ensure the environment configurations are generated and look for information unlikely to change
     as a basic smoke test.
 
-    :param basic_environment: A dict representing the environment configuration
+    Args:
+        basic_environment: A dict representing the environment configuration
     """
     assert "py3" in basic_environment.name
 

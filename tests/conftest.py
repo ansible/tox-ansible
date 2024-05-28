@@ -22,8 +22,11 @@ if TYPE_CHECKING:
 def module_fixture_dir(request: pytest.FixtureRequest) -> Path:
     """Provide a module specific fixture directory.
 
-    :param request: pytest fixture request
-    :return: path to the module specific fixture directory
+    Args:
+        request: pytest fixture request
+
+    Returns:
+        Path to the module specific fixture directory
     """
     cwd = Path(__file__).parent
     fixture_dir = cwd / "fixtures"
@@ -34,7 +37,8 @@ def module_fixture_dir(request: pytest.FixtureRequest) -> Path:
 def _tox_in_tox(monkeypatch: pytest.MonkeyPatch) -> None:
     """Enable tox-in-tox.
 
-    :param monkeypatch: pytest fixture to patch modules
+    Args:
+        monkeypatch: pytest fixture to patch modules
     """
     monkeypatch.delenv("TOX_ENV_NAME", raising=False)
     monkeypatch.delenv("TOX_WORK_DIR", raising=False)
@@ -52,7 +56,8 @@ class BasicEnvironment:
 def pytest_generate_tests(metafunc: Metafunc) -> None:
     """Parametrize the basic environments and there configurations.
 
-    :param metafunc: Metadata for the test
+    Args:
+        metafunc: Metadata for the test
     """
     if "basic_environment" in metafunc.fixturenames:
         cwd = Path(__file__).parent

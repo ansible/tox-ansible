@@ -13,7 +13,8 @@ def test_user_provided(
 ) -> None:
     """Test supplemental user configuration.
 
-    :param module_fixture_dir: pytest fixture for module fixture directory
+    Args:
+        module_fixture_dir: pytest fixture for module fixture directory
     """
     try:
         proc = subprocess.run(
