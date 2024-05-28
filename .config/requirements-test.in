@@ -1,5 +1,15 @@
 ansible-core
-coverage
+black
+coverage[toml]
+flake8
+mypy
+pip-tools
+pre-commit
+pydoclint[flake8]
+pylint
 pytest
-pytest_mock
 pytest-xdist
+ruff
+toml-sort
+tox
+types-PyYAML
