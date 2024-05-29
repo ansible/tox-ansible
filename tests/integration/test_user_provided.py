@@ -55,6 +55,7 @@ def test_user_provided_matrix_success(
         matrix_length: pytest fixture for matrix length
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     proc = subprocess.run(
         f"tox --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
         capture_output=True,
