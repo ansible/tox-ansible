@@ -1,6 +1,7 @@
 autouse
 basepython
 calver
+capsys
 cidrblock
 codecov
 delenv

@@ -17,6 +17,18 @@ import pytest
 if TYPE_CHECKING:
     from _pytest.python import Metafunc
 
+GH_MATRIX_LENGTH = 36
+
+
+@pytest.fixture(scope="session")
+def matrix_length() -> int:
+    """Provide the length of the gh matrix.
+
+    Returns:
+        Length of the matrix
+    """
+    return GH_MATRIX_LENGTH
+
 
 @pytest.fixture(scope="module")
 def module_fixture_dir(request: pytest.FixtureRequest) -> Path:

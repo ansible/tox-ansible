@@ -12,7 +12,7 @@ import uuid
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, List, TypeVar  # noqa: UP035
 
 import yaml
 
@@ -62,7 +62,7 @@ class AnsibleConfigSet(ConfigSet):
         """Register the ansible configuration."""
         self.add_config(
             "skip",
-            of_type=list[str],
+            of_type=List[str],  # noqa: UP006
             default=[],
             desc="ansible configuration",
         )
