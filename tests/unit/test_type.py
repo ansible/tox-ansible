@@ -63,7 +63,11 @@ def test_type_broken(
     T = TypeVar("T", bound=ConfigSet)
 
     def register_config(self: T) -> None:
-        """Register the ansible configuration."""
+        """Register the ansible configuration.
+
+        Args:
+            self: the current instance
+        """
         self.add_config(
             "skip",
             of_type=list[str],
