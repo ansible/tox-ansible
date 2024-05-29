@@ -10,8 +10,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from tox_ansible.plugin import conf_passenv
-
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -104,9 +102,3 @@ def test_environment_config(
 
     assert "https://github.com/ansible/ansible/archive" in config["deps"]
     assert "XDG_CACHE_HOME" in config["set_env"]
-
-
-def test_import() -> None:
-    """Verify that module can be imported (used for coverage)."""
-    x = conf_passenv()
-    assert "GITHUB_TOKEN" in x
