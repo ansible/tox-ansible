@@ -1,4 +1,20 @@
-"""Global testing fixtures."""
+"""Global testing fixtures.
+
+The root package import below happens before the pytest workers are forked, so it
+picked up by the initial coverage process for a source match.
+
+Without it, coverage reports the following false positive error:
+
+CoverageWarning: No data was collected. (no-data-collected)
+
+This works in conjunction with the coverage source_pkg set to the package such that
+a `coverage run --debug trace` shows the source package and file match.
+
+<...>
+Imported source package '<package>' as '/**/src/<package>/__init__.py'
+<...>
+Tracing '/**/src/<package>/__init__.py'
+"""
 
 from __future__ import annotations
 
@@ -12,12 +28,23 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+import tox_ansible  # noqa: F401
 
 
 if TYPE_CHECKING:
     from _pytest.python import Metafunc
 
 GH_MATRIX_LENGTH = 36
+
+
+@pytest.fixture(scope="session")
+def tox_bin() -> Path:
+    """Provide the path to the tox binary.
+
+    Returns:
+        Path to the tox binary
+    """
+    return Path(sys.executable).parent / "tox"
 
 
 @pytest.fixture(scope="session")
