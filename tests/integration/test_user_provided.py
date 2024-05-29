@@ -1,6 +1,7 @@
 """User provided configuration."""
 
 import json
+import os
 import subprocess
 
 from configparser import ConfigParser
@@ -11,20 +12,23 @@ import pytest
 
 def test_user_provided(
     module_fixture_dir: Path,
+    tox_bin: Path,
 ) -> None:
     """Test supplemental user configuration.
 
     Args:
         module_fixture_dir: pytest fixture for module fixture directory
+        tox_bin: pytest fixture for tox binary
     """
     try:
         proc = subprocess.run(
-            f"tox config --ansible --root {module_fixture_dir} --conf tox-ansible.ini",
+            f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini",
             capture_output=True,
             cwd=str(module_fixture_dir),
             text=True,
             check=True,
             shell=True,
+            env=os.environ,
         )
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
@@ -43,26 +47,29 @@ def test_user_provided(
 
 
 def test_user_provided_matrix_success(
-    monkeypatch: pytest.MonkeyPatch,
-    module_fixture_dir: Path,
     matrix_length: int,
+    module_fixture_dir: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    tox_bin: Path,
 ) -> None:
     """Test supplemental user configuration for matrix generation.
 
     Args:
-        monkeypatch: pytest fixture to patch modules
-        module_fixture_dir: pytest fixture for module fixture directory
         matrix_length: pytest fixture for matrix length
+        module_fixture_dir: pytest fixture for module fixture directory
+        monkeypatch: pytest fixture to patch modules
+        tox_bin: pytest fixture for tox binary
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     proc = subprocess.run(
-        f"tox --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
+        f"{tox_bin} --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
         capture_output=True,
         cwd=str(module_fixture_dir),
         text=True,
         check=True,
         shell=True,
+        env=os.environ,
     )
     matrix = json.loads(proc.stdout)
     matrix_len = matrix_length

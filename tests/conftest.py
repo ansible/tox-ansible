@@ -21,6 +21,16 @@ GH_MATRIX_LENGTH = 36
 
 
 @pytest.fixture(scope="session")
+def tox_bin() -> Path:
+    """Provide the path to the tox binary.
+
+    Returns:
+        Path to the tox binary
+    """
+    return Path(sys.executable).parent / "tox"
+
+
+@pytest.fixture(scope="session")
 def matrix_length() -> int:
     """Provide the length of the gh matrix.
 
