@@ -43,15 +43,18 @@ def test_user_provided(
 
 
 def test_user_provided_matrix_success(
+    monkeypatch: pytest.MonkeyPatch,
     module_fixture_dir: Path,
     matrix_length: int,
 ) -> None:
     """Test supplemental user configuration for matrix generation.
 
     Args:
+        monkeypatch: pytest fixture to patch modules
         module_fixture_dir: pytest fixture for module fixture directory
         matrix_length: pytest fixture for matrix length
     """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     proc = subprocess.run(
         f"tox --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
         capture_output=True,
