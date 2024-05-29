@@ -62,7 +62,7 @@ class AnsibleConfigSet(ConfigSet):
         """Register the ansible configuration."""
         self.add_config(
             "skip",
-            of_type=List[str], # noqa: UP006 https://github.com/tox-dev/tox/issues/3287
+            of_type=List[str],  # noqa: UP006 https://github.com/tox-dev/tox/issues/3287
             default=[],
             desc="ansible configuration",
         )
