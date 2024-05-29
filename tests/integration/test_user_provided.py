@@ -53,7 +53,7 @@ def test_user_provided_matrix_success(
         matrix_length: pytest fixture for matrix length
     """
     proc = subprocess.run(
-        f"tox config --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
+        f"tox --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
         capture_output=True,
         cwd=str(module_fixture_dir),
         text=True,
