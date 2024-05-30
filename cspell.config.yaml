@@ -25,11 +25,9 @@ ignorePaths:
   - requirements.txt
   # The tox configuration file
   - tox.ini
-  # The mkdocs configuration file
-  - mkdocs.yml
-  - "*.svg"
   # Sample tox configurations
   - docs/*.ini
+  - mkdocs.yml
 
 languageSettings:
   - languageId: python
