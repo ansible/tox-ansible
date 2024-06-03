@@ -232,7 +232,7 @@ def desc_for_env(env: str) -> str:
         The environment description.
     """
     test_type, python, core = env.split("-")
-    ansible_pkg = "ansible" if core == "2.9" else "ansible-core"
+    ansible_pkg = "ansible-core"
 
     return f"{test_type.capitalize()} tests using {ansible_pkg} {core} and python {python[2:]}"
 
@@ -449,7 +449,7 @@ def conf_commands_for_sanity(
     return commands
 
 
-def conf_commands_pre(  # noqa: C901, PLR0915
+def conf_commands_pre(
     env_conf: EnvConfigSet,
     c_name: str,
     c_namespace: str,
@@ -513,16 +513,6 @@ def conf_commands_pre(  # noqa: C901, PLR0915
     if in_action():
         commands.append(end_group)
 
-    if env_conf.name == "sanity-py3.8-2.9":
-        # Avoid "Setuptools is replacing distutils"
-        if in_action():
-            group = "echo ::group::Use old setuptools for sanity-py3.8-2.9"
-            commands.append(group)
-        pip_install = "pip install setuptools==57.5.0"
-        commands.append(pip_install)
-        if in_action():
-            commands.append(end_group)
-
     return commands
 
 
@@ -579,8 +569,6 @@ def conf_passenv() -> list[str]:
 def conf_setenv(env_conf: EnvConfigSet) -> str:
     """Build the set environment variables for the tox environment.
 
-    ansible 2.9 did not support the ANSIBLE_COLLECTION_PATH environment variable
-    ansible 2.16 has it marked for deprecation in 2.19
     Set the XDG_CACHE_HOME to the environment directory to isolate it
 
     Args:
@@ -589,10 +577,7 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
     Returns:
         The set environment variables.
     """
-    if env_conf.name.endswith("2.9"):
-        envvar_name = "ANSIBLE_COLLECTIONS_PATHS"
-    else:
-        envvar_name = "ANSIBLE_COLLECTIONS_PATH"
+    envvar_name = "ANSIBLE_COLLECTIONS_PATH"
     envtmpdir = env_conf["envtmpdir"]
 
     setenv = [
