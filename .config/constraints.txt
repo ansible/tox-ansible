@@ -111,7 +111,7 @@ tomli==2.0.1
 tomlkit==0.12.5
 tox==4.15.1
 types-pyyaml==6.0.12.20240311
-typing-extensions==4.12.1
+typing-extensions==4.12.2
 urllib3==2.2.1
 virtualenv==20.26.2
 watchdog==4.0.1
