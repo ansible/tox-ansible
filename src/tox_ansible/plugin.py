@@ -449,7 +449,7 @@ def conf_commands_for_sanity(
     return commands
 
 
-def conf_commands_pre(  # noqa: C901
+def conf_commands_pre(
     env_conf: EnvConfigSet,
     c_name: str,
     c_namespace: str,
@@ -472,13 +472,6 @@ def conf_commands_pre(  # noqa: C901
     collection_installed_at = f"{collections_root}/ansible_collections/{c_namespace}/{c_name}"
     galaxy_build_dir = f"{envtmpdir}/collection_build"
     end_group = "echo ::endgroup::"
-
-    if in_action():
-        group = "echo ::group::Ensure pip is up to date"
-        commands.append(group)
-    commands.append("python -m ensurepip --upgrade")
-    if in_action():
-        commands.append(end_group)
 
     if in_action():
         group = "echo ::group::Make the galaxy build dir"

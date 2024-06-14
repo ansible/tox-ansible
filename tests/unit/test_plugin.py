@@ -38,5 +38,5 @@ def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     )
 
     result = conf_commands_pre(env_conf=conf, c_name="test", c_namespace="test")
-    number_commands = 15
+    number_commands = 12
     assert len(result) == number_commands, result
