@@ -25,7 +25,6 @@ def test_type_current(
         capsys: pytest fixture to capture stdout and stderr
         monkeypatch: pytest fixture to patch modules
         module_fixture_dir: pytest fixture to provide a module specific fixture directory
-        matrix_length: pytest fixture to provide the length of the gh matrix
     """
     matrix_length = 36
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
