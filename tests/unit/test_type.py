@@ -18,7 +18,6 @@ def test_type_current(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
     module_fixture_dir: Path,
-    matrix_length: int,
 ) -> None:
     """Test the current runtime for a gh matrix.
 
@@ -28,6 +27,7 @@ def test_type_current(
         module_fixture_dir: pytest fixture to provide a module specific fixture directory
         matrix_length: pytest fixture to provide the length of the gh matrix
     """
+    matrix_length = 36
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     monkeypatch.chdir(module_fixture_dir)
@@ -42,8 +42,7 @@ def test_type_current(
         out["run"](args=args)
     captured = capsys.readouterr()
     matrix = json.loads(captured.out)
-    matrix_len = matrix_length
-    assert len(matrix) == matrix_len
+    assert len(matrix) == matrix_length
     for entry in matrix:
         assert entry["description"]
         assert entry["factors"]
