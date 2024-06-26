@@ -87,7 +87,12 @@ def _tox_in_tox(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @dataclass
 class BasicEnvironment:
-    """An structure for an environment."""
+    """An structure for an environment.
+
+    Attributes:
+        name: The name of the environment
+        config: The configuration entry for the environment
+    """
 
     name: str
     config: dict[str, str]

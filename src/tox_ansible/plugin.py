@@ -70,7 +70,18 @@ class AnsibleConfigSet(ConfigSet):
 
 @dataclass
 class AnsibleTestConf:  # pylint: disable=too-many-instance-attributes
-    """Ansible test configuration."""
+    """Ansible test configuration.
+
+    Attributes:
+        description: The description of the test.
+        deps: The dependencies for the test.
+        setenv: The set environment variables for the test.
+        skip_install: Skip the installation.
+        allowlist_externals: The allowed external commands.
+        commands_pre: The pre-run commands.
+        commands: The commands to run.
+        passenv: The pass environment
+    """
 
     description: str
     deps: str
