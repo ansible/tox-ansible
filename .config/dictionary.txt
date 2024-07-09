@@ -1,12 +1,9 @@
 autouse
-basepython
 bthornto
 calver
 capsys
 ccshared
 cflags
-cidrblock
-codecov
 cppflags
 cpython
 delenv
@@ -18,7 +15,6 @@ fixturenames
 ldflags
 libera
 metafunc
-nocolor
 passenv
 pythonhashseed
 pythonioencoding
@@ -27,6 +23,3 @@ sysroot
 testenv
 tmpdir
 toxfile
-toxinidir
-workdir
-xdist
