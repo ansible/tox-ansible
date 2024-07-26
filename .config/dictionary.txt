@@ -1,6 +1,7 @@
 autouse
 bthornto
 calver
+caplog
 capsys
 ccshared
 cflags
@@ -9,6 +10,7 @@ cpython
 delenv
 devel
 endgroup
+envlist
 envtmpdir
 fileh
 fixturenames
@@ -23,3 +25,4 @@ sysroot
 testenv
 tmpdir
 toxfile
+xdist
