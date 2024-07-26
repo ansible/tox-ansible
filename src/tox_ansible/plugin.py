@@ -295,7 +295,7 @@ def _check_num_candidates(candidates: list[str], env_name: str) -> None:
         logging.critical(err)
         sys.exit(1)
     if len(candidates) == 0:
-        err = f"No python versions found in {env_name}"
+        err = f"No python version found in {env_name}"
         logging.critical(err)
         sys.exit(1)
 
