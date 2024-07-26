@@ -283,7 +283,38 @@ def add_ansible_matrix(state: State) -> EnvList:
     return env_list
 
 
-def generate_gh_matrix(env_list: EnvList, section: str) -> None:  # noqa: C901
+def _check_num_candidates(candidates: list[str], env_name: str) -> None:
+    """Check the number of candidates.
+
+    Args:
+        candidates: The candidates.
+        env_name: The environment name.
+    """
+    if len(candidates) > 1:
+        err = f"Multiple python versions found in {env_name}"
+        logging.critical(err)
+        sys.exit(1)
+    if len(candidates) == 0:
+        err = f"No python versions found in {env_name}"
+        logging.critical(err)
+        sys.exit(1)
+
+
+def _gen_version(candidates: list[str]) -> str:
+    """Generate the version from the candidates.
+
+    Args:
+        candidates: The candidates.
+
+    Returns:
+        The version.
+    """
+    if "." in candidates[0]:
+        return candidates[0]
+    return f"{candidates[0][0]}.{candidates[0][1:]}"
+
+
+def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     """Generate the github matrix.
 
     Args:
@@ -301,18 +332,10 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:  # noqa: C901
             match = PY_FACTORS_RE.match(factor)
             if match:
                 candidates.append(match[2])
-        if len(candidates) > 1:
-            err = f"Multiple python versions found in {env_name}"
-            logging.critical(err)
-            sys.exit(1)
-        if len(candidates) == 0:
-            err = f"No python versions found in {env_name}"
-            logging.critical(err)
-            sys.exit(1)
-        if "." in candidates[0]:
-            version = candidates[0]
-        else:
-            version = f"{candidates[0][0]}.{candidates[0][1:]}"
+
+        _check_num_candidates(candidates=candidates, env_name=env_name)
+        version = _gen_version(candidates=candidates)
+
         results.append(
             {
                 "description": desc_for_env(env_name),
