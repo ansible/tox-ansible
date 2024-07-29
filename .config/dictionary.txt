@@ -10,6 +10,7 @@ cpython
 delenv
 devel
 endgroup
+envdir
 envlist
 envtmpdir
 fileh
