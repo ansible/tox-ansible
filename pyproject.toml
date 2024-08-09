@@ -71,7 +71,7 @@ allow-init-docstring = true
 arg-type-hints-in-docstring = false
 baseline = ".config/pydoclint-baseline.txt"
 check-return-types = false
-exclude = '.eggs|\.git|\.tox|build|out|venv'
+exclude = '\.git|\.tox|build|out|venv'
 show-filenames-in-every-violation-message = true
 skip-checking-short-docstrings = false
 style = "google"
@@ -342,6 +342,7 @@ parametrize-values-type = "tuple"
 known-first-party = ["tox_ansible"]
 lines-after-imports = 2 # Ensures consistency for cases when there's variable vs function/class definitions after imports
 lines-between-types = 1 # Separate import/from with 1 line
+required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "_version.py" = ["SIM108"]
