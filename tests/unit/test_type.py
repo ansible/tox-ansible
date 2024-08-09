@@ -5,6 +5,7 @@ These are specific to PR https://github.com/tox-dev/tox/pull/3288
 When merged the 2nd test can be switched to a SystemExit like test #1
 The types override for List/list and the related ruff noqa's in plugin.py can be removed.
 """
+from __future__ import annotations
 
 import json
 import runpy
