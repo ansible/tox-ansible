@@ -36,6 +36,12 @@ requires-python = ">=3.10"
 [project.entry-points.tox]
 tox-ansible = "tox_ansible.plugin"
 
+[project.urls]
+changelog = "https://github.com/ansible/tox-ansible/releases"
+documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
+homepage = "https://github.com/ansible/tox-ansible"
+repository = "https://github.com/ansible/tox-ansible"
+
 [tool.black]
 line-length = 100
 
@@ -65,7 +71,7 @@ allow-init-docstring = true
 arg-type-hints-in-docstring = false
 baseline = ".config/pydoclint-baseline.txt"
 check-return-types = false
-exclude = '\.git|\.tox|build|out|venv'
+exclude = '.eggs|\.git|\.tox|build|out|venv'
 show-filenames-in-every-violation-message = true
 skip-checking-short-docstrings = false
 style = "google"
