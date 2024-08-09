@@ -1,13 +1,19 @@
 """User provided configuration."""
 
+from __future__ import annotations
+
 import json
 import os
 import subprocess
 
 from configparser import ConfigParser
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def test_user_provided(
