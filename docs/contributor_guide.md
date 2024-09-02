@@ -26,25 +26,30 @@ Prerequisites:
 Feel free to raise issues in the repo if you feel unable to contribute a code
 fix.
 
+Possible security bugs should be reported via email to <mailto:security@ansible.com>.
+
 ## Talk to us
 
-Use Github [discussions] forum or for a live chat experience try
-`#ansible-devtools` IRC channel on libera.chat or Matrix room
-[#devtools:ansible.com](https://matrix.to/#/#devtools:ansible.com).
+### Code of Conduct
 
-For the full list of Ansible IRC and Mailing list, please see the [Ansible
-Communication] page. Release announcements will be made to the [Ansible
-Announce] list.
+Please read and adhere to the [Ansible Community Code of Conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html) in all your interactions within the Ansible community.
 
-Possible security bugs should be reported via email to
-<mailto:security@ansible.com>.
+### Forum
 
-## Code of Conduct
+Join the [Ansible Forum](https://forum.ansible.com) as a single starting point and our default communication platform for questions and help, development discussions, events, and much more. [Register](https://forum.ansible.com/signup?) to join the community. Search by categories and tags to find interesting topics or start a new one; subscribe only to topics you need!
 
-Please see the official [Ansible Community Code of Conduct].
+* [Get Help](https://forum.ansible.com/c/help/6): get help or help others. Please add appropriate tags if you start new discussions, for example `devtools`.
+* [Posts tagged with 'devtools'](https://forum.ansible.com/tag/devtools): subscribe to participate in project-related conversations.
+* [Bullhorn newsletter](https://docs.ansible.com/ansible/devel/community/communication.html#the-bullhorn) used to announce releases and important changes.
+* [Social Spaces](https://forum.ansible.com/c/chat/4): gather and interact with fellow enthusiasts.
+* [News & Announcements](https://forum.ansible.com/c/news/5): track project-wide announcements including social events.
 
-[discussions]: https://github.com/ansible/tox-ansible/discussions
-[ansible communication]: https://docs.ansible.com/ansible/latest/community/communication.html
-[ansible announce]: https://groups.google.com/forum/#!forum/ansible-announce
-[Ansible Community Code of Conduct]: https://docs.ansible.com/ansible/latest/community/code_of_conduct.html
+For more information on the forum navigation, see [Navigating the Ansible forum](https://forum.ansible.com/t/navigating-the-ansible-forum-tags-categories-and-concepts/39) post.
+
+### Matrix
+
+For real-time interactions, conversations in the community happen over the Matrix protocol in the [#devtools:ansible.com](https://matrix.to/#/#devtools:ansible.com).
+
+For more information, see the community-hosted [Matrix FAQ](https://hackmd.io/@ansible-community/community-matrix-faq).
+
 [creating your fork on github]: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
