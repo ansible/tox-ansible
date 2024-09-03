@@ -16,7 +16,7 @@ By using `tox` to create and manage the testing environments, Test outcomes shou
 
 ## Talk to us
 
-Need help or want to discuss the project? See our [Contributor guide](https://ansible.readthedocs.io/projects/tox-ansible/contributor_guide/#talk-to-us) to learn how to join the conversation!
+Need help or want to discuss the project? See our [Contributor guide](https://ansible.readthedocs.io/projects/tox-ansible/contributor_guide/#talk-to-us) join the conversation!
 
 ## Installation
 
