@@ -32,7 +32,7 @@ Possible security bugs should be reported via email to <mailto:security@ansible.
 
 ### Code of Conduct
 
-Please read and adhere to the [Ansible Community Code of Conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html) in all your interactions within the Ansible community.
+Please read and adhere to the [Ansible Community Code of Conduct](https://docs.ansible.com/ansible/latest/community/code_of_conduct.html) in all your interactions with the Ansible community.
 
 ### Forum
 
