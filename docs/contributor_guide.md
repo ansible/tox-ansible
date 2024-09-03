@@ -44,7 +44,7 @@ Join the [Ansible Forum](https://forum.ansible.com) as a single starting point a
 - [Social Spaces](https://forum.ansible.com/c/chat/4): gather and interact with fellow enthusiasts.
 - [News & Announcements](https://forum.ansible.com/c/news/5): track project-wide announcements including social events.
 
-For more information on the forum navigation, see [Navigating the Ansible forum](https://forum.ansible.com/t/navigating-the-ansible-forum-tags-categories-and-concepts/39) post.
+See `Navigating the Ansible forum <https://forum.ansible.com/t/navigating-the-ansible-forum-tags-categories-and-concepts/39>`_ for some practical advice on finding your way around.
 
 ### Matrix
 
