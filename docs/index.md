@@ -1,5 +1,7 @@
 # Tox Ansible Documentation
 
+> Need help or want to discuss the project? See our [Contributor guide](https://ansible.readthedocs.io/projects/tox-ansible/contributor_guide/#talk-to-us) to join the conversation!
+
 ## About Tox Ansible
 
 `tox-ansible` is a utility designed to simplify the testing of ansible content collections.
