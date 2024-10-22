@@ -9,20 +9,17 @@ import os
 import re
 import sys
 import uuid
-
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, TypeVar
 
 import yaml
-
 from tox.config.loader.memory import MemoryLoader
 from tox.config.loader.section import Section
 from tox.config.loader.str_convert import StrConvert
 from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
 from tox.plugin import impl
 from tox.tox_env.python.api import PY_FACTORS_RE
-
 
 if TYPE_CHECKING:
     from tox.config.cli.parser import ToxParser
@@ -42,8 +39,9 @@ ALLOWED_EXTERNALS = [
 ENV_LIST = """
 {integration, sanity, unit}-py3.9-{2.15}
 {integration, sanity, unit}-py3.10-{2.15, 2.16, 2.17}
-{integration, sanity, unit}-py3.11-{2.15, 2.16, 2.17, milestone, devel}
-{integration, sanity, unit}-py3.12-{2.16, 2.17, milestone, devel}
+{integration, sanity, unit}-py3.11-{2.15, 2.16, 2.17, 2.18, milestone, devel}
+{integration, sanity, unit}-py3.12-{2.16, 2.17, 2.18, milestone, devel}
+{integration, sanity, unit}-py3.13-{2.16, 2.17, 2.18, milestone, devel}
 """
 TOX_WORK_DIR = Path()
 OUR_DEPS = [
