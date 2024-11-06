@@ -110,6 +110,7 @@ repos:
         stages: [manual]
         entry: >-
           pip-compile .config/requirements.in
+          --no-annotate
           --upgrade
           --all-extras
           --no-annotate
