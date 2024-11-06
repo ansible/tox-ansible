@@ -2,7 +2,6 @@ ansible-core
 black
 coverage[toml]
 mypy
-pip-tools
 pre-commit
 pydoclint
 pylint
