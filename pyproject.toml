@@ -71,7 +71,7 @@ allow-init-docstring = true
 arg-type-hints-in-docstring = false
 baseline = ".config/pydoclint-baseline.txt"
 check-return-types = false
-exclude = '\.git|\.tox|build|out|venv'
+exclude = '\.eggs|\.git|\.tox|build|out|venv'
 should-document-private-class-attributes = true
 show-filenames-in-every-violation-message = true
 skip-checking-short-docstrings = false
@@ -375,3 +375,8 @@ write_to = "src/tox_ansible/_version.py"
 in_place = true
 sort_inline_tables = true
 sort_table_keys = true
+
+[tool.uv.pip]
+annotation-style = "line"
+custom-compile-command = "tox run deps"
+no-emit-package = ["ansible-core", "pip", "resolvelib", "typing_extensions", "uv"]

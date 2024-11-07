@@ -5,6 +5,8 @@ ci:
   autoupdate_schedule: monthly
   autofix_commit_msg: "chore: auto fixes from pre-commit.com hooks"
 
+  skip:
+    - deps
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -66,7 +68,7 @@ repos:
           - --exit-non-zero-on-fix
 
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.15.2
+    rev: v8.15.3
     hooks:
       - id: cspell
         name: Spell check with cspell
@@ -101,20 +103,24 @@ repos:
         # Override default pre-commit '--ignore-missing-imports'
         args: [--strict]
 
-  - repo: https://github.com/jazzband/pip-tools
-    rev: 7.4.1
+  # Keep last due to being considerably slower than the others:
+  - repo: local
     hooks:
-      - id: pip-compile
-        name: deps
-        alias: deps
-        stages: [manual]
-        entry: >-
-          pip-compile .config/requirements.in
-          --no-annotate
-          --upgrade
-          --all-extras
-          --no-annotate
-          --strip-extras
-          --output-file=.config/constraints.txt pyproject.toml
-        files: ^.config\/.*requirements.*$
-        language_version: "3.10" # minimal we support officially
+      - id: up
+        name: Upgrade constraints files and requirements
+        files: ^(pyproject\.toml|requirements\.txt)$
+        language: python
+        entry: python3 -m uv pip compile --python-version=3.10 -q --all-extras --output-file=.config/constraints.txt pyproject.toml --upgrade
+        pass_filenames: false
+        stages:
+          - manual
+        additional_dependencies:
+          - uv>=0.4.3
+      - id: deps
+        name: Check constraints files and requirements
+        files: ^(pyproject\.toml|requirements\.txt)$
+        language: python
+        entry: python3 -m uv pip compile --python-version=3.10 -q --all-extras --output-file=.config/constraints.txt pyproject.toml
+        pass_filenames: false
+        additional_dependencies:
+          - uv>=0.4.3
