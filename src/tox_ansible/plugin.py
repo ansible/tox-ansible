@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 ALLOWED_EXTERNALS = [
     "bash",
+    "sh",
     "cp",
     "git",
     "rm",
@@ -526,7 +527,7 @@ def conf_commands_pre(
         f"cp -r $file {galaxy_build_dir}/$file;\n"
         "done"
     )
-    full_cmd = f"bash -c '{cd_tox_dir} && {copy_script}'"
+    full_cmd = f"sh -c '{cd_tox_dir} && {copy_script}'"
     commands.append(full_cmd)
     if in_action():
         commands.append(end_group)
