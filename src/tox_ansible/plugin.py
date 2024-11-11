@@ -32,12 +32,14 @@ if TYPE_CHECKING:
 
 ALLOWED_EXTERNALS = [
     "bash",
+    "sh",
     "cp",
     "git",
     "rm",
     "mkdir",
     "cd",
     "echo",
+    "dirname",
 ]
 ENV_LIST = """
 {integration, sanity, unit}-py3.9-{2.15}
@@ -519,8 +521,13 @@ def conf_commands_pre(
         group = "echo ::group::Copy the collection to the galaxy build dir"
         commands.append(group)
     cd_tox_dir = f"cd {TOX_WORK_DIR}"
-    copy_cmd = f"cp -r --parents $(git ls-files 2> /dev/null || ls) {galaxy_build_dir}"
-    full_cmd = f"bash -c '{cd_tox_dir} && {copy_cmd}'"
+    copy_script = (
+        f"for file in $(git ls-files 2> /dev/null || ls); do\n\t"
+        f"mkdir -p {galaxy_build_dir}/$(dirname $file);\n\t"
+        f"cp -r $file {galaxy_build_dir}/$file;\n"
+        "done"
+    )
+    full_cmd = f"sh -c '{cd_tox_dir} && {copy_script}'"
     commands.append(full_cmd)
     if in_action():
         commands.append(end_group)
