@@ -61,7 +61,7 @@ T = TypeVar("T", bound=ConfigSet)
 class AnsibleConfigSet(ConfigSet):
     """The ansible configuration."""
 
-    def register_config(self: T) -> None:
+    def register_config(self) -> None:
         """Register the ansible configuration."""
         self.add_config(
             "skip",
