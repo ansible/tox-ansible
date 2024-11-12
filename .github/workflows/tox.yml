@@ -8,6 +8,8 @@ on:
   pull_request:
     branches:
       - "main"
+      - "releases/**"
+      - "stable/**"
   workflow_call:
 
 concurrency:
@@ -20,3 +22,81 @@ jobs:
     with:
       max_python: "3.13"
       jobs_producing_coverage: 8
+
+  smoke-matrix:
+    # Uncomment the below line when all tests start passing
+    needs: tox
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox-ansible, includes tox
+        run: python3 -m pip install .
+
+      - name: Generate matrix
+        id: generate-matrix
+        working-directory: tests/fixtures/unit/test_type
+        run: |
+          python3 -m tox --ansible --gh-matrix --conf tox-ansible.ini
+
+    outputs:
+      envlist: ${{ steps.generate-matrix.outputs.envlist }}
+
+  smoke-test:
+    needs: smoke-matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJson(needs.smoke-matrix.outputs.envlist) }}
+    name: ${{ matrix.entry.name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.entry.python }}
+
+      - name: Install tox-ansible, includes tox
+        run: python3 -m pip install .
+
+      - name: Install ansible-creator
+        run: python3 -m pip install ansible-creator
+
+      - name: Create test directory to scaffold ansible collection
+        run: mkdir example
+
+      - name: Scaffold an ansible collection using ansible-creator
+        working-directory: example
+        run: ansible-creator init collection "foo.bar"
+
+      - name: Track files created by ansible-creator
+        working-directory: example
+        run: git add .
+
+      - name: Run tox test
+        working-directory: example
+        run: python3 -m tox --ansible -e ${{ matrix.entry.name }} --conf tox-ansible.ini
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  smoke-check:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - run: >-
+          python -c "assert set([
+          '${{ needs.smoke-test.result }}',
+          ]) == {'success'}"
