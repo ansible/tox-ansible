@@ -8,6 +8,8 @@ on:
   pull_request:
     branches:
       - "main"
+      - "releases/**"
+      - "stable/**"
   workflow_call:
 
 concurrency:
@@ -20,3 +22,65 @@ jobs:
     with:
       max_python: "3.13"
       jobs_producing_coverage: 8
+
+  tox-matrix:
+    needs: tox
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tox-ansible, includes tox
+        run: python3 -m pip install .
+
+      - name: Generate matrix
+        id: generate-matrix
+        working-directory: tests/fixtures/unit/test_type
+        run: |
+          python3 -m tox --ansible --gh-matrix --conf tox-ansible.ini
+
+    outputs:
+      envlist: ${{ steps.generate-matrix.outputs.envlist }}
+
+  integration:
+    needs: tox-matrix
+    strategy:
+      fail-fast: false
+    name: integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Make test script executable
+        working-directory: tools
+        run: chmod +x test_all.sh
+
+      - name: Run tox test
+        working-directory: tools
+        run: ./test_all.sh foo.bar '${{ needs.tox-matrix.outputs.envlist }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test_passed:
+    needs: integration
+    runs-on: ubuntu-latest
+    steps:
+      - run: >-
+          python -c "assert set([
+          '${{ needs.integration.result }}',
+          ]) == {'success'}"
