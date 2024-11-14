@@ -49,10 +49,12 @@ ENV_LIST = """
 {integration, sanity, unit}-py3.13-{2.18, milestone, devel}
 """
 TOX_WORK_DIR = Path()
+# Without the minimal pytest-ansible condition, installation may fail in some
+# cases (pip, uv).
 OUR_DEPS = [
-    "pytest",
-    "pytest-xdist",
-    "pytest-ansible",
+    "pytest>=7.4.3",  # Oct 2023
+    "pytest-xdist>=3.4.0",  # Nov 2023
+    "pytest-ansible>=v4.1.1",  # latest version still supporting py39 (Oct 2023)
 ]
 
 T = TypeVar("T", bound=ConfigSet)

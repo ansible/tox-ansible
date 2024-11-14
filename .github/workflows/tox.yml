@@ -67,7 +67,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.entry.python }}
+          # tox-ansible requires python 3.10 but it can be used to test with
+          # older versions of python.
+          python-version: |
+            ${{ matrix.entry.python }}
+            3.10
 
       - name: Install tox-ansible, includes tox
         run: python3 -m pip install .
