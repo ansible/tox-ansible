@@ -78,7 +78,7 @@ pylint==3.3.3             # via tox-ansible (pyproject.toml)
 pymdown-extensions==10.14.1  # via markdown-exec, mkdocs-ansible, mkdocs-material, mkdocstrings
 pyproject-api==1.9.0      # via tox
 pytest==8.3.4             # via pytest-ansible, pytest-xdist, tox-ansible (pyproject.toml)
-pytest-ansible==25.1.0   # via tox-ansible (pyproject.toml)
+pytest-ansible==25.1.0    # via tox-ansible (pyproject.toml)
 pytest-xdist==3.6.1       # via tox-ansible (pyproject.toml)
 python-dateutil==2.9.0.post0  # via ghp-import, mkdocs-macros-plugin
 python-slugify==8.0.4     # via mkdocs-monorepo-plugin
