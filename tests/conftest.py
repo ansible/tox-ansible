@@ -33,9 +33,42 @@ import tox_ansible  # noqa: F401
 
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from _pytest.python import Metafunc
 
 GH_MATRIX_LENGTH = 45
+
+
+def run(
+    args: Sequence[str | Path] | str | Path,
+    *,
+    cwd: Path,
+    check: bool = False,
+    shell: bool = True,
+    env: subprocess._ENV | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Utility function to run a command.
+
+    Args:
+        args: The command to run
+        cwd: The current working directory
+        check: Whether to raise an exception if the command fails
+        shell: Whether to run the command in a shell
+        env: The environment to run the command in
+
+    Returns:
+        A CompletedProcess with the result of the command
+    """
+    return subprocess.run(
+        args=args,
+        capture_output=True,
+        check=check,
+        cwd=str(cwd),
+        shell=shell,
+        text=True,
+        env=env,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -117,14 +150,11 @@ def pytest_generate_tests(metafunc: Metafunc) -> None:
             env.pop("TOX_ENV_NAME", None)
             env.pop("TOX_WORK_DIR", None)
 
-            proc = subprocess.run(
+            proc = run(
                 args=cmd,
-                capture_output=True,
                 check=True,
-                cwd=str(basic_dir),
+                cwd=basic_dir,
                 env=env,
-                shell=True,
-                text=True,
             )
         except subprocess.CalledProcessError as exc:
             print(exc.stdout)
