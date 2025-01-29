@@ -114,7 +114,7 @@ The arguments after the `--` will be passed to the `ansible-test` command. Thus 
 Same can be done to pass arguments to the `pytest` commands for the `unit-*` and `integration-*` environments:
 
 ```bash
-tox -e unit-py3.11-2.15 --ansible --conf tox-ansible.ini -- --junit-xml=tests/output/junit/unit.xml
+tox -e unit-py3.13-2.18 --ansible --conf tox-ansible.ini -- --junit-xml=tests/output/junit/unit.xml
 ```
 
 ## Usage in a CI/CD pipeline
