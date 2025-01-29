@@ -67,7 +67,7 @@ def test_check_num_candidates_2(caplog: pytest.LogCaptureFixture) -> None:
     Args:
         caplog: Pytest fixture.
     """
-    environment_list = EnvList(envs=["integration-py3.9-py3.9"])
+    environment_list = EnvList(envs=["integration-py3.13-py3.13"])
     with pytest.raises(SystemExit, match="1"):
         generate_gh_matrix(environment_list, "all")
     logs = caplog.text
@@ -96,7 +96,8 @@ def test_gen_version_matrix(python: str, tmp_path: Path, monkeypatch: pytest.Mon
         tmp_path: Pytest fixture.
         monkeypatch: Pytest fixture.
     """
-    environment_list = EnvList(envs=[f"integration-{python}-2.15"])
+    av = "2.18"
+    environment_list = EnvList(envs=[f"integration-{python}-{av}"])
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     gh_output = tmp_path / "matrix.json"
     monkeypatch.setenv("GITHUB_OUTPUT", str(gh_output))
@@ -106,9 +107,9 @@ def test_gen_version_matrix(python: str, tmp_path: Path, monkeypatch: pytest.Mon
     assert json_string
     json_result = json.loads(json_string.group("json"))
     assert json_result[0] == {
-        "description": f"Integration tests using ansible-core 2.15 and python {python[2:]}",
-        "factors": ["integration", python, "2.15"],
-        "name": f"integration-{python}-2.15",
+        "description": f"Integration tests using ansible-core {av} and python {python[2:]}",
+        "factors": ["integration", python, av],
+        "name": f"integration-{python}-{av}",
         "python": "3.13",
     }
 
