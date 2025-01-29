@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from tests.conftest import run
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -23,15 +25,9 @@ def test_ansible_environments(module_fixture_dir: Path, tox_bin: Path) -> None:
         module_fixture_dir: pytest fixture to get the fixtures directory
         tox_bin: pytest fixture to get the tox binary
     """
-    cmd = (tox_bin, "-l", "--ansible", "--conf", f"{module_fixture_dir}/tox-ansible.ini")
+    cmd = (str(tox_bin), "-l", "--ansible", "--conf", f"{module_fixture_dir}/tox-ansible.ini")
     try:
-        proc = subprocess.run(  # noqa: S603
-            cmd,
-            capture_output=True,
-            cwd=str(module_fixture_dir),
-            text=True,
-            check=True,
-        )
+        proc = run(cmd, cwd=module_fixture_dir, check=True, shell=False)
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
         print(exc.stderr)
@@ -59,12 +55,11 @@ def test_gh_matrix(
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
 
     cmd = (tox_bin, "--ansible", "--gh-matrix", "--conf", f"{module_fixture_dir}/tox-ansible.ini")
-    proc = subprocess.run(  # noqa: S603
+    proc = run(
         cmd,
-        capture_output=True,
-        cwd=str(module_fixture_dir),
-        text=True,
+        cwd=module_fixture_dir,
         check=True,
+        shell=False,
     )
     structured = json.loads(proc.stdout)
     assert isinstance(structured, list)
@@ -110,11 +105,9 @@ def test_no_ansible_flag(module_fixture_dir: Path, tox_bin: Path) -> None:
 
     """
     cmd = (tox_bin, "--root", str(module_fixture_dir), "--conf", "tox-ansible.ini")
-    proc = subprocess.run(  # noqa: S603
+    proc = run(
         cmd,
-        capture_output=True,
-        cwd=str(module_fixture_dir),
-        text=True,
+        cwd=module_fixture_dir,
         check=True,
     )
     assert "py: OK" in proc.stdout
@@ -129,23 +122,22 @@ def test_no_ansible_flag_gh(module_fixture_dir: Path, tox_bin: Path) -> None:
 
     """
     cmd = (
-        tox_bin,
+        str(tox_bin),
         "--gh-matrix",
         "--root",
         str(module_fixture_dir),
         "--conf",
-        "tox-ansible.ini",
+        str(module_fixture_dir / "tox-ansible.ini"),
     )
 
-    with pytest.raises(subprocess.CalledProcessError) as exc:
-        subprocess.run(  # noqa: S603
-            cmd,
-            capture_output=True,
-            cwd=str(module_fixture_dir),
-            text=True,
-            check=True,
-        )
-    assert "The --gh-matrix option requires --ansible" in exc.value.stdout
+    proc = run(
+        cmd,
+        cwd=module_fixture_dir,
+        check=False,
+        shell=False,
+    )
+    assert proc.returncode == 1
+    assert "The --gh-matrix option requires --ansible" in proc.stdout
 
 
 def test_tox_ini_msg(
@@ -161,12 +153,11 @@ def test_tox_ini_msg(
     """
     cmd = (tox_bin, "--ansible", "--root", str(module_fixture_dir), "-e", "non-existent")
     with pytest.raises(subprocess.CalledProcessError) as exc:
-        subprocess.run(  # noqa: S603
+        run(
             cmd,
-            capture_output=True,
-            cwd=str(module_fixture_dir),
-            text=True,
+            cwd=module_fixture_dir,
             check=True,
+            shell=False,
         )
     expected = "Using a default tox.ini file with tox-ansible plugin is not recommended"
     assert expected in exc.value.stdout
@@ -197,12 +188,11 @@ def test_setting_matrix_scope(
         "--conf",
         "tox-ansible.ini",
     )
-    proc = subprocess.run(  # noqa: S603
+    proc = run(
         cmd,
-        capture_output=True,
-        cwd=str(module_fixture_dir),
-        text=True,
+        cwd=module_fixture_dir,
         check=False,
+        shell=False,
     )
     structured = json.loads(proc.stdout)
     assert isinstance(structured, list)
@@ -227,11 +217,10 @@ def test_action_not_output(
 
     cmd = (tox_bin, "--ansible", "--gh-matrix", "--conf", "tox-ansible.ini")
 
-    proc = subprocess.run(  # noqa: S603
+    proc = run(
         cmd,
-        capture_output=True,
-        cwd=str(module_fixture_dir),
-        text=True,
+        cwd=module_fixture_dir,
         check=False,
+        shell=False,
     )
     assert "GITHUB_OUTPUT environment variable not set" in proc.stdout

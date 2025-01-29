@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from tests.conftest import run
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -27,14 +29,10 @@ def test_user_provided(
         tox_bin: pytest fixture for tox binary
     """
     try:
-        proc = subprocess.run(
+        proc = run(
             f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini",
-            capture_output=True,
-            cwd=str(module_fixture_dir),
-            text=True,
+            cwd=module_fixture_dir,
             check=True,
-            shell=True,
-            env=os.environ,
         )
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
@@ -68,13 +66,10 @@ def test_user_provided_matrix_success(
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
-    proc = subprocess.run(
+    proc = run(
         f"{tox_bin} --ansible --root {module_fixture_dir} --gh-matrix --conf tox-ansible.ini",
-        capture_output=True,
-        cwd=str(module_fixture_dir),
-        text=True,
+        cwd=module_fixture_dir,
         check=True,
-        shell=True,
         env=os.environ,
     )
     matrix = json.loads(proc.stdout)

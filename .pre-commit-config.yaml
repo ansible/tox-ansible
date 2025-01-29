@@ -23,8 +23,6 @@ repos:
     rev: v3.1.0
     hooks:
       - id: add-trailing-comma
-        args:
-          - --py36-plus
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks.git
     rev: v1.5.5
@@ -81,8 +79,6 @@ repos:
     rev: "0.6.0"
     hooks:
       - id: pydoclint
-        # This allows automatic reduction of the baseline file when needed.
-        entry: sh -ec "pydoclint . && pydoclint --generate-baseline=1 ."
         pass_filenames: false
 
   - repo: https://github.com/pycqa/pylint.git

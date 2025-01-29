@@ -70,9 +70,10 @@ strict = true
 [tool.pydoclint]
 allow-init-docstring = true
 arg-type-hints-in-docstring = false
+auto-regenerate-baseline = true
 baseline = ".config/pydoclint-baseline.txt"
 check-return-types = false
-exclude = '\.cache|\.eggs|\.git|\.mypy_cache|\.tox|build|dist|out|venv'
+exclude = '\.cache|\.eggs|\.git|\.mypy_cache|\.tox|build|dist|out|site|\.?venv'
 should-document-private-class-attributes = true
 show-filenames-in-every-violation-message = true
 skip-checking-short-docstrings = false
