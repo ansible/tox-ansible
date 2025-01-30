@@ -47,7 +47,6 @@ ENV_LIST = """
 {integration, sanity, unit}-py3.12-{2.16, 2.17, 2.18, milestone, devel}
 {integration, sanity, unit}-py3.13-{2.18, milestone, devel}
 """
-TOX_WORK_DIR = Path()
 # Without the minimal pytest-ansible condition, installation may fail in some
 # cases (pip, uv).
 OUR_DEPS = [
@@ -178,8 +177,6 @@ def tox_add_core_config(
         )
         logging.warning(msg)
 
-    global TOX_WORK_DIR  # pylint: disable=global-statement # noqa: PLW0603
-    TOX_WORK_DIR = state.conf.work_dir
     env_list = add_ansible_matrix(state)
 
     if not state.conf.options.gh_matrix:
@@ -209,7 +206,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     ]:
         return
 
-    galaxy_path = TOX_WORK_DIR / "galaxy.yml"
+    galaxy_path = env_conf._conf._root / "galaxy.yml"  # noqa: SLF001
     c_name, c_namespace = get_collection_name(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
 
@@ -449,10 +446,11 @@ def conf_commands_for_integration_unit(
         The commands to run.
     """
     args = f" {' '.join(pos_args)} " if pos_args else " "
+    root = Path(__file__).parents[2].resolve()
 
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python3 -m pytest --ansible-unit-inject-only{args}{TOX_WORK_DIR}/tests/{test_type}"
+    command = f"python3 -m pytest --ansible-unit-inject-only{args}{root}/tests/{test_type}"
     return [command]
 
 
@@ -521,7 +519,7 @@ def conf_commands_pre(
     if in_action():
         group = "echo ::group::Copy the collection to the galaxy build dir"
         commands.append(group)
-    cd_tox_dir = f"cd {TOX_WORK_DIR}"
+    cd_tox_dir = f"cd {env_conf._conf._root.as_posix()}"  # noqa: SLF001
     copy_script = (
         f"for file in $(git ls-files 2> /dev/null || ls); do\n\t"
         f"mkdir -p {galaxy_build_dir}/$(dirname $file);\n\t"
@@ -570,20 +568,21 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
         The dependencies.
     """
     deps = []
+    root = env_conf._conf._root  # noqa: SLF001
     if test_type in ["integration", "unit"]:
         deps.extend(OUR_DEPS)
         try:
-            with (TOX_WORK_DIR / "test-requirements.txt").open() as fileh:
+            with (root / "test-requirements.txt").open() as fileh:
                 deps.extend(fileh.read().splitlines())
         except FileNotFoundError:
             pass
         try:
-            with (TOX_WORK_DIR / "requirements-test.txt").open() as fileh:
+            with (root / "requirements-test.txt").open() as fileh:
                 deps.extend(fileh.read().splitlines())
         except FileNotFoundError:
             pass
         try:
-            with (TOX_WORK_DIR / "requirements.txt").open() as fileh:
+            with (root / "requirements.txt").open() as fileh:
                 deps.extend(fileh.read().splitlines())
         except FileNotFoundError:
             pass

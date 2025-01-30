@@ -221,7 +221,8 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
         pos_args=None,
     )
     assert len(result) == 1
-    assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/unit"
+    path = Path("./tests/unit").resolve().as_posix()
+    assert result[0] == f"python3 -m pytest --ansible-unit-inject-only {path}"
 
 
 def test_conf_commands_sanity(tmp_path: Path) -> None:
@@ -282,7 +283,8 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
         pos_args=None,
     )
     assert len(result) == 1
-    assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/integration"
+    path = Path("./tests/integration").resolve().as_posix()
+    assert result[0] == f"python3 -m pytest --ansible-unit-inject-only {path}"
 
 
 def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -315,7 +317,7 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
     assert "Unknown test type" in logs
 
 
-def test_conf_deps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_conf_deps(tmp_path: Path) -> None:
     """Test the conf_commands function.
 
     Args:
@@ -329,7 +331,6 @@ def test_conf_deps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     (tmp_path / "test-requirements.txt").write_text("test-requirement")
     (tmp_path / "requirements.txt").write_text("requirement")
     (tmp_path / "requirements-test.txt").write_text("requirement-test")
-    monkeypatch.setattr("tox_ansible.plugin.TOX_WORK_DIR", tmp_path)
 
     conf = Config.make(
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
