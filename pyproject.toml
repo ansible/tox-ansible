@@ -43,9 +43,6 @@ documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
 homepage = "https://github.com/ansible/tox-ansible"
 repository = "https://github.com/ansible/tox-ansible"
 
-[tool.black]
-line-length = 100
-
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "pragma: no cover"]
 fail_under = 81
@@ -375,6 +372,7 @@ git_describe_command = [
   "v*.*"
 ]
 local_scheme = "no-local-version"
+tag_regex = "^(?P<prefix>v)?(?P<version>\\d+[^\\+]*)(?P<suffix>.*)?$"
 write_to = "src/tox_ansible/_version.py"
 
 [tool.tomlsort]
@@ -384,5 +382,14 @@ sort_table_keys = true
 
 [tool.uv.pip]
 annotation-style = "line"
-custom-compile-command = "tox run deps"
-no-emit-package = ["ansible-core", "pip", "resolvelib", "typing_extensions", "uv"]
+custom-compile-command = "tox run -e deps"
+no-emit-package = [
+  "ansible-core",
+  "exceptiongroup",
+  "pip",
+  "resolvelib",
+  "ruamel-yaml-clib",
+  "tomli",
+  "typing_extensions",
+  "uv"
+]
