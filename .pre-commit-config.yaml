@@ -6,9 +6,24 @@ ci:
   autofix_commit_msg: "chore: auto fixes from pre-commit.com hooks"
 
   skip:
+    # https://github.com/pre-commit-ci/issues/issues/55
+    - lock
     - deps
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.4.2
+    hooks:
+      - id: prettier
+        always_run: true
+        additional_dependencies:
+          - prettier
+          - prettier-plugin-sort-json
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.17.1
+    hooks:
+      - id: cspell
+        name: Spell check with cspell
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
     rev: v5.0.0
     hooks:
       - id: check-added-large-files
@@ -18,35 +33,18 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
-
-  - repo: https://github.com/asottile/add-trailing-comma.git
-    rev: v3.1.0
-    hooks:
-      - id: add-trailing-comma
-
-  - repo: https://github.com/Lucas-C/pre-commit-hooks.git
-    rev: v1.5.5
-    hooks:
-      - id: remove-tabs
-        exclude: >
-          (?x)^(
-            .config/pydoclint-baseline.txt
-          )$
-
-  - repo: https://github.com/pycontribs/mirrors-prettier
-    rev: v3.4.2
-    hooks:
-      - id: prettier
-        always_run: true
-        additional_dependencies:
-          - prettier
-          - prettier-plugin-toml
-          - prettier-plugin-sort-json
+      - id: mixed-line-ending
+      - id: fix-byte-order-marker
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: debug-statements
+        language_version: python3
 
   - repo: https://github.com/pappasam/toml-sort
     rev: v0.24.2
     hooks:
       - id: toml-sort-fix
+        alias: toml
 
   - repo: https://github.com/tox-dev/tox-ini-fmt
     rev: 1.5.0
@@ -54,7 +52,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.3
+    rev: v0.9.4
     hooks:
       - id: ruff
         args:
@@ -64,16 +62,14 @@ repos:
       - id: ruff-format # must be after ruff
         types_or: [python, pyi]
 
-  - repo: https://github.com/psf/black # must be after ruff
-    rev: 25.1.0
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
     hooks:
-      - id: black
-
-  - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.17.1
-    hooks:
-      - id: cspell
-        name: Spell check with cspell
+      - id: mypy
+        additional_dependencies:
+          - pytest
+          - tox
+          - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
     rev: "0.6.0"
@@ -92,35 +88,28 @@ repos:
           - tox
           - pyyaml
 
-  - repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v1.14.1
-    hooks:
-      - id: mypy
-        additional_dependencies:
-          - pytest
-          - tox
-          - types-PyYAML
-        # Override default pre-commit '--ignore-missing-imports'
-        args: [--strict]
-
   # Keep last due to being considerably slower than the others:
   - repo: local
     hooks:
-      - id: up
+      - id: deps
+        # To run it execute: `pre-commit run pip-compile-upgrade --hook-stage manual`
         name: Upgrade constraints files and requirements
-        files: ^(pyproject\.toml|requirements\.txt)$
+        files: ^(pyproject\.toml|\.config/.*)$
+        always_run: true
         language: python
-        entry: python3 -m uv pip compile --python-version=3.10 -q --all-extras --output-file=.config/constraints.txt pyproject.toml --upgrade
+        language_version: "3.10" # minimal we support officially https://github.com/astral-sh/uv/issues/3883
+        entry: python3 -m uv pip compile -q --all-extras --universal --output-file=.config/constraints.txt pyproject.toml --upgrade
         pass_filenames: false
         stages:
           - manual
         additional_dependencies:
-          - uv>=0.4.3
-      - id: deps
+          - uv>=0.5.25
+      - id: lock
         name: Check constraints files and requirements
-        files: ^(pyproject\.toml|requirements\.txt)$
+        files: ^(pyproject\.toml|\.config/.*)$
         language: python
-        entry: python3 -m uv pip compile --python-version=3.10 -q --all-extras --output-file=.config/constraints.txt pyproject.toml
+        language_version: "3.10" # minimal we support officially https://github.com/astral-sh/uv/issues/3883
+        entry: python3 -m uv pip compile -q --all-extras --universal --output-file=.config/constraints.txt pyproject.toml
         pass_filenames: false
         additional_dependencies:
-          - uv>=0.4.3
+          - uv>=0.5.25
