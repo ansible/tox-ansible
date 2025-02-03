@@ -19,7 +19,7 @@ repos:
           - prettier
           - prettier-plugin-sort-json
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.17.1
+    rev: v8.17.2
     hooks:
       - id: cspell
         name: Spell check with cspell
