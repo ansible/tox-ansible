@@ -8,12 +8,12 @@ beautifulsoup4==4.13.3    # via linkchecker, mkdocs-htmlproofer-plugin
 cachetools==5.5.1         # via tox
 cairocffi==1.7.1          # via cairosvg
 cairosvg==2.7.1           # via mkdocs-ansible
-certifi==2025.1.31       # via requests
+certifi==2025.1.31        # via requests
 cffi==1.17.1              # via cairocffi, cryptography
 cfgv==3.4.0               # via pre-commit
 chardet==5.2.0            # via tox
 charset-normalizer==3.4.1  # via requests
-click==8.1.8              # via mkdocs, mkdocstrings, pydoclint
+click==8.1.8              # via mkdocs, pydoclint
 colorama==0.4.6           # via click, griffe, mkdocs, mkdocs-material, pylint, pytest, tox
 coverage==7.6.11          # via tox-ansible (pyproject.toml)
 cryptography==44.0.0      # via ansible-core
@@ -49,10 +49,10 @@ mkdocs==1.6.1             # via mkdocs-ansible, mkdocs-autorefs, mkdocs-gen-file
 mkdocs-ansible==24.12.0   # via tox-ansible (pyproject.toml)
 mkdocs-autorefs==1.3.0    # via mkdocstrings, mkdocstrings-python
 mkdocs-gen-files==0.5.0   # via mkdocs-ansible
-mkdocs-get-deps==0.2.0    # via mkdocs
+mkdocs-get-deps==0.2.0    # via mkdocs, mkdocstrings
 mkdocs-htmlproofer-plugin==1.3.0  # via mkdocs-ansible
 mkdocs-macros-plugin==1.3.7  # via mkdocs-ansible
-mkdocs-material==9.6.3   # via mkdocs-ansible
+mkdocs-material==9.6.3    # via mkdocs-ansible
 mkdocs-material-extensions==1.3.1  # via mkdocs-ansible, mkdocs-material
 mkdocs-minify-plugin==0.8.0  # via mkdocs-ansible
 mkdocs-monorepo-plugin==1.1.0  # via mkdocs-ansible
@@ -65,7 +65,7 @@ packaging==24.2           # via ansible-compat, ansible-core, mkdocs, mkdocs-mac
 paginate==0.5.7           # via mkdocs-material
 pathspec==0.12.1          # via mkdocs, mkdocs-macros-plugin
 pillow==11.1.0            # via cairosvg, mkdocs-ansible
-platformdirs==4.3.6       # via mkdocs-get-deps, mkdocstrings, pylint, tox, virtualenv
+platformdirs==4.3.6       # via mkdocs-get-deps, pylint, tox, virtualenv
 pluggy==1.5.0             # via pytest, tox
 pre-commit==4.1.0         # via tox-ansible (pyproject.toml)
 pycparser==2.22           # via cffi
