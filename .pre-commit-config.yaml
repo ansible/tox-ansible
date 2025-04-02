@@ -11,7 +11,7 @@ ci:
     - deps
 repos:
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.4.2
+    rev: v3.5.3
     hooks:
       - id: prettier
         always_run: true
@@ -19,7 +19,7 @@ repos:
           - prettier
           - prettier-plugin-sort-json
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.17.2
+    rev: v8.17.3
     hooks:
       - id: cspell
         name: Spell check with cspell
@@ -52,7 +52,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.4
+    rev: v0.9.9
     hooks:
       - id: ruff
         args:
@@ -63,7 +63,7 @@ repos:
         types_or: [python, pyi]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.14.1
+    rev: v1.15.0
     hooks:
       - id: mypy
         additional_dependencies:
@@ -72,10 +72,9 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.0"
+    rev: "0.6.4"
     hooks:
       - id: pydoclint
-        pass_filenames: false
 
   - repo: https://github.com/pycqa/pylint.git
     rev: v3.3.4
