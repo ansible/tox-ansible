@@ -72,10 +72,9 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.2"
+    rev: "0.6.4"
     hooks:
       - id: pydoclint
-        pass_filenames: false
 
   - repo: https://github.com/pycqa/pylint.git
     rev: v3.3.4
