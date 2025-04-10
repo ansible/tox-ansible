@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from tox.config.types import EnvList
     from tox.session.state import State
 
+logger = logging.getLogger(__name__)
 
 ALLOWED_EXTERNALS = [
     "bash",
@@ -163,7 +164,7 @@ def tox_add_core_config(
     """
     if state.conf.options.gh_matrix and not state.conf.options.ansible:
         err = "The --gh-matrix option requires --ansible"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
 
     if not state.conf.options.ansible:
@@ -176,7 +177,7 @@ def tox_add_core_config(
             " (`tox --ansible -c tox-ansible.ini`) to avoid unintentionally overriding"
             " the tox-ansible environment configurations."
         )
-        logging.warning(msg)
+        logger.warning(msg)
 
     global TOX_WORK_DIR  # pylint: disable=global-statement # noqa: PLW0603
     TOX_WORK_DIR = state.conf.work_dir
@@ -296,11 +297,11 @@ def _check_num_candidates(candidates: list[str], env_name: str) -> None:
     """
     if len(candidates) > 1:
         err = f"Multiple python versions found in {env_name}"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
     if len(candidates) == 0:
         err = f"No python version found in {env_name}"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
 
 
@@ -357,7 +358,7 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
 
     if not gh_output:
         err = "GITHUB_OUTPUT environment variable not set"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
 
     value = json.dumps(results)
@@ -386,7 +387,7 @@ def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
             galaxy = yaml.safe_load(galaxy_file)
     except FileNotFoundError:
         err = f"Unable to find galaxy.yml file at {galaxy_path}"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
 
     try:
@@ -394,7 +395,7 @@ def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
         c_namespace = galaxy["namespace"]
     except KeyError as exc:
         err = f"Unable to find {exc} in galaxy.yml"
-        logging.critical(err)
+        logger.critical(err)
         sys.exit(1)
     return c_name, c_namespace
 
@@ -431,7 +432,7 @@ def conf_commands(
             pos_args=pos_args,
         )
     err = f"Unknown test type {test_type}"
-    logging.critical(err)
+    logger.critical(err)
     sys.exit(1)
 
 
