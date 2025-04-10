@@ -52,7 +52,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
+    rev: v0.11.4
     hooks:
       - id: ruff
         args:
@@ -72,12 +72,12 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.4"
+    rev: "0.6.5"
     hooks:
       - id: pydoclint
 
   - repo: https://github.com/pycqa/pylint.git
-    rev: v3.3.4
+    rev: v3.3.6
     hooks:
       - id: pylint
         args:
