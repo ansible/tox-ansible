@@ -19,7 +19,7 @@ repos:
           - prettier
           - prettier-plugin-sort-json
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v8.19.1
+    rev: v9.0.1
     hooks:
       - id: cspell
         name: Spell check with cspell
@@ -52,7 +52,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.8
+    rev: v0.11.12
     hooks:
       - id: ruff
         args:
@@ -63,7 +63,7 @@ repos:
         types_or: [python, pyi]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.15.0
+    rev: v1.16.0
     hooks:
       - id: mypy
         additional_dependencies:
@@ -72,7 +72,7 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.6"
+    rev: "0.6.7"
     hooks:
       - id: pydoclint
 
