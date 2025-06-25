@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
+import os
 import re
+import typing
 
 from pathlib import Path
 
@@ -28,6 +31,10 @@ from tox_ansible.plugin import (
     get_collection_name,
     tox_add_env_config,
 )
+
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -315,12 +322,26 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
     assert "Unknown test type" in logs
 
 
-def test_conf_deps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@contextlib.contextmanager
+def working_directory(path: Path) -> Generator[None, None, None]:
+    """Changes working directory and returns to previous on exit.
+
+    Args:
+        path: Path object.
+    """
+    prev_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
+
+
+def test_conf_deps(tmp_path: Path) -> None:
     """Test the conf_commands function.
 
     Args:
         tmp_path: Pytest fixture.
-        monkeypatch: Pytest fixture for patching.
     """
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
@@ -329,18 +350,21 @@ def test_conf_deps(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     (tmp_path / "test-requirements.txt").write_text("test-requirement")
     (tmp_path / "requirements.txt").write_text("requirement")
     (tmp_path / "requirements-test.txt").write_text("requirement-test")
-    monkeypatch.setattr("tox_ansible.plugin.TOX_WORK_DIR", tmp_path)
 
-    conf = Config.make(
-        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
-        pos_args=[],
-        source=source,
-    ).get_env("unit-py3.13-2.18")
+    # test will fail if current directory is not the one with the config as we
+    # would not be able to find the extra config. Tox config objects do not
+    # include any information regarding the config file location.
+    with working_directory(tmp_path):
+        conf = Config.make(
+            Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+            pos_args=[],
+            source=source,
+        ).get_env("unit-py3.13-2.18")
 
-    result = conf_deps(env_conf=conf, test_type="unit")
-    assert "test-requirement" in result
-    assert "requirement" in result
-    assert "requirement-test" in result
+        result = conf_deps(env_conf=conf, test_type="unit")
+        assert "test-requirement" in result
+        assert "requirement" in result
+        assert "requirement-test" in result
 
 
 def test_tox_add_env_config_valid(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
