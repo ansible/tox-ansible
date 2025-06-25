@@ -11,7 +11,7 @@ ci:
     - deps
 repos:
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.5.3
+    rev: v3.6.1
     hooks:
       - id: prettier
         always_run: true
@@ -52,18 +52,15 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.12
+    rev: v0.12.0
     hooks:
-      - id: ruff
-        args:
-          - --fix
-          - --exit-non-zero-on-fix
-        types_or: [python, pyi]
-      - id: ruff-format # must be after ruff
-        types_or: [python, pyi]
+      - id: ruff-format
+        alias: ruff
+      - id: ruff-check
+        alias: ruff
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.16.0
+    rev: v1.16.1
     hooks:
       - id: mypy
         additional_dependencies:
