@@ -6,9 +6,7 @@ updates:
     schedule:
       day: sunday
       interval: weekly
-    labels:
-      - dependabot-deps-updates
-      - skip-changelog
+    labels: []
     groups:
       dependencies:
         patterns:
@@ -17,6 +15,4 @@ updates:
     directory: "/"
     schedule:
       interval: daily
-    labels:
-      - "dependencies"
-      - "skip-changelog"
+    labels: []
