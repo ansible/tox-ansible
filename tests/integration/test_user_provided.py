@@ -30,7 +30,7 @@ def test_user_provided(
     """
     try:
         proc = run(
-            f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini",
+            f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini -qq",
             cwd=module_fixture_dir,
             check=True,
         )
