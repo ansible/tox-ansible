@@ -206,8 +206,10 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         "unit",
     ]:
         return
-
-    galaxy_path = state.conf.work_dir / "galaxy.yml"
+    # When run nested, work_dir might become .tox instead of cwd and we don't
+    # want to use `state.conf.work_dir` to find the galaxy file. PWD is more
+    # reliable, even if there is a chance it might be also changed.
+    galaxy_path = state.conf.src_path.parent.resolve() / "galaxy.yml"
     c_name, c_namespace = get_collection_name(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
 

@@ -367,20 +367,28 @@ def test_conf_deps(tmp_path: Path) -> None:
         assert "requirement-test" in result
 
 
-def test_tox_add_env_config_valid(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("custom_work_dir", (False, True))
+def test_tox_add_env_config_valid(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, custom_work_dir: bool
+) -> None:
     """Test the tox_add_env_config function.
 
     Args:
         tmp_path: Pytest fixture for temporary directory.
         monkeypatch: Pytest fixture for patching.
+        custom_work_dir: if it should use a custom work_dir or not
     """
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test")
+    work_dir = tmp_path
+    if custom_work_dir:
+        work_dir = tmp_path / ".foo"
+        work_dir.mkdir(exist_ok=True)
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
     parsed = Parsed(
-        work_dir=tmp_path,
+        work_dir=work_dir,
         override=[],
         config_file=ini_file,
         root_dir=tmp_path,
