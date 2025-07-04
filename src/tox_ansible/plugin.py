@@ -43,6 +43,7 @@ ALLOWED_EXTERNALS = [
     "dirname",
 ]
 ENV_LIST = """
+galaxy
 {integration, sanity, unit}-py3.10-{2.17}
 {integration, sanity, unit}-py3.11-{2.17, 2.18, milestone, devel}
 {integration, sanity, unit}-py3.12-{2.17, 2.18, milestone, devel}
@@ -131,7 +132,7 @@ def tox_add_option(parser: ToxParser) -> None:
     parser.add_argument(
         "--matrix-scope",
         default="all",
-        choices=["all", "sanity", "integration", "unit"],
+        choices=["all", "galaxy", "sanity", "integration", "unit"],
         help="Emit a github matrix specific to scope mentioned",
     )
 
@@ -200,11 +201,15 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
 
     factors = env_conf.name.split("-")
     expected_factors = 3
-    if len(factors) != expected_factors or factors[0] not in [
-        "integration",
-        "sanity",
-        "unit",
-    ]:
+    if "galaxy" not in factors and (
+        len(factors) != expected_factors
+        or factors[0]
+        not in [
+            "integration",
+            "sanity",
+            "unit",
+        ]
+    ):
         return
     # When run nested, work_dir might become .tox instead of cwd and we don't
     # want to use `state.conf.work_dir` to find the galaxy file. PWD is more
@@ -246,6 +251,8 @@ def desc_for_env(env: str) -> str:
     Returns:
         The environment description.
     """
+    if env == "galaxy":
+        return "Build collection and run galaxy-importer on it"
     test_type, python, core = env.split("-")
     ansible_pkg = "ansible-core"
 
@@ -294,6 +301,8 @@ def _check_num_candidates(candidates: list[str], env_name: str) -> None:
         candidates: The candidates.
         env_name: The environment name.
     """
+    if env_name == "galaxy":
+        return
     if len(candidates) > 1:
         err = f"Multiple python versions found in {env_name}"
         logger.critical(err)
@@ -336,6 +345,8 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
             match = PY_FACTORS_RE.match(factor)
             if match:
                 candidates.append(match[2])
+        if env_name == "galaxy":
+            candidates = ["3.13"]
 
         _check_num_candidates(candidates=candidates, env_name=env_name)
         version = _gen_version(candidates=candidates)
@@ -430,6 +441,10 @@ def conf_commands(
             env_conf=env_conf,
             pos_args=pos_args,
         )
+    if test_type == "galaxy":
+        return conf_commands_for_galaxy(
+            c_name=c_name, c_namespace=c_namespace, env_conf=env_conf, pos_args=pos_args
+        )
     err = f"Unknown test type {test_type}"
     logger.critical(err)
     sys.exit(1)
@@ -484,6 +499,37 @@ def conf_commands_for_sanity(
     ch_dir = f"cd {envtmpdir}/collections/ansible_collections/{c_namespace}/{c_name}"
     full_command = f"bash -c '{ch_dir} && {command}'"
     commands.append(full_command)
+    return commands
+
+
+def conf_commands_for_galaxy(
+    c_name: str,  # noqa: ARG001
+    c_namespace: str,  # noqa: ARG001
+    env_conf: EnvConfigSet,
+    pos_args: tuple[str, ...] | None,  # noqa: ARG001
+) -> list[str]:
+    """Add commands for sanity tests.
+
+    Args:
+        c_name: The collection name.
+        c_namespace: The collection namespace.
+        env_conf: The tox environment configuration object.
+        pos_args: Positional arguments passed to tox command.
+
+    Returns:
+        The commands to run.
+    """
+    commands = []
+    env_tmp_dir = env_conf["env_tmp_dir"]
+    env_log_dir = env_conf["env_log_dir"]
+    env_python = env_conf["env_python"]
+    work_dir = env_conf._conf.work_dir  # noqa: SLF001
+    commands.append(
+        f"bash -c 'cd {env_log_dir} && "
+        f"{env_python} -m galaxy_importer.main "
+        f"--git-clone-path {work_dir} --output-path {env_tmp_dir}'"
+    )
+
     return commands
 
 
@@ -571,31 +617,34 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     """
     deps = []
     cwd = Path.cwd()
-    if test_type in ["integration", "unit"]:
-        deps.extend(OUR_DEPS)
-        try:
-            with (cwd / "test-requirements.txt").open() as fileh:
-                deps.extend(fileh.read().splitlines())
-        except FileNotFoundError:
-            pass
-        try:
-            with (cwd / "requirements-test.txt").open() as fileh:
-                deps.extend(fileh.read().splitlines())
-        except FileNotFoundError:
-            pass
-        try:
-            with (cwd / "requirements.txt").open() as fileh:
-                deps.extend(fileh.read().splitlines())
-        except FileNotFoundError:
-            pass
-
-    ansible_version = env_conf.name.split("-")[2]
-    base_url = "https://github.com/ansible/ansible/archive/"
-    if ansible_version in ["devel", "milestone"]:
-        ansible_package = f"{base_url}{ansible_version}.tar.gz"
+    if test_type == "galaxy":
+        deps.append("galaxy-importer")
     else:
-        ansible_package = f"{base_url}stable-{ansible_version}.tar.gz"
-    deps.append(ansible_package)
+        if test_type in ["integration", "unit"]:
+            deps.extend(OUR_DEPS)
+            try:
+                with (cwd / "test-requirements.txt").open() as fileh:
+                    deps.extend(fileh.read().splitlines())
+            except FileNotFoundError:
+                pass
+            try:
+                with (cwd / "requirements-test.txt").open() as fileh:
+                    deps.extend(fileh.read().splitlines())
+            except FileNotFoundError:
+                pass
+            try:
+                with (cwd / "requirements.txt").open() as fileh:
+                    deps.extend(fileh.read().splitlines())
+            except FileNotFoundError:
+                pass
+        ansible_version = env_conf.name.split("-")[2]
+        base_url = "https://github.com/ansible/ansible/archive/"
+        if ansible_version in ["devel", "milestone"]:
+            ansible_package = f"{base_url}{ansible_version}.tar.gz"
+        else:
+            ansible_package = f"{base_url}stable-{ansible_version}.tar.gz"
+        deps.append(ansible_package)
+
     return "\n".join(deps)
 
 
