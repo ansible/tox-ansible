@@ -336,7 +336,8 @@ target-version = "py310"
 [tool.ruff.lint]
 ignore = [
   "COM812", # conflicts with ISC001 on format
-  "ISC001" # conflicts with COM812 on format
+  "ISC001", # conflicts with COM812 on format
+  "SLF001" # we cannot avoid using tox internals
 ]
 select = ["ALL"]
 
