@@ -677,4 +677,9 @@ def conf_setenv(env_conf: EnvConfigSet) -> str:
         f"{envvar_name}={envtmpdir}/collections/",
         f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache",
     ]
+    # due to the ceilings used by galaxy-importer, use of constraints will
+    # likely cause installation failures.
+    if env_conf.name == "galaxy":
+        setenv.append("PIP_CONSTRAINT=/dev/null")
+        setenv.append("UV_CONSTRAINT=/dev/null")
     return "\n".join(setenv)
