@@ -523,11 +523,11 @@ def conf_commands_for_galaxy(
     env_tmp_dir = env_conf["env_tmp_dir"]
     env_log_dir = env_conf["env_log_dir"]
     env_python = env_conf["env_python"]
-    work_dir = env_conf._conf.work_dir  # noqa: SLF001
+    config_dir = env_conf._conf.src_path.parent.resolve()
     commands.append(
         f"bash -c 'cd {env_log_dir} && "
         f"{env_python} -m galaxy_importer.main "
-        f"--git-clone-path {work_dir} --output-path {env_tmp_dir}'"
+        f"--git-clone-path {config_dir} --output-path {env_tmp_dir}'"
     )
 
     return commands
