@@ -618,7 +618,7 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     deps = []
     cwd = Path.cwd()
     if test_type == "galaxy":
-        deps.append("galaxy-importer")
+        deps.append("galaxy-importer>=0.4.31")
     else:
         if test_type in ["integration", "unit"]:
             deps.extend(OUR_DEPS)
