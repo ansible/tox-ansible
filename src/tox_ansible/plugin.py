@@ -215,19 +215,17 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     # want to use `state.conf.work_dir` to find the galaxy file. PWD is more
     # reliable, even if there is a chance it might be also changed.
     galaxy_path = state.conf.src_path.parent.resolve() / "galaxy.yml"
-    c_name, c_namespace = get_collection_name(galaxy_path=galaxy_path)
+    collection = get_collection(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
         commands_pre=conf_commands_pre(
-            c_name=c_name,
-            c_namespace=c_namespace,
+            collection=collection,
             env_conf=env_conf,
         ),
         commands=conf_commands(
-            c_name=c_name,
-            c_namespace=c_namespace,
+            collection=collection,
             env_conf=env_conf,
             pos_args=pos_args,
             test_type=factors[0],
@@ -383,7 +381,22 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
         fileh.write(encoded)
 
 
-def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
+@dataclass
+class Collection:
+    """Collection information.
+
+    Attributes:
+        name: The collection name.
+        namespace: The collection namespace.
+        version: The collection version.
+    """
+
+    name: str
+    namespace: str
+    version: str
+
+
+def get_collection(galaxy_path: Path) -> Collection:
     """Extract collection information from the galaxy.yml file.
 
     Args:
@@ -403,16 +416,16 @@ def get_collection_name(galaxy_path: Path) -> tuple[str, str]:
     try:
         c_name = galaxy["name"]
         c_namespace = galaxy["namespace"]
+        c_version = galaxy["version"]
     except KeyError as exc:
         err = f"Unable to find {exc} in galaxy.yml"
         logger.critical(err)
         sys.exit(1)
-    return c_name, c_namespace
+    return Collection(name=c_name, namespace=c_namespace, version=c_version)
 
 
 def conf_commands(
-    c_name: str,
-    c_namespace: str,
+    collection: Collection,
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
     test_type: str,
@@ -420,8 +433,7 @@ def conf_commands(
     """Build the commands for the tox environment.
 
     Args:
-        c_name: The collection name.
-        c_namespace: The collection namespace.
+        collection: The collection info.
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
         test_type: The test type, either "integration", "unit", or "sanity".
@@ -436,14 +448,15 @@ def conf_commands(
         )
     if test_type == "sanity":
         return conf_commands_for_sanity(
-            c_name=c_name,
-            c_namespace=c_namespace,
+            collection=collection,
             env_conf=env_conf,
             pos_args=pos_args,
         )
     if test_type == "galaxy":
         return conf_commands_for_galaxy(
-            c_name=c_name, c_namespace=c_namespace, env_conf=env_conf, pos_args=pos_args
+            collection=collection,
+            env_conf=env_conf,
+            pos_args=pos_args,
         )
     err = f"Unknown test type {test_type}"
     logger.critical(err)
@@ -472,16 +485,14 @@ def conf_commands_for_integration_unit(
 
 
 def conf_commands_for_sanity(
-    c_name: str,
-    c_namespace: str,
+    collection: Collection,
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
 ) -> list[str]:
     """Add commands for sanity tests.
 
     Args:
-        c_name: The collection name.
-        c_namespace: The collection namespace.
+        collection: The collection info.
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
 
@@ -496,23 +507,23 @@ def conf_commands_for_sanity(
     py_ver = env_conf.name.split("-")[1].replace("py", "")
 
     command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
-    ch_dir = f"cd {envtmpdir}/collections/ansible_collections/{c_namespace}/{c_name}"
+    ch_dir = (
+        f"cd {envtmpdir}/collections/ansible_collections/{collection.namespace}/{collection.name}"
+    )
     full_command = f"bash -c '{ch_dir} && {command}'"
     commands.append(full_command)
     return commands
 
 
 def conf_commands_for_galaxy(
-    c_name: str,  # noqa: ARG001
-    c_namespace: str,  # noqa: ARG001
+    collection: Collection,  # noqa: ARG001
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,  # noqa: ARG001
 ) -> list[str]:
     """Add commands for sanity tests.
 
     Args:
-        c_name: The collection name.
-        c_namespace: The collection namespace.
+        collection: The collection info.
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
 
@@ -533,17 +544,12 @@ def conf_commands_for_galaxy(
     return commands
 
 
-def conf_commands_pre(
-    env_conf: EnvConfigSet,
-    c_name: str,
-    c_namespace: str,
-) -> list[str]:
+def conf_commands_pre(env_conf: EnvConfigSet, collection: Collection) -> list[str]:
     """Build and install the collection.
 
     Args:
         env_conf: The tox environment configuration object.
-        c_name: The collection name.
-        c_namespace: The collection namespace.
+        collection: The collection info.
 
     Returns:
         The commands to pre run.
@@ -553,7 +559,9 @@ def conf_commands_pre(
     # Define some directories"
     envtmpdir = env_conf["envtmpdir"]
     collections_root = f"{envtmpdir}/collections"
-    collection_installed_at = f"{collections_root}/ansible_collections/{c_namespace}/{c_name}"
+    collection_installed_at = (
+        f"{collections_root}/ansible_collections/{collection.namespace}/{collection.name}"
+    )
     galaxy_build_dir = f"{envtmpdir}/collection_build"
     end_group = "echo ::endgroup::"
 
@@ -584,7 +592,7 @@ def conf_commands_pre(
         commands.append(group)
     cd_build_dir = f"cd {galaxy_build_dir}"
     build_cmd = "ansible-galaxy collection build"
-    tar_file = f"{c_namespace}-{c_name}-*.tar.gz"
+    tar_file = f"{collection.namespace}-{collection.name}-*.tar.gz"
     install_cmd = f"ansible-galaxy collection install {tar_file} -p {collections_root}"
     full_cmd = f"bash -c '{cd_build_dir} && {build_cmd} && {install_cmd}'"
     commands.append(full_cmd)
