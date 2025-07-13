@@ -11,7 +11,7 @@ cachetools==6.1.0         # via tox
 cairocffi==1.7.1          # via cairosvg
 cairosvg==2.7.1 ; python_full_version < '3.11'  # via mkdocs-ansible
 cairosvg==2.8.2 ; python_full_version >= '3.11'  # via mkdocs-ansible
-certifi==2025.6.15        # via requests
+certifi==2025.7.9        # via requests
 cffi==1.17.1              # via cairocffi, cryptography
 cfgv==3.4.0               # via pre-commit
 chardet==5.2.0            # via tox
@@ -91,7 +91,7 @@ pyyaml-env-tag==1.1       # via mkdocs
 referencing==0.36.2       # via jsonschema, jsonschema-specifications
 requests==2.32.4          # via linkchecker, mkdocs-htmlproofer-plugin, mkdocs-material
 rpds-py==0.26.0           # via jsonschema, referencing
-ruff==0.12.2              # via tox-ansible (pyproject.toml)
+ruff==0.12.3              # via tox-ansible (pyproject.toml)
 setuptools==80.9.0        # via pbr
 six==1.17.0               # via python-dateutil
 smmap==5.0.2              # via gitdb
