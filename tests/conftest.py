@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 
 GH_MATRIX_LENGTH = 37
 
+
 def run(
     args: Sequence[str | Path] | str | Path,
     *,
