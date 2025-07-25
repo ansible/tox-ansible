@@ -107,7 +107,7 @@ def test_gen_version_matrix(python: str, tmp_path: Path, monkeypatch: pytest.Mon
         tmp_path: Pytest fixture.
         monkeypatch: Pytest fixture.
     """
-    av = "2.18"
+    av = "2.19"
     environment_list = EnvList(envs=[f"integration-{python}-{av}"])
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     gh_output = tmp_path / "matrix.json"
@@ -132,7 +132,7 @@ def test_gen_version_matrix_with_nl(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         tmp_path: Pytest fixture.
         monkeypatch: Pytest fixture.
     """
-    environment_list = EnvList(envs=["integration-py3.13-2.18"])
+    environment_list = EnvList(envs=["integration-py3.13-2.19"])
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     gh_output = tmp_path / "matrix.json"
     monkeypatch.setenv("GITHUB_OUTPUT", str(gh_output))
@@ -223,7 +223,7 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
-    ).get_env("unit-py3.13-2.18")
+    ).get_env("unit-py3.13-2.19")
 
     result = conf_commands(
         env_conf=conf,
@@ -249,7 +249,7 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
-    ).get_env("sanity-py3.13-2.18")
+    ).get_env("sanity-py3.13-2.19")
 
     conf.add_config(
         keys=["env_tmp_dir", "envtmpdir"],
@@ -282,7 +282,7 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
-    ).get_env("integration-py3.13-2.18")
+    ).get_env("integration-py3.13-2.19")
 
     result = conf_commands(
         env_conf=conf,
@@ -309,7 +309,7 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
-    ).get_env("invalid-py3.13-2.18")
+    ).get_env("invalid-py3.13-2.19")
 
     with pytest.raises(SystemExit, match="1"):
         conf_commands(
@@ -360,7 +360,7 @@ def test_conf_deps(tmp_path: Path) -> None:
             Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
             pos_args=[],
             source=source,
-        ).get_env("unit-py3.13-2.18")
+        ).get_env("unit-py3.13-2.19")
 
         result = conf_deps(env_conf=conf, test_type="unit")
         assert "test-requirement" in result
@@ -400,7 +400,7 @@ def test_tox_add_env_config_valid(
         parsed=parsed,
         pos_args=[],
         source=source,
-    ).get_env("unit-py3.13-2.18")
+    ).get_env("unit-py3.13-2.19")
 
     env_conf.add_config(
         keys=["env_tmp_dir", "envtmpdir"],
@@ -439,7 +439,7 @@ def test_tox_add_env_config_valid(
     assert isinstance(env_conf.loaders[0], MemoryLoader)
     assert (
         env_conf.loaders[0].raw["description"]
-        == "Unit tests using ansible-core 2.18 and python 3.13"
+        == "Unit tests using ansible-core 2.19 and python 3.13"
     )
 
 
@@ -467,7 +467,7 @@ def test_tox_add_env_config_invalid(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         parsed=parsed,
         pos_args=[],
         source=source,
-    ).get_env("insanity-py3.13-2.18")
+    ).get_env("insanity-py3.13-2.19")
 
     output = io.BytesIO()
     wrapper = io.TextIOWrapper(
