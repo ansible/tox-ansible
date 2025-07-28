@@ -18,7 +18,7 @@ chardet==5.2.0            # via tox
 charset-normalizer==3.4.2  # via requests
 click==8.2.1              # via mkdocs, pydoclint
 colorama==0.4.6           # via click, griffe, mkdocs, mkdocs-material, pylint, pytest, tox
-coverage==7.10.0           # via tox-ansible (pyproject.toml)
+coverage==7.10.0          # via tox-ansible (pyproject.toml)
 cryptography==45.0.5      # via ansible-core
 csscompressor==0.9.5      # via mkdocs-minify-plugin
 cssselect2==0.8.0         # via cairosvg
