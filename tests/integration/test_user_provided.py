@@ -47,7 +47,7 @@ def test_user_provided(
         assert cfg_parser.get(env_name, "deps") == "root"
         assert "root" in cfg_parser.get(env_name, "set_env")
         assert "milestone" not in env_name
-    assert "specific" in cfg_parser.get("testenv:integration-py3.11-devel", "pass_env")
+    assert "specific" in cfg_parser.get("testenv:integration-py3.12-devel", "pass_env")
 
 
 def test_user_provided_matrix_success(
