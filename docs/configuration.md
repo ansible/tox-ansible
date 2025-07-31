@@ -14,7 +14,7 @@ This will skip tests in any environment that uses Ansible 2.9 or the devel branc
 
 ### Overriding the configuration
 
-Any configuration in either the `[testenv]` section or an environment section `[testenv:integration-py3.11-{devel,milestone}]` can override some or all of the `tox-ansible` environment configurations.
+Any configuration in either the `[testenv]` section or an environment section `[testenv:integration-py3.12-{devel,milestone}]` can override some or all of the `tox-ansible` environment configurations.
 
 For example
 
@@ -24,7 +24,7 @@ For example
 commands_pre =
     true
 
-[testenv:integration-py3.11-{devel,milestone}]
+[testenv:integration-py3.12-{devel,milestone}]
 commands =
     true
 ```
@@ -33,7 +33,7 @@ will result in:
 
 ```ini
 # tox-ansible.ini
-[testenv:integration-py3.11-devel]
+[testenv:integration-py3.12-devel]
 commands_pre = true
 commands = true
 ```
