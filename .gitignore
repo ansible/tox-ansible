@@ -172,8 +172,3 @@ cython_debug/
 
 .DS_Store
 _readthedocs
-
-# codecov binary and signature files downloaded by CI
-codecov
-codecov.SHA256SUM
-codecov.SHA256SUM.sig
