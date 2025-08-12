@@ -43,15 +43,12 @@ default environments:
 ...
 integration-py3.11-2.14      -> Integration tests for ansible.scm using ansible-core 2.14 and python 3.11
 integration-py3.12-devel     -> Integration tests for ansible.scm using ansible-core devel and python 3.11
-integration-py3.11-milestone -> Integration tests for ansible.scm using ansible-core milestone and python 3.11
 ...
 sanity-py3.11-2.14           -> Sanity tests for ansible.scm using ansible-core 2.14 and python 3.11
 sanity-py3.12-devel          -> Sanity tests for ansible.scm using ansible-core devel and python 3.11
-sanity-py3.11-milestone      -> Sanity tests for ansible.scm using ansible-core milestone and python 3.11
 ...
 unit-py3.11-2.14             -> Unit tests for ansible.scm using ansible-core 2.14 and python 3.11
 unit-py3.12-devel            -> Unit tests for ansible.scm using ansible-core devel and python 3.11
-unit-py3.11-milestone        -> Unit tests for ansible.scm using ansible-core milestone and python 3.11
 ```
 
 These represent the available testing environments. Each denotes the type of tests that will be run, the Python interpreter used to run the tests, and the Ansible version used to run the tests.

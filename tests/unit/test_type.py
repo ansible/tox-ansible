@@ -32,7 +32,7 @@ def test_type_current(
         monkeypatch: pytest fixture to patch modules
         module_fixture_dir: pytest fixture to provide a module specific fixture directory
     """
-    matrix_length = 37
+    matrix_length = 34
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     monkeypatch.chdir(module_fixture_dir)
