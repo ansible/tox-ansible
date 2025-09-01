@@ -24,7 +24,7 @@ repos:
       - id: cspell
         name: Spell check with cspell
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -52,7 +52,7 @@ repos:
       - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.7
+    rev: v0.12.11
     hooks:
       - id: ruff-format
         alias: ruff
@@ -69,12 +69,12 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.7"
+    rev: "0.6.11"
     hooks:
       - id: pydoclint
 
   - repo: https://github.com/pycqa/pylint.git
-    rev: v3.3.7
+    rev: v3.3.8
     hooks:
       - id: pylint
         args:
