@@ -65,7 +65,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - pytest
-          - tox
+          - tox>=4.29.0
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
@@ -81,7 +81,7 @@ repos:
           - --output-format=colorized
         additional_dependencies:
           - pytest
-          - tox
+          - tox>=4.29.0
           - pyyaml
 
   # Keep last due to being considerably slower than the others:

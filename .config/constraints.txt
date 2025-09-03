@@ -102,7 +102,7 @@ termcolor==3.1.0          # via mkdocs-macros-plugin
 tinycss2==1.4.0           # via cairosvg, cssselect2
 toml-sort==0.24.2         # via tox-ansible (pyproject.toml)
 tomlkit==0.13.3           # via pylint, toml-sort
-tox==4.28.4               # via tox-extra, tox-uv, tox-ansible (pyproject.toml)
+tox==4.29.0               # via tox-extra, tox-uv, tox-ansible (pyproject.toml)
 tox-extra==2.2.0          # via tox-ansible (pyproject.toml)
 tox-uv==1.27.0            # via tox-extra
 types-pyyaml==6.0.12.20250809  # via tox-ansible (pyproject.toml)
