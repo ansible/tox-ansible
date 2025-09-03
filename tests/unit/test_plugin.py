@@ -55,6 +55,7 @@ def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("py39")
 
     conf.add_config(
@@ -223,6 +224,7 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("unit-py3.13-2.19")
 
     result = conf_commands(
@@ -249,6 +251,7 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("sanity-py3.13-2.19")
 
     conf.add_config(
@@ -282,6 +285,7 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("integration-py3.13-2.19")
 
     result = conf_commands(
@@ -309,6 +313,7 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
         Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("invalid-py3.13-2.19")
 
     with pytest.raises(SystemExit, match="1"):
@@ -360,6 +365,7 @@ def test_conf_deps(tmp_path: Path) -> None:
             Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
             pos_args=[],
             source=source,
+            extra_envs=[],
         ).get_env("unit-py3.13-2.19")
 
         result = conf_deps(env_conf=conf, test_type="unit")
@@ -400,6 +406,7 @@ def test_tox_add_env_config_valid(
         parsed=parsed,
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("unit-py3.13-2.19")
 
     env_conf.add_config(
@@ -467,6 +474,7 @@ def test_tox_add_env_config_invalid(tmp_path: Path, monkeypatch: pytest.MonkeyPa
         parsed=parsed,
         pos_args=[],
         source=source,
+        extra_envs=[],
     ).get_env("insanity-py3.13-2.19")
 
     output = io.BytesIO()

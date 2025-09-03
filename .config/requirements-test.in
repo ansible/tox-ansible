@@ -8,6 +8,6 @@ pytest
 pytest-xdist
 ruff
 toml-sort
-tox
+tox>=4.29.0
 tox-extra>=2.2.0
 types-PyYAML
