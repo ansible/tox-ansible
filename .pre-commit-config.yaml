@@ -70,7 +70,7 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.6.11"
+    rev: "0.7.3"
     hooks:
       - id: pydoclint
 
