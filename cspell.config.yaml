@@ -6,19 +6,24 @@ dictionaries:
   - bash
   - networking-terms
   - python
+  - python-common
   - words
   - "!aws"
   - "!backwards-compatibility"
   - "!cryptocurrencies"
   - "!cpp"
+enabled: true
+useGitignore: true
 ignorePaths:
-  - .config/requirements*
-  - \.*
   - cspell.config.yaml
-  - mkdocs.yml
+  - uv.lock
+  - "*.egg-info"
+  - src/tox_ansible/_version.py
   - pyproject.toml
-  - tox.ini
-
+  - .config/dictionary.txt
+  - site
+  - _readthedocs
+  - coverage.lcov
 languageSettings:
   - languageId: python
     allowCompoundWords: false
