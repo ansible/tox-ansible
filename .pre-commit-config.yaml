@@ -8,9 +8,20 @@ ci:
 
   skip:
     # https://github.com/pre-commit-ci/issues/issues/55
-    - lock
     - deps
 repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.8.15
+    hooks:
+      - id: uv-sync
+      - id: uv-lock
+        name: "deps: upgrade via uv sync --upgrade"
+        alias: deps
+        args: ["--upgrade"]
+        stages: [manual]
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: v3.6.2
     hooks:
@@ -23,7 +34,16 @@ repos:
     rev: v9.2.0
     hooks:
       - id: cspell
-        name: Spell check with cspell
+        entry: bash
+        pass_filenames: false
+        args:
+          [
+            "-euo",
+            "pipefail",
+            "-c",
+            "cspell-cli . --relative --no-progress --no-summary && cspell-cli . --disable-dictionary=words --no-exit-code --words-only --quiet --unique | LC_ALL=C sort > .config/dictionary.txt",
+          ]
+        name: cspell + remove unused and sort dictionary
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
     rev: v6.0.0
     hooks:
@@ -46,11 +66,6 @@ repos:
     hooks:
       - id: toml-sort-fix
         alias: toml
-
-  - repo: https://github.com/tox-dev/tox-ini-fmt
-    rev: 1.6.0
-    hooks:
-      - id: tox-ini-fmt
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.13.0
@@ -84,29 +99,3 @@ repos:
           - pytest
           - tox>=4.29.0
           - pyyaml
-
-  # Keep last due to being considerably slower than the others:
-  - repo: local
-    hooks:
-      - id: deps
-        # To run it execute: `pre-commit run pip-compile-upgrade --hook-stage manual`
-        name: Upgrade constraints files and requirements
-        files: ^(pyproject\.toml|\.config/.*)$
-        always_run: true
-        language: python
-        language_version: "3.10" # minimal we support officially https://github.com/astral-sh/uv/issues/3883
-        entry: python3 -m uv pip compile -q --all-extras --universal --output-file=.config/constraints.txt pyproject.toml --upgrade
-        pass_filenames: false
-        stages:
-          - manual
-        additional_dependencies:
-          - uv>=0.5.25
-      - id: lock
-        name: Check constraints files and requirements
-        files: ^(pyproject\.toml|\.config/.*)$
-        language: python
-        language_version: "3.10" # minimal we support officially https://github.com/astral-sh/uv/issues/3883
-        entry: python3 -m uv pip compile -q --all-extras --universal --output-file=.config/constraints.txt pyproject.toml
-        pass_filenames: false
-        additional_dependencies:
-          - uv>=0.5.25

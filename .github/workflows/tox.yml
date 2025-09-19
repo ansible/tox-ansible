@@ -29,8 +29,7 @@ jobs:
         docs
         lint
         pkg
-        pre
-        py-devel
+        devel
 
   smoke-matrix:
     # Uncomment the below line when all tests start passing
