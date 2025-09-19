@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.15
+    rev: 0.8.17
     hooks:
       - id: uv-sync
       - id: uv-lock
