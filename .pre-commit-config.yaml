@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.22
+    rev: 0.8.23
     hooks:
       - id: uv-sync
       - id: uv-lock
@@ -90,7 +90,7 @@ repos:
       - id: pydoclint
 
   - repo: https://github.com/pycqa/pylint.git
-    rev: v3.3.8
+    rev: v3.3.9
     hooks:
       - id: pylint
         args:
