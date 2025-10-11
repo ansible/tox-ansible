@@ -77,6 +77,9 @@ documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
 homepage = "https://github.com/ansible/tox-ansible"
 repository = "https://github.com/ansible/tox-ansible"
 
+[tool.coverage.paths]
+source = ["src", "tests", ".tox/*/site-packages"]
+
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "pragma: no cover"]
 fail_under = 81
@@ -84,9 +87,6 @@ ignore_errors = false
 show_missing = true
 skip_covered = true
 skip_empty = true
-
-[tool.coverage.paths]
-source = ["src", "tests", ".tox/*/site-packages"]
 
 [tool.coverage.run]
 # branch is more reliable than lines, protects against false positives
