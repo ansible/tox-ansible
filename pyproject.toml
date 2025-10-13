@@ -77,9 +77,6 @@ documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
 homepage = "https://github.com/ansible/tox-ansible"
 repository = "https://github.com/ansible/tox-ansible"
 
-[tool.coverage.paths]
-source = ["src", "tests", ".tox/*/site-packages"]
-
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:", "pragma: no cover"]
 fail_under = 81
@@ -94,6 +91,7 @@ branch = true
 concurrency = ["multiprocessing", "thread"]
 omit = ["_version.py"]
 parallel = true
+relative_files = true
 source = ["src"]
 
 [tool.mypy]
