@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.3
+    rev: 0.9.5
     hooks:
       - id: uv-sync
       - id: uv-lock
@@ -31,7 +31,7 @@ repos:
           - prettier
           - prettier-plugin-sort-json
   - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.2.0
+    rev: v9.2.1
     hooks:
       - id: cspell
         entry: bash
@@ -68,7 +68,7 @@ repos:
         alias: toml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.1
+    rev: v0.14.2
     hooks:
       - id: ruff-format
         alias: ruff
@@ -85,12 +85,12 @@ repos:
           - types-PyYAML
 
   - repo: https://github.com/jsh9/pydoclint
-    rev: "0.7.3"
+    rev: "0.7.6"
     hooks:
       - id: pydoclint
 
   - repo: https://github.com/pycqa/pylint.git
-    rev: v4.0.1
+    rev: v4.0.2
     hooks:
       - id: pylint
         args:
