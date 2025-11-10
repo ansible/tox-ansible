@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
     from _pytest.python import Metafunc
 
-GH_MATRIX_LENGTH = 34
+GH_MATRIX_LENGTH = 40
 
 
 def run(
