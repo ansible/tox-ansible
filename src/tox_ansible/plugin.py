@@ -55,6 +55,7 @@ OUR_DEPS = [
     "pytest>=7.4.3",  # Oct 2023
     "pytest-xdist>=3.4.0",  # Nov 2023
     "pytest-ansible>=v4.1.1",  # latest version still supporting py39 (Oct 2023)
+    "ansible-compat>=25.11.0",  # Nov 2025
 ]
 
 T = TypeVar("T", bound=ConfigSet)
