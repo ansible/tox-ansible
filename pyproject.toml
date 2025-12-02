@@ -7,7 +7,7 @@ requires = [
 
 [dependency-groups]
 dev = [
-  "ansible-core>=2.17.14",
+  "ansible-core>=2.16.14",
   "coverage[toml]>=7.10.2",
   "mypy>=1.17.1",
   "pre-commit>=4.3.0",
@@ -56,7 +56,7 @@ dependencies = [
   "pytest>=8.4.1",
   "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
-  "pyyaml>=6.0.2",
+  "pyyaml>=6.0.1",
   "tox>=4.15.1"
 ]
 description = "A radical approach to testing ansible content"

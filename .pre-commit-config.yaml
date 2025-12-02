@@ -99,3 +99,7 @@ repos:
           - pytest
           - tox>=4.29.0
           - pyyaml
+  - repo: https://github.com/ansible/team-devtools
+    rev: v25.12.8
+    hooks:
+      - id: check-platform-constraints
