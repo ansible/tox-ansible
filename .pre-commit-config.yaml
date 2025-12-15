@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.15
+    rev: 0.9.17
     hooks:
       - id: uv-sync
       - id: uv-lock
@@ -68,7 +68,7 @@ repos:
         alias: toml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.8
+    rev: v0.14.9
     hooks:
       - id: ruff-format
         alias: ruff
