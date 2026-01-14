@@ -44,7 +44,7 @@ ALLOWED_EXTERNALS = [
 ]
 ENV_LIST = """
 galaxy
-{integration, sanity, unit}-py3.10-{2.17}
+{integration, sanity, unit}-py3.10-{2.16, 2.17}
 {integration, sanity, unit}-py3.11-{2.17, 2.18, 2.19}
 {integration, sanity, unit}-py3.12-{2.17, 2.18, 2.19, 2.20, milestone, devel}
 {integration, sanity, unit}-py3.13-{2.18, 2.19, 2.20, milestone, devel}
