@@ -48,6 +48,7 @@ galaxy
 {integration, sanity, unit}-py3.11-{2.17, 2.18, 2.19}
 {integration, sanity, unit}-py3.12-{2.17, 2.18, 2.19, 2.20, milestone, devel}
 {integration, sanity, unit}-py3.13-{2.18, 2.19, 2.20, milestone, devel}
+{integration, sanity, unit}-py3.14-{2.18, 2.19, 2.20, milestone, devel}
 """
 # Without the minimal pytest-ansible condition, installation may fail in some
 # cases (pip, uv).
@@ -345,7 +346,7 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
             if match:
                 candidates.append(match[2])
         if env_name == "galaxy":
-            candidates = ["3.13"]
+            candidates = ["3.14"]
 
         _check_num_candidates(candidates=candidates, env_name=env_name)
         version = _gen_version(candidates=candidates)
