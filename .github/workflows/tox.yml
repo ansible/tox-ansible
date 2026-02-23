@@ -21,6 +21,12 @@ concurrency:
 
 jobs:
   tox:
+    permissions:
+      checks: read
+      contents: read
+      packages: write
+      pull-requests: write
+      id-token: write
     uses: ansible/team-devtools/.github/workflows/tox.yml@main
     secrets: inherit
     with:
@@ -36,6 +42,8 @@ jobs:
     # Uncomment the below line when all tests start passing
     needs: tox
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
@@ -67,6 +75,8 @@ jobs:
         entry: ${{ fromJson(needs.smoke-matrix.outputs.envlist) }}
     name: ${{ matrix.entry.name }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
@@ -120,6 +130,7 @@ jobs:
   smoke-check:
     needs: smoke-test
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - run: >-
           python -c "assert set([

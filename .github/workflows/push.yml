@@ -11,4 +11,5 @@ on:
 
 jobs:
   ack:
+    permissions: {}
     uses: ansible/team-devtools/.github/workflows/push.yml@main

@@ -43,6 +43,7 @@ jobs:
   forum_post:
     needs: release
     runs-on: ubuntu-24.04
+    permissions: {}
 
     steps:
       - name: Retreive the forum post script from team-devtools
