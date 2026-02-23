@@ -8,6 +8,9 @@ on:
 
 jobs:
   ack:
-    permissions: {}
+    permissions:
+      checks: write
+      contents: write
+      pull-requests: write
     uses: ansible/team-devtools/.github/workflows/ack.yml@main
     secrets: inherit

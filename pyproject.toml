@@ -55,6 +55,7 @@ dev = [
   "toml-sort>=0.24.2",
   "tox>=4.29.0",
   "tox-extra>=2.2.0",
+  "tox-uv>=1.29.0",
   "types-pyyaml>=6.0.12.20250809"
 ]
 docs = ["mkdocs-ansible>=0.2.0"]

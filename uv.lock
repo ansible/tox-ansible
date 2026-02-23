@@ -2462,6 +2462,7 @@ dev = [
     { name = "toml-sort" },
     { name = "tox" },
     { name = "tox-extra" },
+    { name = "tox-uv" },
     { name = "types-pyyaml" },
 ]
 docs = [
@@ -2499,6 +2500,7 @@ dev = [
     { name = "toml-sort", specifier = ">=0.24.2" },
     { name = "tox", specifier = ">=4.29.0" },
     { name = "tox-extra", specifier = ">=2.2.0" },
+    { name = "tox-uv", specifier = ">=1.29.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250809" },
 ]
 docs = [{ name = "mkdocs-ansible", specifier = ">=0.2.0" }]
