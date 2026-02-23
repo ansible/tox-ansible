@@ -1,20 +1,43 @@
 ---
 ci:
-  # format compatible with commitlint
-  autoupdate_commit_msg: "chore: pre-commit autoupdate"
-  # we rely on renovate to update it but there is no way to fully disable it
+  # We rely on renovate to update it but there is no way to fully disable it
+  # https://github.com/pre-commit-ci/issues/issues/83
   autoupdate_schedule: quarterly
-  autofix_commit_msg: "chore: auto fixes from pre-commit.com hooks"
-
   skip:
     # https://github.com/pre-commit-ci/issues/issues/55
+    - cspell # missing uv
+    - codecov # missing uv
+    - shellcheck # no docker support on pre-commit.ci
+    # uv not present on pre-commit.ci
+    - mypy
     - deps
+    - pylint
+    - ruff
+    - toml
 repos:
   - repo: meta
     hooks:
       - id: check-useless-excludes
+        priority: 0
+  - repo: https://github.com/ansible/actions
+    rev: v0.5.1
+    hooks:
+      - id: toml
+        priority: 0
+      - id: mypy
+        priority: 2
+      - id: ruff
+        priority: 1
+      - id: cspell
+        priority: 0
+      - id: pylint
+        priority: 5
+      - id: codecov
+        priority: 0
+      - id: shellcheck
+        priority: 0
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.21
+    rev: 0.10.4
     hooks:
       - id: uv-sync
       - id: uv-lock
@@ -22,84 +45,31 @@ repos:
         alias: deps
         args: ["--upgrade"]
         stages: [manual]
-  - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.7.4
+  - repo: https://github.com/biomejs/pre-commit
+    rev: "v2.4.4"
     hooks:
-      - id: prettier
-        always_run: true
-        additional_dependencies:
-          - prettier
-          - prettier-plugin-sort-json
-  - repo: https://github.com/streetsidesoftware/cspell-cli
-    rev: v9.4.0
-    hooks:
-      - id: cspell
-        entry: bash
-        pass_filenames: false
-        args:
-          [
-            "-euo",
-            "pipefail",
-            "-c",
-            "cspell-cli . --relative --no-progress --no-summary && cspell-cli . --disable-dictionary=words --no-exit-code --words-only --quiet --unique | LC_ALL=C sort > .config/dictionary.txt",
-          ]
-        name: cspell + remove unused and sort dictionary
+      - id: biome-check
+        name: biome
+        alias: biome
+        args: [--unsafe]
+        priority: 0
   - repo: https://github.com/pre-commit/pre-commit-hooks.git
     rev: v6.0.0
     hooks:
       - id: check-added-large-files
+        priority: 0
       - id: check-merge-conflict
       - id: check-symlinks
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: trailing-whitespace
-      - id: mixed-line-ending
-      - id: fix-byte-order-marker
-      - id: check-executables-have-shebangs
-      - id: check-merge-conflict
-      - id: debug-statements
-        language_version: python3
-
-  - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.3
-    hooks:
-      - id: toml-sort-fix
-        alias: toml
-
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
-    hooks:
-      - id: ruff-format
-        alias: ruff
-      - id: ruff-check
-        alias: ruff
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
-    hooks:
-      - id: mypy
-        additional_dependencies:
-          - pytest
-          - tox>=4.29.0
-          - types-PyYAML
-
   - repo: https://github.com/jsh9/pydoclint
     rev: "0.8.3"
     hooks:
       - id: pydoclint
-
-  - repo: https://github.com/pycqa/pylint.git
-    rev: v4.0.4
-    hooks:
-      - id: pylint
-        args:
-          - --output-format=colorized
-        additional_dependencies:
-          - pytest
-          - tox>=4.29.0
-          - pyyaml
   - repo: https://github.com/ansible/team-devtools
-    rev: v25.12.8
+    rev: v26.1.0
     hooks:
       - id: check-platform-constraints
+        priority: 0
