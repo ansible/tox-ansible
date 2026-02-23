@@ -48,8 +48,12 @@ galaxy
 {integration, sanity, unit}-py3.11-{2.17, 2.18, 2.19}
 {integration, sanity, unit}-py3.12-{2.17, 2.18, 2.19, 2.20, milestone, devel}
 {integration, sanity, unit}-py3.13-{2.18, 2.19, 2.20, milestone, devel}
-{integration, sanity, unit}-py3.14-{2.18, 2.19, 2.20, milestone, devel}
+{integration, sanity, unit}-py3.14-{2.20, 2.20, milestone, devel}
 """
+# ^ py314 is NOT supported before 2.20! If is in official metadata of the
+# release branch, is not supported.
+# https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
+
 # Without the minimal pytest-ansible condition, installation may fail in some
 # cases (pip, uv).
 OUR_DEPS = [
@@ -335,7 +339,6 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
         section: The test section to be generated.
     """
     results = []
-
     for env_name in env_list.envs:
         if section != "all" and not env_name.startswith(section):
             continue
