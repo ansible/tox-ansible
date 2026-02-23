@@ -526,9 +526,10 @@ commands = [
     "-m",
     "pytest",
     { default = [
-      "-v",  # no progress otherwise
+      "-p",
+      "no:xdist",  # caused devel pipeline to fail for no clear reasons
+      "-vv",  # no progress otherwise
       "-ra",
-      "-n0",  # caused devel pipeline to fail for no clear reasons
       "--showlocals",
       "--doctest-modules",
       "--durations=10",
