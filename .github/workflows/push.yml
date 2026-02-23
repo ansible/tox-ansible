@@ -11,5 +11,7 @@ on:
 
 jobs:
   ack:
-    permissions: {}
+    permissions:
+      contents: write
+      pull-requests: write
     uses: ansible/team-devtools/.github/workflows/push.yml@main
