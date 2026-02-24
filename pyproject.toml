@@ -26,11 +26,12 @@ classifiers = [
   "Topic :: Utilities"
 ]
 dependencies = [
+  "chardet<6.0.0",  # https://github.com/chardet/chardet/issues/321 (indirect via tox)
   "pytest>=8.4.1",
   "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
   "pyyaml>=6.0.1",
-  "tox>=4.15.1"
+  "tox>=4.15.1",
 ]
 dynamic = ["version"]
 
