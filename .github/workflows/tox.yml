@@ -30,7 +30,7 @@ jobs:
     uses: ansible/team-devtools/.github/workflows/tox.yml@main
     secrets: inherit
     with:
-      max_python: "3.13"
+      max_python: "3.14"
       jobs_producing_coverage: 7
       other_names: |
         docs
