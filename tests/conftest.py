@@ -40,13 +40,14 @@ if TYPE_CHECKING:
 GH_MATRIX_LENGTH = 49
 
 
-def run(
+def run(  # noqa: PLR0913
     args: Sequence[str | Path] | str | Path,
     *,
     cwd: Path,
     check: bool = False,
     shell: bool = True,
     env: subprocess._ENV | None = None,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Utility function to run a command.
 
@@ -56,6 +57,7 @@ def run(
         check: Whether to raise an exception if the command fails
         shell: Whether to run the command in a shell
         env: The environment to run the command in
+        timeout: The timeout in seconds
 
     Returns:
         A CompletedProcess with the result of the command
@@ -68,6 +70,7 @@ def run(
         shell=shell,
         text=True,
         env=env,
+        timeout=timeout,
     )
 
 

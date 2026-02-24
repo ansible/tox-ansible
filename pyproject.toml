@@ -357,7 +357,7 @@ enable = ["useless-suppression"]
 fail-on = ["useless-suppression"]
 
 [tool.pytest]
-addopts = ["--durations=10", "--force-sugar", "--showlocals", "-ra"]
+addopts = ["--durations=10", "--showlocals", "-ra"]
 cache_dir = "./.cache/.pytest"
 junit_family = "xunit2"  # see https://docs.codecov.com/docs/test-analytics
 testpaths = ["tests"]
@@ -376,6 +376,7 @@ ignore = [
   "COM812",  # conflicts with ISC001 on format
   "ISC001",  # conflicts with COM812 on format
   "SLF001",  # we cannot avoid using tox internals
+  "S604",  # shell=True is a must when using tools like mise
 ]
 select = ["ALL"]
 
@@ -530,7 +531,7 @@ commands = [
     { default = [
       "-v",  # no progress otherwise
       "-ra",
-      "-n0",  # caused devel pipeline to fail for no clear reasons
+      "-n1",  # caused devel pipeline to fail for no clear reasons
       "--showlocals",
       "--doctest-modules",
       "--durations=10",

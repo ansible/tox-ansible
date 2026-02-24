@@ -33,6 +33,8 @@ def test_user_provided(
             f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini -qq",
             cwd=module_fixture_dir,
             check=True,
+            shell=True,
+            timeout=10,
         )
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)

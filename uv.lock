@@ -1826,7 +1826,7 @@ wheels = [
 
 [[package]]
 name = "pytest-ansible"
-version = "25.12.0"
+version = "26.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ansible-compat" },
@@ -1836,39 +1836,12 @@ dependencies = [
     { name = "cffi" },
     { name = "packaging" },
     { name = "pytest" },
-    { name = "pytest-plus" },
-    { name = "pytest-sugar" },
     { name = "pytest-xdist" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/40/c8/4a89525a2ec2e1229d9d9d436583a0f720fa4765e83b1620d0eee6c00b47/pytest_ansible-25.12.0.tar.gz", hash = "sha256:8a8b7afb30274a1a992a37408b775ad5fe5219a7c3b36904523d1276fe089ccd", size = 184678, upload-time = "2025-12-02T15:41:25.234Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/dc/033262ec3667d00be359834459fc0f95c0783b04b934acd1361d21a26d47/pytest_ansible-26.2.0.tar.gz", hash = "sha256:bfa61d43209cf5ef84775a3ae0c5bba10f19dfecca485be8c15ef1bf9b0c5d0e", size = 186484, upload-time = "2026-02-24T12:58:03.446Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7f/81/3b83d011ddcf4c5ee714405429b977da3b743d2b6519b18b302129d43abd/pytest_ansible-25.12.0-py3-none-any.whl", hash = "sha256:c7ebf507eea6cb97949e0bae5e015d892bae6c461d0c7f526cce4c961560990c", size = 31219, upload-time = "2025-12-02T15:41:23.608Z" },
-]
-
-[[package]]
-name = "pytest-plus"
-version = "0.8.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/83/8d/c5acdd43847e975b31173f12fe3660174fb4f274f5bbe0b7efb5fa5d91fb/pytest_plus-0.8.1.tar.gz", hash = "sha256:02dfb28f1a914e8df3b6e3525df7e94feabc0681ecea626912e8028e9355f02c", size = 15444, upload-time = "2025-02-02T10:05:05.071Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/ae/35aac382af0d72c57df397deb753bca71a879a0a51f52b3ce77b3d2e7643/pytest_plus-0.8.1-py3-none-any.whl", hash = "sha256:2b8e9037716c9d7b708074863933897681f86d852d9c4e9717271be143dbdfb6", size = 6235, upload-time = "2025-02-02T10:05:03.701Z" },
-]
-
-[[package]]
-name = "pytest-sugar"
-version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-    { name = "termcolor" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/4e/60fed105549297ba1a700e1ea7b828044842ea27d72c898990510b79b0e2/pytest-sugar-1.1.1.tar.gz", hash = "sha256:73b8b65163ebf10f9f671efab9eed3d56f20d2ca68bda83fa64740a92c08f65d", size = 16533, upload-time = "2025-08-23T12:19:35.737Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/d5/81d38a91c1fdafb6711f053f5a9b92ff788013b19821257c2c38c1e132df/pytest_sugar-1.1.1-py3-none-any.whl", hash = "sha256:2f8319b907548d5b9d03a171515c1d43d2e38e32bd8182a1781eb20b43344cc8", size = 11440, upload-time = "2025-08-23T12:19:34.894Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/19/b41e84d4c4d40613d72c918855382d60fbce3688448b27746f52943d51b9/pytest_ansible-26.2.0-py3-none-any.whl", hash = "sha256:7d29b871d37d7aba607f04c389777eb76a3a25f0f67656681363341a01cc9ff5", size = 31519, upload-time = "2026-02-24T12:58:01.936Z" },
 ]
 
 [[package]]
