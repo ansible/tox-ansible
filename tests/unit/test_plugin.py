@@ -169,6 +169,44 @@ def test_commands_pre_devel(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     assert "--acv devel --no-seed" in result[0]
 
 
+def test_commands_pre_milestone(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Test pre-command generation passes milestone as-is to --acv.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-milestone")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="milestone",
+    )
+    assert len(result) == 1
+    assert "ade install -e" in result[0]
+    assert "--acv milestone --no-seed" in result[0]
+
+
 def test_check_num_candidates_2(caplog: pytest.LogCaptureFixture) -> None:
     """Test the number of candidates check.
 

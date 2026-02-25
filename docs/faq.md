@@ -14,7 +14,7 @@ For each test environment, `tox-ansible` runs `ade install` as a pre-command whi
 
 `tox-ansible` also installs any Python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file.
 
-`tox-ansible` sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's site-packages directory. This ensures the collection under test is found when running tests. The `pytest-ansible` plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
+`tox-ansible` sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to `"."` (the current directory). This prevents ansible-core from scanning system and user collection paths and isolates the collection under test. The collection itself is installed into the virtual environment's site-packages via an editable install (`ade install -e`), so Ansible discovers it through Python's import machinery. The `pytest-ansible` plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
 `pytest` is used to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
