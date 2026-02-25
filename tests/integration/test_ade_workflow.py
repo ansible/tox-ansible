@@ -98,7 +98,8 @@ def test_ade_workflow_e2e(
     py_minor = sys.version_info.minor
     py_ver = f"{sys.version_info.major}.{py_minor}"
     core_ver = {10: "2.17", 11: "2.19", 12: "2.19", 13: "2.19", 14: "2.20"}.get(
-        py_minor, "2.19",
+        py_minor,
+        "2.19",
     )
     env_name = f"unit-py{py_ver}-{core_ver}"
 
