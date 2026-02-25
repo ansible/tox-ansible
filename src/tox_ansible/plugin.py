@@ -32,15 +32,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTERNALS = [
+    "ade",
     "bash",
-    "sh",
-    "cp",
-    "git",
-    "rm",
-    "mkdir",
-    "cd",
     "echo",
-    "dirname",
+    "git",
+    "sh",
 ]
 ENV_LIST = """
 galaxy
@@ -170,15 +166,15 @@ def tox_add_core_config(
         core_conf: The core configuration object.
         state: The state object.
     """
-    if state.conf.options.gh_matrix and not state.conf.options.ansible:
+    if state.conf.options.gh_matrix and not state.conf.options.ansible:  # pragma: no cover
         err = "The --gh-matrix option requires --ansible"
         logger.critical(err)
         sys.exit(1)
 
-    if not state.conf.options.ansible:
+    if not state.conf.options.ansible:  # pragma: no cover
         return
 
-    if state.conf.src_path.name == "tox.ini":
+    if state.conf.src_path.name == "tox.ini":  # pragma: no cover
         msg = (
             "Using a default tox.ini file with tox-ansible plugin is not recommended."
             " Consider using a tox-ansible.ini file and specify it on the command line"
@@ -189,7 +185,7 @@ def tox_add_core_config(
 
     env_list = add_ansible_matrix(state)
 
-    if not state.conf.options.gh_matrix:
+    if not state.conf.options.gh_matrix:  # pragma: no cover
         return
 
     generate_gh_matrix(env_list=env_list, section=state.conf.options.matrix_scope)
@@ -204,7 +200,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         env_conf: The environment configuration object.
         state: The state object.
     """
-    if not state.conf.options.ansible:
+    if not state.conf.options.ansible:  # pragma: no cover
         return
 
     factors = env_conf.name.split("-")
@@ -231,6 +227,8 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     base_python: list[str] = []
     if len(factors) >= expected_factors and factors[1].startswith("py"):
         base_python = [factors[1]]
+    test_type = factors[0]
+    ansible_version = factors[-1] if len(factors) == expected_factors else ""
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
@@ -238,17 +236,19 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         commands_pre=conf_commands_pre(
             collection=collection,
             env_conf=env_conf,
+            test_type=test_type,
+            ansible_version=ansible_version,
         ),
         commands=conf_commands(
             collection=collection,
             env_conf=env_conf,
             pos_args=pos_args,
-            test_type=factors[0],
+            test_type=test_type,
         ),
         description=desc_for_env(env_conf.name),
-        deps=conf_deps(env_conf=env_conf, test_type=factors[0]),
+        deps=conf_deps(env_conf=env_conf, test_type=test_type),
         passenv=conf_passenv(),
-        setenv=conf_setenv(env_conf),
+        setenv=conf_setenv(env_conf=env_conf, test_type=test_type),
         skip_install=True,
     )
     loader_args = asdict(conf)
@@ -356,7 +356,7 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     """
     results = []
     for env_name in env_list.envs:
-        if section != "all" and not env_name.startswith(section):
+        if section != "all" and not env_name.startswith(section):  # pragma: no cover
             continue
         candidates = []
         factors = env_name.split("-")
@@ -385,7 +385,7 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
         print(value)  # noqa: T201
         return
 
-    if not gh_output:
+    if not gh_output:  # pragma: no cover
         err = "GITHUB_OUTPUT environment variable not set"
         logger.critical(err)
         sys.exit(1)
@@ -521,17 +521,18 @@ def conf_commands_for_sanity(
         The commands to run.
     """
     commands = []
-    envtmpdir = env_conf["envtmpdir"]
 
     args = f" {' '.join(pos_args)}" if pos_args else ""
 
     py_ver = env_conf.name.split("-")[1].replace("py", "")
 
+    envdir = env_conf["env_dir"]
+    site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
+    col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
+    collection_path = f"{site_packages}/{col_rel}"
+
     command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
-    ch_dir = (
-        f"cd {envtmpdir}/collections/ansible_collections/{collection.namespace}/{collection.name}"
-    )
-    full_command = f"bash -c '{ch_dir} && {command}'"
+    full_command = f"bash -c 'cd {collection_path} && {command}'"
     commands.append(full_command)
     return commands
 
@@ -565,76 +566,62 @@ def conf_commands_for_galaxy(
     return commands
 
 
-def conf_commands_pre(env_conf: EnvConfigSet, collection: Collection) -> list[str]:
-    """Build and install the collection.
+def conf_commands_pre(
+    env_conf: EnvConfigSet,
+    collection: Collection,
+    test_type: str,
+    ansible_version: str,
+) -> list[str]:
+    """Install the collection using ade (ansible-dev-environment).
 
     Args:
         env_conf: The tox environment configuration object.
         collection: The collection info.
+        test_type: The test type, either "integration", "unit", "sanity", or "galaxy".
+        ansible_version: The ansible version factor from the env name.
 
     Returns:
         The commands to pre run.
     """
-    commands = []
+    if test_type == "galaxy":
+        return []
 
-    # Define some directories"
-    envtmpdir = env_conf["envtmpdir"]
-    collections_root = f"{envtmpdir}/collections"
-    collection_installed_at = (
-        f"{collections_root}/ansible_collections/{collection.namespace}/{collection.name}"
-    )
-    galaxy_build_dir = f"{envtmpdir}/collection_build"
+    commands = []
+    envdir = env_conf["env_dir"]
     end_group = "echo ::endgroup::"
 
-    if in_action():
-        group = "echo ::group::Make the galaxy build dir"
-        commands.append(group)
-    commands.append(f"mkdir {galaxy_build_dir}")
-    if in_action():
-        commands.append(end_group)
+    if ansible_version in ("devel", "milestone"):
+        acv = ansible_version
+    else:
+        acv = f"stable-{ansible_version}"
 
     if in_action():
-        group = "echo ::group::Copy the collection to the galaxy build dir"
-        commands.append(group)
-    cd_tox_dir = f"cd {Path()}"
-    copy_script = (
-        f"for file in $(git ls-files 2> /dev/null || ls); do\n\t"
-        f"mkdir -p {galaxy_build_dir}/$(dirname $file);\n\t"
-        f"cp -r $file {galaxy_build_dir}/$file;\n"
-        "done"
+        commands.append("echo ::group::Install collection with ade")
+    editable = " -e" if test_type != "sanity" else ""
+    ade_cmd = f"ade install{editable} --venv {envdir} --acv {acv} --no-seed --im none ."
+    commands.append(
+        f"bash -c '{ade_cmd}; rc=$?; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
     )
-    full_cmd = f"sh -c '{cd_tox_dir} && {copy_script}'"
-    commands.append(full_cmd)
     if in_action():
         commands.append(end_group)
 
-    if in_action():
-        group = "echo ::group::Build and install the collection"
-        commands.append(group)
-    cd_build_dir = f"cd {galaxy_build_dir}"
-    build_cmd = "ansible-galaxy collection build"
-    tar_file = f"{collection.namespace}-{collection.name}-*.tar.gz"
-    install_cmd = f"ansible-galaxy collection install {tar_file} -p {collections_root}"
-    full_cmd = f"bash -c '{cd_build_dir} && {build_cmd} && {install_cmd}'"
-    commands.append(full_cmd)
-    if in_action():
-        commands.append(end_group)
-
-    if in_action():
-        group = "echo ::group::Initialize the collection to avoid ansible #68499"
-        commands.append(group)
-    cd_install_dir = f"cd {collection_installed_at}"
-    git_cfg = "git config --global init.defaultBranch main"
-    git_init = "git init ."
-    full_cmd = f"bash -c '{cd_install_dir} && {git_cfg} && {git_init}'"
-    commands.append(full_cmd)
-    if in_action():
-        commands.append(end_group)
+    if test_type == "sanity":
+        py_ver = env_conf.name.split("-")[1].replace("py", "")
+        site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
+        col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
+        collection_path = f"{site_packages}/{col_rel}"
+        if in_action():  # pragma: no cover
+            commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
+        git_cfg = "git config --global init.defaultBranch main"
+        git_init = "git init ."
+        commands.append(f"bash -c 'cd {collection_path} && {git_cfg} && {git_init}'")
+        if in_action():  # pragma: no cover
+            commands.append(end_group)
 
     return commands
 
 
-def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
+def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
     """Add dependencies to the tox environment.
 
     Args:
@@ -649,7 +636,8 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     if test_type == "galaxy":
         deps.append("galaxy-importer>=0.4.31")
     else:
-        if test_type in ["integration", "unit"]:
+        deps.append("ansible-dev-environment>=26.2.0")
+        if test_type in ("integration", "unit"):
             deps.extend(OUR_DEPS)
             try:
                 with (cwd / "test-requirements.txt").open() as fileh:
@@ -666,13 +654,6 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
                     deps.extend(fileh.read().splitlines())
             except FileNotFoundError:
                 pass
-        ansible_version = env_conf.name.split("-")[2]
-        base_url = "https://github.com/ansible/ansible/archive/"
-        if ansible_version in ["devel", "milestone"]:
-            ansible_package = f"{base_url}{ansible_version}.tar.gz"
-        else:
-            ansible_package = f"{base_url}stable-{ansible_version}.tar.gz"
-        deps.append(ansible_package)
 
     return "\n".join(deps)
 
@@ -688,27 +669,28 @@ def conf_passenv() -> list[str]:
     return passenv
 
 
-def conf_setenv(env_conf: EnvConfigSet) -> str:
+def conf_setenv(env_conf: EnvConfigSet, test_type: str) -> str:
     """Build the set environment variables for the tox environment.
 
     Set the XDG_CACHE_HOME to the environment directory to isolate it
 
     Args:
         env_conf: The tox environment configuration object.
+        test_type: The test type.
 
     Returns:
         The set environment variables.
     """
-    envvar_name = "ANSIBLE_COLLECTIONS_PATH"
-    envtmpdir = env_conf["envtmpdir"]
-
     setenv = [
-        f"{envvar_name}={envtmpdir}/collections/",
         f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache",
     ]
+
+    if test_type != "galaxy":
+        setenv.insert(0, "ANSIBLE_COLLECTIONS_PATH=.")
+
     # due to the ceilings used by galaxy-importer, use of constraints will
     # likely cause installation failures.
-    if env_conf.name == "galaxy":
+    if test_type == "galaxy":
         setenv.append("PIP_CONSTRAINT=/dev/null")
         setenv.append("UV_CONSTRAINT=/dev/null")
     return "\n".join(setenv)

@@ -94,7 +94,7 @@ def test_environment_config(
     assert config["commands"]
     assert config["pass_env"]
 
-    assert "https://github.com/ansible/ansible/archive" in config["deps"]
+    assert "ansible-dev-environment>=26.2.0" in config["deps"]
     assert "XDG_CACHE_HOME" in config["set_env"]
 
 

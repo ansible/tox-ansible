@@ -24,6 +24,8 @@ ignorePaths:
   - site
   - _readthedocs
   - coverage.lcov
+  - tests/fixtures/**/plugins/**
+  - tests/fixtures/**/tests/**
 languageSettings:
   - languageId: python
     allowCompoundWords: false
