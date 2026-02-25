@@ -32,15 +32,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ALLOWED_EXTERNALS = [
+    "ade",
     "bash",
-    "sh",
-    "cp",
-    "git",
-    "rm",
-    "mkdir",
-    "cd",
     "echo",
-    "dirname",
+    "git",
+    "sh",
 ]
 ENV_LIST = """
 galaxy
@@ -224,22 +220,27 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     collection = get_collection(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
 
+    test_type = factors[0]
+    ansible_version = factors[-1] if len(factors) == expected_factors else ""
+
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
         commands_pre=conf_commands_pre(
             collection=collection,
             env_conf=env_conf,
+            test_type=test_type,
+            ansible_version=ansible_version,
         ),
         commands=conf_commands(
             collection=collection,
             env_conf=env_conf,
             pos_args=pos_args,
-            test_type=factors[0],
+            test_type=test_type,
         ),
         description=desc_for_env(env_conf.name),
-        deps=conf_deps(env_conf=env_conf, test_type=factors[0]),
+        deps=conf_deps(env_conf=env_conf, test_type=test_type),
         passenv=conf_passenv(),
-        setenv=conf_setenv(env_conf),
+        setenv=conf_setenv(env_conf=env_conf, test_type=test_type),
         skip_install=True,
     )
     loader = MemoryLoader(**asdict(conf))
@@ -505,7 +506,6 @@ def conf_commands_for_sanity(
         The commands to run.
     """
     commands = []
-    envtmpdir = env_conf["envtmpdir"]
 
     args = f" {' '.join(pos_args)}" if pos_args else ""
 
@@ -513,7 +513,7 @@ def conf_commands_for_sanity(
 
     command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
     ch_dir = (
-        f"cd {envtmpdir}/collections/ansible_collections/{collection.namespace}/{collection.name}"
+        f"cd {{envsitepackagesdir}}/ansible_collections/{collection.namespace}/{collection.name}"
     )
     full_command = f"bash -c '{ch_dir} && {command}'"
     commands.append(full_command)
@@ -549,76 +549,60 @@ def conf_commands_for_galaxy(
     return commands
 
 
-def conf_commands_pre(env_conf: EnvConfigSet, collection: Collection) -> list[str]:
-    """Build and install the collection.
+def conf_commands_pre(
+    env_conf: EnvConfigSet,
+    collection: Collection,
+    test_type: str,
+    ansible_version: str,
+) -> list[str]:
+    """Install the collection using ade (ansible-dev-environment).
 
     Args:
         env_conf: The tox environment configuration object.
         collection: The collection info.
+        test_type: The test type, either "integration", "unit", "sanity", or "galaxy".
+        ansible_version: The ansible version factor from the env name.
 
     Returns:
         The commands to pre run.
     """
-    commands = []
+    if test_type == "galaxy":
+        return []
 
-    # Define some directories"
-    envtmpdir = env_conf["envtmpdir"]
-    collections_root = f"{envtmpdir}/collections"
-    collection_installed_at = (
-        f"{collections_root}/ansible_collections/{collection.namespace}/{collection.name}"
-    )
-    galaxy_build_dir = f"{envtmpdir}/collection_build"
+    commands = []
+    envdir = env_conf["env_dir"]
     end_group = "echo ::endgroup::"
 
-    if in_action():
-        group = "echo ::group::Make the galaxy build dir"
-        commands.append(group)
-    commands.append(f"mkdir {galaxy_build_dir}")
-    if in_action():
-        commands.append(end_group)
+    if ansible_version in ("devel", "milestone"):
+        acv = ansible_version
+    else:
+        acv = f"stable-{ansible_version}"
 
     if in_action():
-        group = "echo ::group::Copy the collection to the galaxy build dir"
-        commands.append(group)
-    cd_tox_dir = f"cd {Path()}"
-    copy_script = (
-        f"for file in $(git ls-files 2> /dev/null || ls); do\n\t"
-        f"mkdir -p {galaxy_build_dir}/$(dirname $file);\n\t"
-        f"cp -r $file {galaxy_build_dir}/$file;\n"
-        "done"
+        commands.append("echo ::group::Install collection with ade")
+    ade_cmd = f"ade install -e --venv {envdir} --acv {acv} --no-seed --im none ."
+    commands.append(
+        f"bash -c '{ade_cmd}; rc=$?; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
     )
-    full_cmd = f"sh -c '{cd_tox_dir} && {copy_script}'"
-    commands.append(full_cmd)
     if in_action():
         commands.append(end_group)
 
-    if in_action():
-        group = "echo ::group::Build and install the collection"
-        commands.append(group)
-    cd_build_dir = f"cd {galaxy_build_dir}"
-    build_cmd = "ansible-galaxy collection build"
-    tar_file = f"{collection.namespace}-{collection.name}-*.tar.gz"
-    install_cmd = f"ansible-galaxy collection install {tar_file} -p {collections_root}"
-    full_cmd = f"bash -c '{cd_build_dir} && {build_cmd} && {install_cmd}'"
-    commands.append(full_cmd)
-    if in_action():
-        commands.append(end_group)
-
-    if in_action():
-        group = "echo ::group::Initialize the collection to avoid ansible #68499"
-        commands.append(group)
-    cd_install_dir = f"cd {collection_installed_at}"
-    git_cfg = "git config --global init.defaultBranch main"
-    git_init = "git init ."
-    full_cmd = f"bash -c '{cd_install_dir} && {git_cfg} && {git_init}'"
-    commands.append(full_cmd)
-    if in_action():
-        commands.append(end_group)
+    if test_type == "sanity":
+        collection_path = (
+            f"{{envsitepackagesdir}}/ansible_collections/{collection.namespace}/{collection.name}"
+        )
+        if in_action():
+            commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
+        git_cfg = "git config --global init.defaultBranch main"
+        git_init = "git init ."
+        commands.append(f"bash -c 'cd {collection_path} && {git_cfg} && {git_init}'")
+        if in_action():
+            commands.append(end_group)
 
     return commands
 
 
-def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
+def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
     """Add dependencies to the tox environment.
 
     Args:
@@ -633,7 +617,8 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
     if test_type == "galaxy":
         deps.append("galaxy-importer>=0.4.31")
     else:
-        if test_type in ["integration", "unit"]:
+        deps.append("ansible-dev-environment>=26.2.0")
+        if test_type in ("integration", "unit"):
             deps.extend(OUR_DEPS)
             try:
                 with (cwd / "test-requirements.txt").open() as fileh:
@@ -650,13 +635,6 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:
                     deps.extend(fileh.read().splitlines())
             except FileNotFoundError:
                 pass
-        ansible_version = env_conf.name.split("-")[2]
-        base_url = "https://github.com/ansible/ansible/archive/"
-        if ansible_version in ["devel", "milestone"]:
-            ansible_package = f"{base_url}{ansible_version}.tar.gz"
-        else:
-            ansible_package = f"{base_url}stable-{ansible_version}.tar.gz"
-        deps.append(ansible_package)
 
     return "\n".join(deps)
 
@@ -672,27 +650,28 @@ def conf_passenv() -> list[str]:
     return passenv
 
 
-def conf_setenv(env_conf: EnvConfigSet) -> str:
+def conf_setenv(env_conf: EnvConfigSet, test_type: str) -> str:
     """Build the set environment variables for the tox environment.
 
     Set the XDG_CACHE_HOME to the environment directory to isolate it
 
     Args:
         env_conf: The tox environment configuration object.
+        test_type: The test type.
 
     Returns:
         The set environment variables.
     """
-    envvar_name = "ANSIBLE_COLLECTIONS_PATH"
-    envtmpdir = env_conf["envtmpdir"]
-
     setenv = [
-        f"{envvar_name}={envtmpdir}/collections/",
         f"XDG_CACHE_HOME={env_conf['env_dir']}/.cache",
     ]
+
+    if test_type != "galaxy":
+        setenv.insert(0, "ANSIBLE_COLLECTIONS_PATH=.")
+
     # due to the ceilings used by galaxy-importer, use of constraints will
     # likely cause installation failures.
-    if env_conf.name == "galaxy":
+    if test_type == "galaxy":
         setenv.append("PIP_CONSTRAINT=/dev/null")
         setenv.append("UV_CONSTRAINT=/dev/null")
     return "\n".join(setenv)

@@ -1,12 +1,5 @@
-CCSHARED
-CFLAGS
-CPPFLAGS
-LDFLAGS
 Metafunc
-PYTHONHASHSEED
-PYTHONIOENCODING
 autouse
-bthornto
 calver
 caplog
 capsys
@@ -14,9 +7,10 @@ delenv
 endgroup
 envdir
 envlist
-envtmpdir
+envsitepackagesdir
 fileh
 fixturenames
 metafunc
 passenv
 toxfile
+toxinidir

@@ -28,6 +28,7 @@ from tox_ansible.plugin import (
     conf_commands,
     conf_commands_pre,
     conf_deps,
+    conf_setenv,
     generate_gh_matrix,
     get_collection,
     tox_add_env_config,
@@ -38,8 +39,8 @@ if typing.TYPE_CHECKING:
     from collections.abc import Generator
 
 
-def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Test pre-command generation.
+def test_commands_pre_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Test pre-command generation for unit tests.
 
     Args:
         monkeypatch: Pytest fixture.
@@ -56,10 +57,10 @@ def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         pos_args=[],
         source=source,
         extra_envs=[],
-    ).get_env("py39")
+    ).get_env("unit-py3.13-2.19")
 
     conf.add_config(
-        keys=["env_tmp_dir", "envtmpdir"],
+        keys=["env_dir", "envdir"],
         of_type=Path,
         default=tmp_path,
         desc="",
@@ -68,9 +69,104 @@ def test_commands_pre(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     result = conf_commands_pre(
         env_conf=conf,
         collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="2.19",
     )
-    number_commands = 12
-    assert len(result) == number_commands, result
+    expected_commands = 3
+    assert len(result) == expected_commands, result
+    assert result[0] == "echo ::group::Install collection with ade"
+    assert "ade install -e --venv" in result[1]
+    assert "--acv stable-2.19 --no-seed --im none ." in result[1]
+    assert result[2] == "echo ::endgroup::"
+
+
+def test_commands_pre_sanity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Test pre-command generation for sanity tests includes git init.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("sanity-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="sanity",
+        ansible_version="2.19",
+    )
+    expected_commands = 6
+    assert len(result) == expected_commands, result
+    assert "ade install -e" in result[1]
+    assert "git init" in result[4]
+    assert "{envsitepackagesdir}/ansible_collections/test/test" in result[4]
+
+
+def test_commands_pre_galaxy() -> None:
+    """Test pre-command generation for galaxy returns empty list."""
+    result = conf_commands_pre(
+        env_conf=None,  # type: ignore[arg-type]
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="galaxy",
+        ansible_version="",
+    )
+    assert not result
+
+
+def test_commands_pre_devel(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Test pre-command generation passes devel as-is to --acv.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-devel")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="devel",
+    )
+    assert len(result) == 1
+    assert "ade install -e" in result[0]
+    assert "--acv devel --no-seed" in result[0]
 
 
 def test_check_num_candidates_2(caplog: pytest.LogCaptureFixture) -> None:
@@ -254,13 +350,6 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
         extra_envs=[],
     ).get_env("sanity-py3.14-2.19")
 
-    conf.add_config(
-        keys=["env_tmp_dir", "envtmpdir"],
-        of_type=Path,
-        default=tmp_path,
-        desc="",
-    )
-
     result = conf_commands(
         env_conf=conf,
         collection=Collection(name="test", namespace="test", version="1.0.0"),
@@ -269,6 +358,7 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
     )
     assert len(result) == 1
     assert "ansible-test sanity" in result[0]
+    assert "{envsitepackagesdir}/ansible_collections/test/test" in result[0]
 
 
 def test_conf_commands_integration(tmp_path: Path) -> None:
@@ -344,7 +434,7 @@ def working_directory(path: Path) -> Generator[None, None, None]:
 
 
 def test_conf_deps(tmp_path: Path) -> None:
-    """Test the conf_commands function.
+    """Test the conf_deps function for unit tests.
 
     Args:
         tmp_path: Pytest fixture.
@@ -369,9 +459,92 @@ def test_conf_deps(tmp_path: Path) -> None:
         ).get_env("unit-py3.14-2.19")
 
         result = conf_deps(env_conf=conf, test_type="unit")
+        assert "ansible-dev-environment>=26.2.0" in result
         assert "test-requirement" in result
         assert "requirement" in result
         assert "requirement-test" in result
+        assert "github.com/ansible/ansible" not in result
+
+
+def test_conf_deps_sanity(tmp_path: Path) -> None:
+    """Test the conf_deps function for sanity tests.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("sanity-py3.13-2.19")
+
+    result = conf_deps(env_conf=conf, test_type="sanity")
+    assert "ansible-dev-environment>=26.2.0" in result
+    assert "pytest" not in result
+
+
+def test_conf_setenv_collections_path(tmp_path: Path) -> None:
+    """Test that ANSIBLE_COLLECTIONS_PATH is set to '.' for isolation.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_setenv(env_conf=conf, test_type="unit")
+    assert "ANSIBLE_COLLECTIONS_PATH=." in result
+    assert "site-packages" not in result
+
+
+def test_conf_setenv_galaxy(tmp_path: Path) -> None:
+    """Test that ANSIBLE_COLLECTIONS_PATH is not set for galaxy environments.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("galaxy")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_setenv(env_conf=conf, test_type="galaxy")
+    assert "ANSIBLE_COLLECTIONS_PATH" not in result
+    assert "PIP_CONSTRAINT" in result
+    assert "UV_CONSTRAINT" in result
 
 
 @pytest.mark.parametrize("custom_work_dir", (False, True))
@@ -408,13 +581,6 @@ def test_tox_add_env_config_valid(
         source=source,
         extra_envs=[],
     ).get_env("unit-py3.14-2.19")
-
-    env_conf.add_config(
-        keys=["env_tmp_dir", "envtmpdir"],
-        of_type=Path,
-        default=tmp_path,
-        desc="",
-    )
 
     env_conf.add_config(
         keys=["env_dir", "envdir"],

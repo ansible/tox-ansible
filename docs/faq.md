@@ -4,12 +4,22 @@
 
 ## How does it work?
 
-`tox` will, by default, create a Python virtual environment for a given environment. `tox-ansible` adds Ansible collection specific build and test logic to tox. The collection is copied into the virtual environment created by tox, built, and installed into the virtual environment. The installation of the collection will include the collection's collection dependencies. `tox-ansible` will also install any Python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file. The virtual environment's temporary directory is used, so the copy, build and install steps are performed with each test run ensuring the current collection code is used.
+`tox` will, by default, create a Python virtual environment for a given environment. `tox-ansible` adds Ansible collection specific build and test logic to tox by delegating collection installation to [ansible-dev-environment](https://github.com/ansible/ansible-dev-environment) (ade).
 
-`tox-ansible` also sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's temporary directory. This ensures that the collection under test is used when running tests. The `pytest-ansible-units` pytest plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
+For each test environment, `tox-ansible` runs `ade install` as a pre-command which:
+
+1. Installs the requested version of `ansible-core` (from PyPI, a GitHub branch, or a URL).
+2. Builds and installs the collection from the current directory into the virtual environment's site-packages.
+3. Discovers and installs Python dependencies declared by the collection and its transitive dependencies using `ansible-builder introspect`.
+
+`tox-ansible` also installs any Python dependencies from a `test-requirements.txt` (or `requirements-test.txt`) and `requirements.txt` file.
+
+`tox-ansible` sets the `ANSIBLE_COLLECTIONS_PATH` environment variable to point to the virtual environment's site-packages directory. This ensures the collection under test is found when running tests. The `pytest-ansible` plugin injects the `ANSIBLE_COLLECTIONS_PATH` environment variable into the collection loader so ansible-core can locate the collection.
 
 `pytest` is used to run both the `unit` and `integration tests`.
 `ansible-test sanity` is used to run the `sanity` tests.
+
+For more details on the architecture and how `tox-ansible` and `ade` work together, see the [Architecture](architecture.md) page.
 
 For full configuration examples for each of the sanity, integration, and unit tests including the commands being run and the environment variables being set and passed, see the following:
 
