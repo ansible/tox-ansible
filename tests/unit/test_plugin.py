@@ -25,7 +25,6 @@ from tox.session.state import State
 
 from tox_ansible.plugin import (
     Collection,
-    _resolve_site_packages,
     conf_commands,
     conf_commands_pre,
     conf_deps,
@@ -118,7 +117,7 @@ def test_commands_pre_sanity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     assert len(result) == expected_commands, result
     assert "ade install -e" in result[1]
     assert "git init" in result[4]
-    assert "{envsitepackagesdir}/ansible_collections/test/test" in result[4]
+    assert "lib/python3.13/site-packages/ansible_collections/test/test" in result[4]
 
 
 def test_commands_pre_galaxy() -> None:
@@ -389,6 +388,13 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
         extra_envs=[],
     ).get_env("sanity-py3.14-2.19")
 
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
     result = conf_commands(
         env_conf=conf,
         collection=Collection(name="test", namespace="test", version="1.0.0"),
@@ -397,7 +403,7 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
     )
     assert len(result) == 1
     assert "ansible-test sanity" in result[0]
-    assert "{envsitepackagesdir}/ansible_collections/test/test" in result[0]
+    assert "lib/python3.14/site-packages/ansible_collections/test/test" in result[0]
 
 
 def test_conf_commands_integration(tmp_path: Path) -> None:
@@ -584,28 +590,6 @@ def test_conf_setenv_galaxy(tmp_path: Path) -> None:
     assert "ANSIBLE_COLLECTIONS_PATH" not in result
     assert "PIP_CONSTRAINT" in result
     assert "UV_CONSTRAINT" in result
-
-
-def test_resolve_site_packages() -> None:
-    """Test that _resolve_site_packages replaces placeholders in loader commands."""
-    loader = MemoryLoader(
-        commands_pre=[
-            "bash -c 'ade install -e .'",
-            "bash -c 'cd {envsitepackagesdir}/ansible_collections/ns/col && git init .'",
-        ],
-        commands=[
-            "bash -c 'cd {envsitepackagesdir}/ansible_collections/ns/col && ansible-test sanity'",
-        ],
-        deps=["ansible-dev-environment>=26.2.0"],
-    )
-    site_pkg = "/home/user/.tox/sanity-py3.14-2.20/lib/python3.14/site-packages"
-    _resolve_site_packages(loader, site_pkg)
-
-    expected = f"{site_pkg}/ansible_collections/ns/col"
-    assert "{envsitepackagesdir}" not in loader.raw["commands_pre"][1]
-    assert expected in loader.raw["commands_pre"][1]
-    assert expected in loader.raw["commands"][0]
-    assert loader.raw["commands_pre"][0] == "bash -c 'ade install -e .'"
 
 
 @pytest.mark.parametrize("custom_work_dir", (False, True))

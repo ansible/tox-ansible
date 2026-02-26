@@ -246,26 +246,6 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     loader = MemoryLoader(**asdict(conf))
     env_conf.loaders.append(loader)
 
-    if test_type == "sanity":
-        env_site_packages = str(env_conf["env_site_packages_dir"])
-        _resolve_site_packages(loader, env_site_packages)
-
-
-def _resolve_site_packages(loader: MemoryLoader, site_packages: str) -> None:
-    """Replace {envsitepackagesdir} placeholders with the resolved path.
-
-    Must be called after the loader is appended to env_conf.loaders so that
-    resolving env_site_packages_dir does not cache set_env prematurely.
-
-    Args:
-        loader: The MemoryLoader whose values will be updated in place.
-        site_packages: The resolved site-packages directory path.
-    """
-    placeholder = "{envsitepackagesdir}"
-    for key in ("commands_pre", "commands"):
-        if key in loader.raw:
-            loader.raw[key] = [cmd.replace(placeholder, site_packages) for cmd in loader.raw[key]]
-
 
 def desc_for_env(env: str) -> str:
     """Generate a description for an environment.
@@ -531,11 +511,13 @@ def conf_commands_for_sanity(
 
     py_ver = env_conf.name.split("-")[1].replace("py", "")
 
+    envdir = env_conf["env_dir"]
+    site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
+    col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
+    collection_path = f"{site_packages}/{col_rel}"
+
     command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
-    ch_dir = (
-        f"cd {{envsitepackagesdir}}/ansible_collections/{collection.namespace}/{collection.name}"
-    )
-    full_command = f"bash -c '{ch_dir} && {command}'"
+    full_command = f"bash -c 'cd {collection_path} && {command}'"
     commands.append(full_command)
     return commands
 
@@ -608,9 +590,10 @@ def conf_commands_pre(
         commands.append(end_group)
 
     if test_type == "sanity":
-        collection_path = (
-            f"{{envsitepackagesdir}}/ansible_collections/{collection.namespace}/{collection.name}"
-        )
+        py_ver = env_conf.name.split("-")[1].replace("py", "")
+        site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
+        col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
+        collection_path = f"{site_packages}/{col_rel}"
         if in_action():
             commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
         git_cfg = "git config --global init.defaultBranch main"

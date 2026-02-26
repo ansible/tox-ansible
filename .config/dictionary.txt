@@ -7,7 +7,6 @@ delenv
 endgroup
 envdir
 envlist
-envsitepackagesdir
 fileh
 fixturenames
 metafunc
