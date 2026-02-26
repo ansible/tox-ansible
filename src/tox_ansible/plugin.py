@@ -246,6 +246,26 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     loader = MemoryLoader(**asdict(conf))
     env_conf.loaders.append(loader)
 
+    if test_type == "sanity":
+        env_site_packages = str(env_conf["env_site_packages_dir"])
+        _resolve_site_packages(loader, env_site_packages)
+
+
+def _resolve_site_packages(loader: MemoryLoader, site_packages: str) -> None:
+    """Replace {envsitepackagesdir} placeholders with the resolved path.
+
+    Must be called after the loader is appended to env_conf.loaders so that
+    resolving env_site_packages_dir does not cache set_env prematurely.
+
+    Args:
+        loader: The MemoryLoader whose values will be updated in place.
+        site_packages: The resolved site-packages directory path.
+    """
+    placeholder = "{envsitepackagesdir}"
+    for key in ("commands_pre", "commands"):
+        if key in loader.raw:
+            loader.raw[key] = [cmd.replace(placeholder, site_packages) for cmd in loader.raw[key]]
+
 
 def desc_for_env(env: str) -> str:
     """Generate a description for an environment.
