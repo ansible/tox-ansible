@@ -582,7 +582,8 @@ def conf_commands_pre(
 
     if in_action():
         commands.append("echo ::group::Install collection with ade")
-    ade_cmd = f"ade install -e --venv {envdir} --acv {acv} --no-seed --im none ."
+    editable = " -e" if test_type != "sanity" else ""
+    ade_cmd = f"ade install{editable} --venv {envdir} --acv {acv} --no-seed --im none ."
     commands.append(
         f"bash -c '{ade_cmd}; rc=$?; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
     )

@@ -115,7 +115,8 @@ def test_commands_pre_sanity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     )
     expected_commands = 6
     assert len(result) == expected_commands, result
-    assert "ade install -e" in result[1]
+    assert "ade install --venv" in result[1]
+    assert "ade install -e" not in result[1]
     assert "git init" in result[4]
     assert "lib/python3.13/site-packages/ansible_collections/test/test" in result[4]
 
