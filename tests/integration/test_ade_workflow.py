@@ -43,9 +43,18 @@ def test_ade_workflow_config(
             continue
 
         config = dict(cfg_parser[env_name])
-        assert "ade install -e" in config["commands_pre"], (
-            f"{env_name}: commands_pre should contain 'ade install -e'"
+        is_sanity = "sanity" in env_name
+        assert "ade install" in config["commands_pre"], (
+            f"{env_name}: commands_pre should contain 'ade install'"
         )
+        if is_sanity:
+            assert "ade install -e" not in config["commands_pre"], (
+                f"{env_name}: sanity commands_pre must not use editable install"
+            )
+        else:
+            assert "ade install -e" in config["commands_pre"], (
+                f"{env_name}: commands_pre should use editable install"
+            )
         assert "ansible-dev-environment>=26.2.0" in config["deps"], (
             f"{env_name}: deps should contain 'ansible-dev-environment>=26.2.0'"
         )
