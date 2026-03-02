@@ -32,6 +32,9 @@ import pytest
 import tox_ansible  # noqa: F401
 
 
+collect_ignore_glob = ["fixtures/**/plugins/**", "fixtures/**/tests/**"]
+
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 

@@ -94,7 +94,14 @@ source = ["src"]
 [tool.mypy]
 cache_dir = "./.cache/.mypy"
 files = ["src", "tests"]
-exclude = ["collections", "context/_build", "build", ".tox"]
+exclude = [
+  "collections",
+  "context/_build",
+  "build",
+  ".tox",
+  "tests/fixtures/.*/plugins",
+  "tests/fixtures/.*/tests"
+]
 strict = true
 
 [tool.pydoclint]
@@ -128,6 +135,8 @@ ignore-paths = [
   ".venv/",
   "_readthedocs/",
   "build/",
+  "tests/fixtures/.*/plugins/",
+  "tests/fixtures/.*/tests/",
 ]
 jobs = 0
 no-docstring-rgx = "__.*__"
@@ -361,9 +370,12 @@ fail-on = ["useless-suppression"]
 addopts = ["--durations=10", "--showlocals", "-ra"]
 cache_dir = "./.cache/.pytest"
 junit_family = "xunit2"  # see https://docs.codecov.com/docs/test-analytics
+markers = [
+  "slow: marks tests that create isolated venvs and install dependencies (deselect with '-m \"not slow\"')"
+]
 testpaths = ["tests"]
 tmp_path_retention_policy = "failed"
-verbosity_assertions = 2
+verbosity_assertions = "2"
 
 [tool.ruff]
 builtins = ["__"]
@@ -392,7 +404,9 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "_version.py" = ["SIM108"]
-"tests/**" = ["SLF001", "S101", "S602", "T201"]
+"tests/**" = ["SLF001", "S101", "S602", "S603", "T201"]
+"tests/fixtures/**/plugins/**" = ["ALL"]
+"tests/fixtures/**/tests/**" = ["ALL"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
