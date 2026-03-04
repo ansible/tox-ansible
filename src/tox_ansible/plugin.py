@@ -287,8 +287,12 @@ def add_ansible_matrix(state: State) -> EnvList:
         env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
     ]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
-    state.conf.core.loaders.append(
-        MemoryLoader(env_list=env_list),
+    state.conf.core.loaders.insert(
+        0,
+        MemoryLoader(
+            env_list=env_list,
+            ignore_base_python_conflict=True,
+        ),
     )
     return env_list
 
