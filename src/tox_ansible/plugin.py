@@ -251,7 +251,10 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         setenv=conf_setenv(env_conf),
         skip_install=True,
     )
-    loader = MemoryLoader(**asdict(conf))
+    loader_args = asdict(conf)
+    if not base_python:
+        del loader_args["base_python"]
+    loader = MemoryLoader(**loader_args)
     env_conf.loaders.append(loader)
 
 
