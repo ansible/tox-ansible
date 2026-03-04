@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 
 def test_type_current(
+    matrix_length: int,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
     module_fixture_dir: Path,
@@ -28,11 +29,11 @@ def test_type_current(
     """Test the current runtime for a gh matrix.
 
     Args:
+        matrix_length: pytest fixture for matrix length
         capsys: pytest fixture to capture stdout and stderr
         monkeypatch: pytest fixture to patch modules
         module_fixture_dir: pytest fixture to provide a module specific fixture directory
     """
-    matrix_length = 43
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
     monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     monkeypatch.chdir(module_fixture_dir)
