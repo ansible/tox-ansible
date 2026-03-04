@@ -228,7 +228,8 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
 
     # Extract Python version from the environment name (e.g., py3.11 from integration-py3.11-2.18)
     # and explicitly set base_python to prevent tox from misinterpreting ansible versions as Python
-    base_python = [factors[1]] if len(factors) >= 2 and factors[1].startswith("py") else []
+    # factors[1] is the Python version for environments matching expected_factors (e.g., sanity-py3.11-2.18)
+    base_python = [factors[1]] if len(factors) >= expected_factors and factors[1].startswith("py") else []
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
