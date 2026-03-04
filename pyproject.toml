@@ -31,7 +31,7 @@ dependencies = [
   "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
   "pyyaml>=6.0.1",
-  "tox>=4.15.1",
+  "tox>=4.47.3",
 ]
 dynamic = ["version"]
 
@@ -55,7 +55,6 @@ dev = [
   "pytest-xdist>=3.8.0",
   "ruff>=0.12.8",
   "toml-sort>=0.24.2",
-  "tox>=4.29.0",
   "tox-extra>=2.2.0",
   "tox-uv>=1.29.0",
   "types-pyyaml>=6.0.12.20250809"
@@ -419,7 +418,7 @@ sort_table_keys = true
 
 [tool.tox]
 env_list = ["py", "devel", "deps", "docs", "lint", "milestone", "pkg"]
-requires = ["setuptools>=65.3", "tox>=4.30.2", "tox-extra>=2.1", "tox-uv>=1.28"]
+requires = ["setuptools>=65.3", "tox>=4.47.3", "tox-extra>=2.1", "tox-uv>=1.28"]
 skip_missing_interpreters = true
 
 [tool.tox.env.deps]
@@ -588,3 +587,11 @@ TERM = "xterm-256color"
 
 [tool.uv]
 package = true
+# needed to test 'lower' constraints, as this is the first version that has
+# pre-build wheels for py310 and we don't want to build it ourselves
+# gitpython is indirect dependency of tox-extra
+constraint-dependencies = [
+  "cryptography>=43",
+  "cffi>=1.15.1",
+  "gitpython>=3",
+]

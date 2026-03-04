@@ -88,6 +88,7 @@ class AnsibleTestConf:  # pylint: disable=too-many-instance-attributes
         deps: The dependencies for the test.
         setenv: The set environment variables for the test.
         skip_install: Skip the installation.
+        base_python: The base Python interpreter to use.
         allowlist_externals: The allowed external commands.
         commands_pre: The pre-run commands.
         commands: The commands to run.
@@ -98,6 +99,7 @@ class AnsibleTestConf:  # pylint: disable=too-many-instance-attributes
     deps: str
     setenv: str
     skip_install: bool
+    base_python: list[str] = field(default_factory=list)
     allowlist_externals: list[str] = field(default_factory=list)
     commands_pre: list[str] = field(default_factory=list)
     commands: list[str] = field(default_factory=list)
@@ -224,8 +226,15 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     collection = get_collection(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
 
+    # Extract Python version from environment name (e.g., py3.11 from integration-py3.11-2.18)
+    # and explicitly set base_python to prevent tox misinterpreting ansible versions as Python
+    base_python: list[str] = []
+    if len(factors) >= expected_factors and factors[1].startswith("py"):
+        base_python = [factors[1]]
+
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
+        base_python=base_python,
         commands_pre=conf_commands_pre(
             collection=collection,
             env_conf=env_conf,
@@ -242,7 +251,10 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         setenv=conf_setenv(env_conf),
         skip_install=True,
     )
-    loader = MemoryLoader(**asdict(conf))
+    loader_args = asdict(conf)
+    if not base_python:
+        del loader_args["base_python"]
+    loader = MemoryLoader(**loader_args)
     env_conf.loaders.append(loader)
 
 
@@ -292,8 +304,12 @@ def add_ansible_matrix(state: State) -> EnvList:
         env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
     ]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
-    state.conf.core.loaders.append(
-        MemoryLoader(env_list=env_list),
+    state.conf.core.loaders.insert(
+        0,
+        MemoryLoader(
+            env_list=env_list,
+            ignore_base_python_conflict=True,
+        ),
     )
     return env_list
 

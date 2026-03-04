@@ -497,3 +497,90 @@ def test_tox_add_env_config_invalid(tmp_path: Path, monkeypatch: pytest.MonkeyPa
 
     tox_add_env_config(env_conf, state)
     assert not env_conf.loaders
+
+
+def test_tox_add_env_config_no_base_python(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test tox_add_env_config excludes base_python for galaxy environment.
+
+    The galaxy environment doesn't follow the {test_type}-py{version}-{ansible}
+    naming pattern, so base_python should not be included in the loader to avoid
+    tox failing to find a Python interpreter with an empty spec.
+
+    Args:
+        tmp_path: Pytest fixture for temporary directory.
+        monkeypatch: Pytest fixture for patching.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    env_conf = Config.make(
+        parsed=parsed,
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("galaxy")
+
+    env_conf.add_config(
+        keys=["env_tmp_dir", "envtmpdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    env_conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    env_conf.add_config(
+        keys=["env_log_dir", "envlogdir"],
+        of_type=Path,
+        default=tmp_path / "log",
+        desc="",
+    )
+
+    env_conf.add_config(
+        keys=["env_python"],
+        of_type=Path,
+        default=Path("/usr/bin/python3"),
+        desc="",
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(
+        buffer=output,
+        encoding="utf-8",
+        line_buffering=True,
+    )
+
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    tox_add_env_config(env_conf, state)
+
+    assert isinstance(env_conf.loaders[0], MemoryLoader)
+    assert "base_python" not in env_conf.loaders[0].raw
+    assert "Build collection" in env_conf.loaders[0].raw["description"]
