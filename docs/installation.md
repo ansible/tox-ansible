@@ -17,3 +17,7 @@ pip install tox-ansible
 - `pytest`
 - `pytest-xdist`
 - `pyyaml`
+
+Each generated test environment will also install:
+
+- `ansible-dev-environment` (ade) -- handles collection installation, ansible-core versioning, and Python dependency resolution.

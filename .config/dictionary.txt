@@ -1,12 +1,5 @@
-CCSHARED
-CFLAGS
-CPPFLAGS
-LDFLAGS
 Metafunc
-PYTHONHASHSEED
-PYTHONIOENCODING
 autouse
-bthornto
 calver
 caplog
 capsys
@@ -21,3 +14,4 @@ fixturenames
 metafunc
 passenv
 toxfile
+toxinidir
