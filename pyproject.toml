@@ -450,7 +450,7 @@ commands = [
 ]
 commands_pre = []
 description = "Bump all test dependencies"
-env_dir = "{work_dir}/lint"
+dependency_groups = ["lint"]
 skip_install = true
 
 [tool.tox.env.devel]
