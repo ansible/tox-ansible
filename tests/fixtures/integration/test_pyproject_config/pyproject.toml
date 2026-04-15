@@ -1,0 +1,5 @@
+[tool.tox]
+requires = ["tox>=4.2"]
+
+[tool.tox-ansible]
+skip = ["devel", "milestone"]

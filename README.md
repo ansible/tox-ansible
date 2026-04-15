@@ -28,11 +28,20 @@ pip install tox-ansible
 
 ## Usage
 
-From the root of your collection, create an empty `tox-ansible.ini` file and list the available environments:
+From the root of your collection, add a `[tool.tox-ansible]` section to your `pyproject.toml`:
+
+```toml
+# pyproject.toml
+[tool.tox]
+requires = ["tox>=4.2"]
+
+[tool.tox-ansible]
+```
+
+Then list the available environments:
 
 ```bash
-touch tox-ansible.ini
-tox list --ansible --conf tox-ansible.ini
+tox list --ansible
 ```
 
 A list of dynamically generated Ansible environments will be displayed:
@@ -56,25 +65,25 @@ These represent the available testing environments. Each denotes the type of tes
 To run tests with a single environment, simply run the following command:
 
 ```bash
-tox -e sanity-py3.11-2.14 --ansible --conf tox-ansible.ini
+tox -e sanity-py3.11-2.14 --ansible
 ```
 
 To run tests with multiple environments, simply add the environment names to the command:
 
 ```bash
-tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible --conf tox-ansible.ini
+tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible
 ```
 
 To run all tests of a specific type in all available environments, use the factor `-f` flag:
 
 ```bash
-tox -f unit --ansible -p auto --conf tox-ansible.ini
+tox -f unit --ansible -p auto
 ```
 
 To run all tests across all available environments:
 
 ```bash
-tox --ansible -p auto --conf tox-ansible.ini
+tox --ansible -p auto
 ```
 
 Note: The `-p auto` flag will run multiple tests in parallel.
@@ -87,58 +96,45 @@ sudo dnf install python3.10
 To review the specific commands and configuration for each of the integration, sanity, and unit factors:
 
 ```bash
-tox config --ansible --conf tox-ansible.ini
+tox config --ansible
 ```
 
 Generate specific GitHub action matrix as per scope mentioned with `--matrix-scope`:
 
 ```bash
-tox --ansible --gh-matrix --matrix-scope unit --conf tox-ansible.ini
+tox --ansible --gh-matrix --matrix-scope unit
 ```
 
-A list of dynamically generated Ansible environments will be displayed specifically for unit tests:
-
-```
-[
-  {
-    "description": "Unit tests using ansible 2.9 and python 3.8",
-    "factors": [
-      "unit",
-      "py3.8",
-      "2.9"
-    ],
-    "name": "unit-py3.8-2.9",
-    "python": "3.8"
-  },
-  ...
-  {
-    "description": "Unit tests using ansible-core milestone and python 3.12",
-    "factors": [
-      "unit",
-      "py3.12",
-      "milestone"
-    ],
-    "name": "unit-py3.12-milestone",
-    "python": "3.12"
-  }
-]
-```
+> **Note:** If your project uses `tox-ansible.ini` instead of `pyproject.toml`, add `--conf tox-ansible.ini` to each command above.
 
 ## Configuration
 
-`tox-ansible` should be configured using a `tox-ansible.ini` file. Using a `tox-ansible.ini` file allows for the introduction of the `tox-ansible` plugin to a repository that may already have an existing `tox` configuration without conflicts. If no configuration overrides are needed, the `tox-ansible.ini` file may be empty but should be present. In addition to all `tox` supported keywords the `ansible` section and `skip` keyword are available:
+`tox-ansible` is configured via a `[tool.tox-ansible]` section in `pyproject.toml`. The `skip` keyword filters environments by substring match:
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+skip = [
+    "2.16",
+    "devel",
+]
+```
+
+This will skip tests in any environment that uses Ansible 2.16 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
+
+Alternatively, if using a `tox-ansible.ini` file, configure the `[ansible]` section:
 
 ```ini
 # tox-ansible.ini
 [ansible]
 skip =
-    2.9
+    2.16
     devel
 ```
 
-This will skip tests in any environment that uses Ansible 2.9 or the devel branch. The list of strings is used for a simple string in string comparison of environment names. Here is the [guide] to override `tox-ansible` environment configuration.
+See the [configuration guide] for details on overriding environment settings.
 
-[guide]: https://ansible.readthedocs.io/projects/tox-ansible/configuration/#overriding-the-configuration
+[configuration guide]: https://ansible.readthedocs.io/projects/tox-ansible/configuration/#overriding-the-configuration
 
 ## Release process
 

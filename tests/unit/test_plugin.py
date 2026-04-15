@@ -25,6 +25,8 @@ from tox.session.state import State
 
 from tox_ansible.plugin import (
     Collection,
+    _load_pyproject_config,
+    add_ansible_matrix,
     conf_commands,
     conf_commands_pre,
     conf_deps,
@@ -796,3 +798,171 @@ def test_tox_add_env_config_no_base_python(
     assert isinstance(env_conf.loaders[0], MemoryLoader)
     assert "base_python" not in env_conf.loaders[0].raw
     assert "Build collection" in env_conf.loaders[0].raw["description"]
+
+
+def test_add_ansible_matrix_pyproject(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test add_ansible_matrix reads skip from pyproject.toml.
+
+    Args:
+        tmp_path: Pytest fixture for temporary directory.
+        monkeypatch: Pytest fixture for patching.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    (tmp_path / "pyproject.toml").write_text(
+        '[tool.tox-ansible]\nskip = ["devel", "milestone"]\n',
+    )
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(
+        buffer=output,
+        encoding="utf-8",
+        line_buffering=True,
+    )
+
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    env_list = add_ansible_matrix(state)
+    for env_name in env_list.envs:
+        assert "devel" not in env_name
+        assert "milestone" not in env_name
+    assert any("unit" in name for name in env_list.envs)
+
+
+def test_add_ansible_matrix_ini_fallback(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test add_ansible_matrix falls back to [ansible] section when no pyproject.toml.
+
+    Args:
+        tmp_path: Pytest fixture for temporary directory.
+        monkeypatch: Pytest fixture for patching.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\nskip =\n    devel\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(
+        buffer=output,
+        encoding="utf-8",
+        line_buffering=True,
+    )
+
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    env_list = add_ansible_matrix(state)
+    for env_name in env_list.envs:
+        assert "devel" not in env_name
+    assert any("unit" in name for name in env_list.envs)
+    assert any("milestone" in name for name in env_list.envs)
+
+
+def test_load_pyproject_config_with_section(tmp_path: Path) -> None:
+    """Test loading config from pyproject.toml with [tool.tox-ansible] section.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[tool.tox-ansible]\nskip = ["devel", "milestone"]\n')
+
+    result = _load_pyproject_config(tmp_path)
+    assert result is not None
+    assert result["skip"] == ["devel", "milestone"]
+
+
+def test_load_pyproject_config_without_section(tmp_path: Path) -> None:
+    """Test loading config from pyproject.toml without the section.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text("[tool.other]\nfoo = 1\n")
+
+    result = _load_pyproject_config(tmp_path)
+    assert result is None
+
+
+def test_load_pyproject_config_no_file(tmp_path: Path) -> None:
+    """Test loading config when pyproject.toml does not exist.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    result = _load_pyproject_config(tmp_path)
+    assert result is None
+
+
+def test_load_pyproject_config_invalid_toml(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading config from an invalid pyproject.toml.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text("[tool.tox-ansible\n")
+
+    result = _load_pyproject_config(tmp_path)
+    assert result is None
+    assert "Failed to parse" in caplog.text
+
+
+def test_load_pyproject_config_empty_section(tmp_path: Path) -> None:
+    """Test loading config with an empty [tool.tox-ansible] section.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text("[tool.tox-ansible]\n")
+
+    result = _load_pyproject_config(tmp_path)
+    assert result is not None
+    assert result.get("skip", []) == []

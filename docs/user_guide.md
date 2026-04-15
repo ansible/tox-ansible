@@ -2,11 +2,22 @@
 
 > Need help or want to discuss the project? See our [Contributor guide](https://ansible.readthedocs.io/projects/tox-ansible/contributor_guide/#talk-to-us) to learn how to join the conversation!
 
-From the root of your collection, create an empty `tox-ansible.ini` file and list the available environments:
+## Getting started
+
+From the root of your collection, add a `[tool.tox-ansible]` section to your `pyproject.toml` (the section can be empty if no skip filters are needed):
+
+```toml
+# pyproject.toml
+[tool.tox]
+requires = ["tox>=4.2"]
+
+[tool.tox-ansible]
+```
+
+Then list the available environments:
 
 ```bash
-touch tox-ansible.ini
-tox list --ansible --conf tox-ansible.ini
+tox list --ansible
 ```
 
 A list of dynamically generated Ansible environments will be displayed:
@@ -30,25 +41,25 @@ These represent the available testing environments. Each denotes the type of tes
 To run tests with a single environment, simply run the following command:
 
 ```bash
-tox -e sanity-py3.11-2.14 --ansible --conf tox-ansible.ini
+tox -e sanity-py3.11-2.14 --ansible
 ```
 
 To run tests with multiple environments, simply add the environment names to the command:
 
 ```bash
-tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible --conf tox-ansible.ini
+tox -e sanity-py3.11-2.14,unit-py3.11-2.14 --ansible
 ```
 
 To run all tests of a specific type in all available environments, use the factor `-f` flag:
 
 ```bash
-tox -f unit --ansible -p auto --conf tox-ansible.ini
+tox -f unit --ansible -p auto
 ```
 
 To run all tests across all available environments:
 
 ```bash
-tox --ansible -p auto --conf tox-ansible.ini
+tox --ansible -p auto
 ```
 
 Note: The `-p auto` flag will run multiple tests in parallel.
@@ -61,13 +72,13 @@ sudo dnf install python3.9
 To review the specific commands and configuration for each of the integration, sanity, and unit factors:
 
 ```bash
-tox config --ansible --conf tox-ansible.ini
+tox config --ansible
 ```
 
 Generate specific GitHub action matrix as per scope mentioned with `--matrix-scope`:
 
 ```bash
-tox --ansible --gh-matrix --matrix-scope unit --conf tox-ansible.ini
+tox --ansible --gh-matrix --matrix-scope unit
 ```
 
 A list of dynamically generated Ansible environments will be displayed specifically for unit tests:
@@ -98,12 +109,22 @@ A list of dynamically generated Ansible environments will be displayed specifica
 ]
 ```
 
+!!! note "Using tox-ansible.ini"
+    If your project uses `tox-ansible.ini` instead of `pyproject.toml`, add `--conf tox-ansible.ini` to every tox command:
+
+    ```bash
+    tox list --ansible --conf tox-ansible.ini
+    tox -e unit-py3.13-2.19 --ansible --conf tox-ansible.ini
+    ```
+
+    See the [Configuration](configuration.md) page for details on both approaches.
+
 ## Passing command line arguments to ansible-test / pytest
 
 The behavior of the `ansible-test` (for `sanity-*` environments) or `pytest` (for `unit-*` and `integration-*` environments) commands can be customized by passing further command line arguments to it, e.g., by invoking `tox` like this:
 
 ```bash
-tox -f sanity --ansible --conf tox-ansible.ini -- --test validate-modules -vvv
+tox -f sanity --ansible -- --test validate-modules -vvv
 ```
 
 The arguments after the `--` will be passed to the `ansible-test` command. Thus in this example, only the `validate-modules` sanity test will run, but with an increased verbosity.
@@ -111,12 +132,12 @@ The arguments after the `--` will be passed to the `ansible-test` command. Thus 
 Same can be done to pass arguments to the `pytest` commands for the `unit-*` and `integration-*` environments:
 
 ```bash
-tox -e unit-py3.13-2.19 --ansible --conf tox-ansible.ini -- --junit-xml=tests/output/junit/unit.xml
+tox -e unit-py3.13-2.19 --ansible -- --junit-xml=tests/output/junit/unit.xml
 ```
 
 ## Usage in a CI/CD pipeline
 
-The repo contains a GitHub workflow that can be used in a GitHub actions CI/CD pipeline. The workflow will run all tests across all available environments unless limited by the `skip` option in the `tox-ansible.ini` file.
+The repo contains a GitHub workflow that can be used in a GitHub actions CI/CD pipeline. The workflow will run all tests across all available environments unless limited by the `skip` option in `pyproject.toml` (or `tox-ansible.ini`).
 
 Each environment will be run in a separate job. The workflow will run all jobs in parallel.
 
@@ -197,8 +218,8 @@ namespace.name
 │   │   │   │   └── tasks
 │   │   │   │       └── main.yaml
 │   │   └── test_integration.py
-├── tox-ansible.ini
-└── tox.ini
+├── pyproject.toml
+└── galaxy.yml
 ```
 
 Individual `molecule` scenarios can be added to the collection's extension directory to test playbooks, roles, and integration targets.

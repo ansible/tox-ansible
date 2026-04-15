@@ -39,7 +39,7 @@ When `tox-ansible` sets up a test environment (e.g. `unit-py3.13-2.19`), it runs
 - **GitHub Actions integration**: Produces JSON matrix output for CI workflows via `--gh-matrix`
 - **Environment configuration**: Sets up each tox env with the right dependencies, environment variables, and commands
 - **Test commands**: Configures `pytest` for unit/integration tests, `ansible-test sanity` for sanity tests, and `galaxy-importer` for galaxy tests
-- **Skip/filter**: Allows users to skip specific Ansible versions via the `[ansible] skip` configuration
+- **Skip/filter**: Allows users to skip specific Ansible versions via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini)
 - **Pre-test setup**: Delegates to ade with a single `ade install` call
 
 ### ansible-dev-environment (ade)

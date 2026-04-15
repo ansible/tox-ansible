@@ -12,7 +12,13 @@ import uuid
 
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
 
 import yaml
 
@@ -177,9 +183,9 @@ def tox_add_core_config(
     if state.conf.src_path.name == "tox.ini":  # pragma: no cover
         msg = (
             "Using a default tox.ini file with tox-ansible plugin is not recommended."
-            " Consider using a tox-ansible.ini file and specify it on the command line"
-            " (`tox --ansible -c tox-ansible.ini`) to avoid unintentionally overriding"
-            " the tox-ansible environment configurations."
+            " Consider adding a [tool.tox-ansible] section to pyproject.toml or using"
+            " a tox-ansible.ini file (`tox --ansible -c tox-ansible.ini`) to avoid"
+            " unintentionally overriding the tox-ansible environment configurations."
         )
         logger.warning(msg)
 
@@ -284,6 +290,30 @@ def in_action() -> bool:
     return os.environ.get("GITHUB_ACTIONS") == "true"
 
 
+def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
+    """Load tox-ansible configuration from pyproject.toml.
+
+    Looks for ``[tool.tox-ansible]`` in the project's ``pyproject.toml``.
+
+    Args:
+        project_dir: The project root directory containing pyproject.toml.
+
+    Returns:
+        The parsed ``[tool.tox-ansible]`` table, or ``None`` if the file
+        or section is not found.
+    """
+    pyproject_path = project_dir / "pyproject.toml"
+    if not pyproject_path.exists():
+        return None
+    try:
+        with pyproject_path.open("rb") as fh:
+            data = tomllib.load(fh)
+    except tomllib.TOMLDecodeError:
+        logger.warning("Failed to parse %s, skipping", pyproject_path)
+        return None
+    return data.get("tool", {}).get("tox-ansible")
+
+
 def add_ansible_matrix(state: State) -> EnvList:
     """Add the ansible matrix to the state.
 
@@ -293,16 +323,22 @@ def add_ansible_matrix(state: State) -> EnvList:
     Returns:
         The environment list.
     """
-    ansible_config = state.conf.get_section_config(
-        Section(None, "ansible"),
-        base=[],
-        of_type=AnsibleConfigSet,
-        for_env=None,
-    )
+    project_dir = state.conf.src_path.parent.resolve()
+    pyproject_config = _load_pyproject_config(project_dir)
+
+    if pyproject_config is not None:
+        skip_list: list[str] = pyproject_config.get("skip", [])
+    else:
+        ansible_config = state.conf.get_section_config(
+            Section(None, "ansible"),
+            base=[],
+            of_type=AnsibleConfigSet,
+            for_env=None,
+        )
+        skip_list = ansible_config["skip"]
+
     env_list = StrConvert().to_env_list(ENV_LIST)
-    env_list.envs = [
-        env for env in env_list.envs if all(skip not in env for skip in ansible_config["skip"])
-    ]
+    env_list.envs = [env for env in env_list.envs if all(skip not in env for skip in skip_list)]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
         0,
