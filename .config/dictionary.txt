@@ -13,5 +13,6 @@ fileh
 fixturenames
 metafunc
 passenv
+redef
 toxfile
 toxinidir

@@ -30,6 +30,7 @@ dependencies = [
   "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
   "pyyaml>=6.0.1",
+  "tomli>=1.1.0; python_version < '3.11'",
   "tox>=4.47.3",
 ]
 dynamic = ["version"]
