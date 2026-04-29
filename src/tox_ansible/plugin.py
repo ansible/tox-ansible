@@ -48,9 +48,9 @@ ENV_LIST = """
 galaxy
 {integration, sanity, unit}-py3.10-{2.16, 2.17}
 {integration, sanity, unit}-py3.11-{2.17, 2.18, 2.19}
-{integration, sanity, unit}-py3.12-{2.17, 2.18, 2.19, 2.20, milestone, devel}
-{integration, sanity, unit}-py3.13-{2.18, 2.19, 2.20, milestone, devel}
-{integration, sanity, unit}-py3.14-{2.20, 2.20, milestone, devel}
+{integration, sanity, unit}-py3.12-{2.17, 2.18, 2.19, 2.20, 2.21, milestone, devel}
+{integration, sanity, unit}-py3.13-{2.18, 2.19, 2.20, 2.21, milestone, devel}
+{integration, sanity, unit}-py3.14-{2.20, 2.21, milestone, devel}
 """
 # ^ py314 is NOT supported before 2.20! If is in official metadata of the
 # release branch, is not supported.
