@@ -675,6 +675,8 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
         deps.append("ansible-dev-environment>=26.2.0")
         if test_type in ("integration", "unit"):
             deps.extend(OUR_DEPS)
+            if test_type == "integration":
+                deps.append("molecule>=26.4.0")
             try:
                 with (cwd / "test-requirements.txt").open() as fileh:
                     deps.extend(fileh.read().splitlines())

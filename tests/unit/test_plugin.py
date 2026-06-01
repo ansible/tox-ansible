@@ -512,6 +512,30 @@ def test_conf_deps(tmp_path: Path) -> None:
         assert "requirement" in result
         assert "requirement-test" in result
         assert "github.com/ansible/ansible" not in result
+        assert "molecule" not in result
+
+
+def test_conf_deps_integration(tmp_path: Path) -> None:
+    """Test the conf_deps function includes molecule for integration tests.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    with working_directory(tmp_path):
+        conf = Config.make(
+            Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+            pos_args=[],
+            source=source,
+            extra_envs=[],
+        ).get_env("integration-py3.14-2.19")
+
+        result = conf_deps(env_conf=conf, test_type="integration")
+        assert "ansible-dev-environment>=26.2.0" in result
+        assert "molecule>=26.4.0" in result
 
 
 def test_conf_deps_sanity(tmp_path: Path) -> None:
