@@ -681,7 +681,7 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
                 try:
                     with (cwd / req_file).open() as fileh:
                         deps.extend(fileh.read().splitlines())
-                except FileNotFoundError:
+                except FileNotFoundError:  # noqa: PERF203
                     pass
 
     return "\n".join(deps)
