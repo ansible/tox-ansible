@@ -675,21 +675,14 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
         deps.append("ansible-dev-environment>=26.2.0")
         if test_type in ("integration", "unit"):
             deps.extend(OUR_DEPS)
-            try:
-                with (cwd / "test-requirements.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
-            try:
-                with (cwd / "requirements-test.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
-            try:
-                with (cwd / "requirements.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
+            if test_type == "integration":
+                deps.append("molecule>=26.4.0")
+            for req_file in ("test-requirements.txt", "requirements-test.txt", "requirements.txt"):
+                try:
+                    with (cwd / req_file).open() as fileh:
+                        deps.extend(fileh.read().splitlines())
+                except FileNotFoundError:  # noqa: PERF203
+                    pass
 
     return "\n".join(deps)
 
