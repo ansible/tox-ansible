@@ -677,21 +677,12 @@ def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
             deps.extend(OUR_DEPS)
             if test_type == "integration":
                 deps.append("molecule>=26.4.0")
-            try:
-                with (cwd / "test-requirements.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
-            try:
-                with (cwd / "requirements-test.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
-            try:
-                with (cwd / "requirements.txt").open() as fileh:
-                    deps.extend(fileh.read().splitlines())
-            except FileNotFoundError:
-                pass
+            for req_file in ("test-requirements.txt", "requirements-test.txt", "requirements.txt"):
+                try:
+                    with (cwd / req_file).open() as fileh:
+                        deps.extend(fileh.read().splitlines())
+                except FileNotFoundError:
+                    pass
 
     return "\n".join(deps)
 
