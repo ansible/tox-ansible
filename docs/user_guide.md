@@ -146,7 +146,7 @@ Below shows relevant snippets from a GitHub Action workflow which:
 
 !!! note
 
-This is not a production ready GitHub Action workflow. It is missing key steps for readability purposes. You will need to set up Python and install `tox-ansible` in your GitHub Action workflow.
+    This is not a production ready GitHub Action workflow. It is missing key steps for readability purposes. You will need to set up Python and install `tox-ansible` in your GitHub Action workflow.
 
 ```yaml
 # .github/workflows/tox-ansible.yml
