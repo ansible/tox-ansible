@@ -178,6 +178,27 @@ jobs:
           tox --ansible --conf tox-ansible.ini -e ${{ matrix.env.name }}
 ```
 
+## Skip functionality
+
+Circumstances may require certain tests to be skipped. `tox-ansible` supports skipping tests via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini).
+
+Example for `pyproject.toml`:
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+skip = sanity-py3.13
+```
+
+Example for `tox-ansible.ini`:
+
+```ini
+# tox-ansible.ini
+[ansible]
+skip =
+    sanity-py3.13
+```
+
 ## Testing molecule scenarios
 
 Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a powerful tool to run `molecule` scenarios across a matrix of Ansible and Python versions.
