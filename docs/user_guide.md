@@ -137,44 +137,66 @@ tox -e unit-py3.13-2.19 --ansible -- --junit-xml=tests/output/junit/unit.xml
 
 ## Usage in a CI/CD pipeline
 
-The repo contains a GitHub workflow that can be used in a GitHub actions CI/CD pipeline. The workflow will run all tests across all available environments unless limited by the `skip` option in `pyproject.toml` (or `tox-ansible.ini`).
+A GitHub Actions matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format which is stored under the `envlist` key in the file specified by the `GITHUB_OUTPUT` environment variable.
 
-Each environment will be run in a separate job. The workflow will run all jobs in parallel.
+Below shows relevant snippets from a GitHub Action workflow which:
 
-The GitHub matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format and added to the file specified by the "GITHUB_OUTPUT" environment variable. The workflow will read this file and use it to create the matrix.
+1. Uses the `--gh-matrix` flag to generate a list of environments.
+2. Creates individual jobs for each environment using a [matrix strategy](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/run-job-variations).
 
-A sample use of the GitHub workflow might look like this:
+!!! note
+
+    This is not a production ready GitHub Action workflow. It is missing key steps for readability purposes. You will need to set up Python and install `tox-ansible` in your GitHub Action workflow.
 
 ```yaml
-name: Test collection
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-on:
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-
+# .github/workflows/tox-ansible.yml
+name: Tox Ansible
+# ...
 jobs:
+  generate-matrix:
+    # ...
+    outputs:
+      envlist: ${{ steps.matrix.outputs.envlist }}
+    steps:
+      # ...
+      - name: Generate matrix
+        id: matrix
+        run: |
+          tox --ansible --conf tox-ansible.ini --gh-matrix
+
   tox-ansible:
-    uses: ansible/tox-ansible/.github/workflows/run.yml@main
+    needs: generate-matrix
+    # ...
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJSON(needs.generate-matrix.outputs.envlist) }}
+    steps:
+      # ...
+      - name: Run tox environment ${{ matrix.env.name }}
+        run: |
+          tox --ansible --conf tox-ansible.ini -e ${{ matrix.env.name }}
 ```
 
-Sample `json`
+## Skip functionality
 
-```json
-[
-  // ...
-  {
-    "description": "Integration tests using ansible-core devel and python 3.11",
-    "factors": ["integration", "py3.11", "devel"],
-    "name": "integration-py3.12-devel",
-    "python": "3.11"
-  }
-  // ...
-]
+Circumstances may require certain tests to be skipped. `tox-ansible` supports skipping tests via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini).
+
+Example for `pyproject.toml`:
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+skip = sanity-py3.13
+```
+
+Example for `tox-ansible.ini`:
+
+```ini
+# tox-ansible.ini
+[ansible]
+skip =
+    sanity-py3.13
 ```
 
 ## Testing molecule scenarios
