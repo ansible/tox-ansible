@@ -633,13 +633,9 @@ def _add_collection_req_commands(
     if in_action():
         commands.append("echo ::group::Install collection requirements with ade")
     for req_path in found_reqs:
-        ade_req_cmd = (
-            f"ade install -r {req_path}"
-            f" --venv {envdir} --acv {acv} --no-seed --im none"
-        )
+        ade_req_cmd = f"ade install -r {req_path} --venv {envdir} --acv {acv} --no-seed --im none"
         commands.append(
-            f"bash -c '{ade_req_cmd}; rc=$?; "
-            "if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
+            f"bash -c '{ade_req_cmd}; rc=$?; if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
         )
     if in_action():
         commands.append(end_group)
