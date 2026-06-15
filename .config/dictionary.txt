@@ -14,5 +14,6 @@ fixturenames
 metafunc
 passenv
 redef
+reqs
 toxfile
 toxinidir

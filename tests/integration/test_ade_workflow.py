@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -24,11 +25,14 @@ def test_ade_workflow_config(
         module_fixture_dir: pytest fixture for module fixture directory
         tox_bin: pytest fixture for tox binary
     """
+    env = os.environ.copy()
+    env["NO_COLOR"] = "1"
     try:
         proc = run(
             f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini -qq",
             cwd=module_fixture_dir,
             check=True,
+            env=env,
         )
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
@@ -64,6 +68,47 @@ def test_ade_workflow_config(
         assert "ANSIBLE_COLLECTIONS_PATH=." in config["set_env"], (
             f"{env_name}: set_env should contain 'ANSIBLE_COLLECTIONS_PATH=.'"
         )
+
+
+def test_ade_workflow_collection_requirements(
+    module_fixture_dir: Path,
+    tox_bin: Path,
+) -> None:
+    """Validate commands_pre installs collection requirements from tests/.
+
+    Args:
+        module_fixture_dir: pytest fixture for module fixture directory
+        tox_bin: pytest fixture for tox binary
+    """
+    env = os.environ.copy()
+    env["NO_COLOR"] = "1"
+    try:
+        proc = run(
+            f"{tox_bin} config --ansible --root {module_fixture_dir} --conf tox-ansible.ini -qq",
+            cwd=module_fixture_dir,
+            check=True,
+            env=env,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(exc.stdout)
+        print(exc.stderr)
+        pytest.fail(exc.stderr)
+
+    cfg_parser = ConfigParser()
+    cfg_parser.read_string(proc.stdout)
+
+    for env_name in cfg_parser.sections():
+        config = dict(cfg_parser[env_name])
+        commands_pre = config.get("commands_pre", "")
+
+        if "unit" in env_name or "integration" in env_name:
+            assert "ade install -r tests/requirements.yml" in commands_pre, (
+                f"{env_name}: commands_pre should install tests/requirements.yml"
+            )
+        elif "sanity" in env_name or "galaxy" in env_name:
+            assert "ade install -r" not in commands_pre, (
+                f"{env_name}: commands_pre should not install collection requirements"
+            )
 
 
 @pytest.mark.slow
