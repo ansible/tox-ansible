@@ -24,7 +24,6 @@ from tox.report import ToxHandler
 from tox.session.state import State
 
 from tox_ansible.plugin import (
-    TEST_REQUIREMENTS_YML,
     Collection,
     _load_pyproject_config,
     add_ansible_matrix,

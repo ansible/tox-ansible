@@ -614,6 +614,66 @@ def conf_commands_for_galaxy(
     return commands
 
 
+def _add_collection_req_commands(
+    commands: list[str],
+    found_reqs: list[str],
+    envdir: str,
+    acv: str,
+    end_group: str,
+) -> None:
+    """Append ade install commands for each discovered requirements file.
+
+    Args:
+        commands: The command list to append to.
+        found_reqs: Requirement file paths that exist on disk.
+        envdir: The tox environment directory.
+        acv: The ansible-core version specifier.
+        end_group: The CI group-close command string.
+    """
+    if in_action():
+        commands.append("echo ::group::Install collection requirements with ade")
+    for req_path in found_reqs:
+        ade_req_cmd = (
+            f"ade install -r {req_path}"
+            f" --venv {envdir} --acv {acv} --no-seed --im none"
+        )
+        commands.append(
+            f"bash -c '{ade_req_cmd}; rc=$?; "
+            "if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
+        )
+    if in_action():
+        commands.append(end_group)
+
+
+def _add_sanity_git_init(
+    commands: list[str],
+    env_conf: EnvConfigSet,
+    collection: Collection,
+    envdir: str,
+    end_group: str,
+) -> None:
+    """Append git-init commands needed to work around ansible/ansible#68499.
+
+    Args:
+        commands: The command list to append to.
+        env_conf: The tox environment configuration object.
+        collection: The collection info.
+        envdir: The tox environment directory.
+        end_group: The CI group-close command string.
+    """
+    py_ver = env_conf.name.split("-")[1].replace("py", "")
+    site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
+    col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
+    collection_path = f"{site_packages}/{col_rel}"
+    if in_action():  # pragma: no cover
+        commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
+    git_cfg = "git config --global init.defaultBranch main"
+    git_init = "git init ."
+    commands.append(f"bash -c 'cd {collection_path} && {git_cfg} && {git_init}'")
+    if in_action():  # pragma: no cover
+        commands.append(end_group)
+
+
 def conf_commands_pre(
     env_conf: EnvConfigSet,
     collection: Collection,
@@ -657,34 +717,10 @@ def conf_commands_pre(
     cwd = Path.cwd()
     found_reqs = [p for p in req_paths if (cwd / p).is_file()]
     if found_reqs:
-        if in_action():
-            commands.append(
-                "echo ::group::Install collection requirements with ade",
-            )
-        for req_path in found_reqs:
-            ade_req_cmd = (
-                f"ade install -r {req_path}"
-                f" --venv {envdir} --acv {acv} --no-seed --im none"
-            )
-            commands.append(
-                f"bash -c '{ade_req_cmd}; rc=$?; "
-                "if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
-            )
-        if in_action():
-            commands.append(end_group)
+        _add_collection_req_commands(commands, found_reqs, envdir, acv, end_group)
 
     if test_type == "sanity":
-        py_ver = env_conf.name.split("-")[1].replace("py", "")
-        site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
-        col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
-        collection_path = f"{site_packages}/{col_rel}"
-        if in_action():  # pragma: no cover
-            commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
-        git_cfg = "git config --global init.defaultBranch main"
-        git_init = "git init ."
-        commands.append(f"bash -c 'cd {collection_path} && {git_cfg} && {git_init}'")
-        if in_action():  # pragma: no cover
-            commands.append(end_group)
+        _add_sanity_git_init(commands, env_conf, collection, envdir, end_group)
 
     return commands
 
