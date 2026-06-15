@@ -101,11 +101,7 @@ def test_ade_workflow_collection_requirements(
         config = dict(cfg_parser[env_name])
         commands_pre = config.get("commands_pre", "")
 
-        if "unit" in env_name:
-            assert "ade install -r tests/requirements.yml" in commands_pre, (
-                f"{env_name}: commands_pre should install tests/requirements.yml"
-            )
-        elif "integration" in env_name:
+        if "unit" in env_name or "integration" in env_name:
             assert "ade install -r tests/requirements.yml" in commands_pre, (
                 f"{env_name}: commands_pre should install tests/requirements.yml"
             )
