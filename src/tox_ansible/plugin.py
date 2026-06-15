@@ -64,6 +64,19 @@ OUR_DEPS = [
     "ansible-compat>=25.11.0",  # Nov 2025
 ]
 
+# Paths checked for collection requirements files, keyed by test type.
+# From https://github.com/ansible/ansible-compat/blob/main/src/ansible_compat/constants.py#L6-L14
+TEST_REQUIREMENTS_YML: dict[str, list[str]] = {
+    "unit": [
+        "tests/requirements.yml",
+        "tests/unit/requirements.yml",
+    ],
+    "integration": [
+        "tests/requirements.yml",
+        "tests/integration/requirements.yml",
+    ],
+}
+
 T = TypeVar("T", bound=ConfigSet)
 
 
@@ -639,6 +652,26 @@ def conf_commands_pre(
     )
     if in_action():
         commands.append(end_group)
+
+    req_paths = TEST_REQUIREMENTS_YML.get(test_type, [])
+    cwd = Path.cwd()
+    found_reqs = [p for p in req_paths if (cwd / p).is_file()]
+    if found_reqs:
+        if in_action():
+            commands.append(
+                "echo ::group::Install collection requirements with ade",
+            )
+        for req_path in found_reqs:
+            ade_req_cmd = (
+                f"ade install -r {req_path}"
+                f" --venv {envdir} --acv {acv} --no-seed --im none"
+            )
+            commands.append(
+                f"bash -c '{ade_req_cmd}; rc=$?; "
+                "if [ $rc -ne 0 ] && [ $rc -ne 2 ]; then exit $rc; fi'",
+            )
+        if in_action():
+            commands.append(end_group)
 
     if test_type == "sanity":
         py_ver = env_conf.name.split("-")[1].replace("py", "")

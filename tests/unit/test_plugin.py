@@ -24,6 +24,7 @@ from tox.report import ToxHandler
 from tox.session.state import State
 
 from tox_ansible.plugin import (
+    TEST_REQUIREMENTS_YML,
     Collection,
     _load_pyproject_config,
     add_ansible_matrix,
@@ -49,6 +50,7 @@ def test_commands_pre_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
         tmp_path: Pytest fixture.
     """
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
 
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
@@ -90,6 +92,7 @@ def test_commands_pre_sanity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
         tmp_path: Pytest fixture.
     """
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
 
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
@@ -142,6 +145,7 @@ def test_commands_pre_devel(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         tmp_path: Pytest fixture.
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.chdir(tmp_path)
 
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
@@ -180,6 +184,7 @@ def test_commands_pre_milestone(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
         tmp_path: Pytest fixture.
     """
     monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.chdir(tmp_path)
 
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
@@ -208,6 +213,237 @@ def test_commands_pre_milestone(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     assert len(result) == 1
     assert "ade install -e" in result[0]
     assert "--acv milestone --no-seed" in result[0]
+
+
+def test_commands_pre_unit_with_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test pre-command generation discovers unit requirements.yml files.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+    (tmp_path / "tests" / "unit").mkdir()
+    (tmp_path / "tests" / "unit" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="2.19",
+    )
+    expected_commands = 7
+    assert len(result) == expected_commands, result
+    assert result[3] == "echo ::group::Install collection requirements with ade"
+    assert "ade install -r tests/requirements.yml" in result[4]
+    assert "ade install -r tests/unit/requirements.yml" in result[5]
+    assert result[6] == "echo ::endgroup::"
+
+
+def test_commands_pre_integration_with_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test pre-command generation discovers integration requirements.yml files.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+    (tmp_path / "tests" / "integration").mkdir()
+    (tmp_path / "tests" / "integration" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("integration-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="integration",
+        ansible_version="2.19",
+    )
+    expected_commands = 7
+    assert len(result) == expected_commands, result
+    assert "ade install -r tests/requirements.yml" in result[4]
+    assert "ade install -r tests/integration/requirements.yml" in result[5]
+
+
+def test_commands_pre_unit_partial_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test pre-command generation with only shared tests/requirements.yml.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="2.19",
+    )
+    expected_commands = 2
+    assert len(result) == expected_commands, result
+    assert "ade install -r tests/requirements.yml" in result[1]
+    assert "tests/unit/requirements.yml" not in str(result)
+
+
+def test_commands_pre_sanity_ignores_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test that sanity pre-commands do not install test requirements.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("sanity-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="sanity",
+        ansible_version="2.19",
+    )
+    expected_commands = 6
+    assert len(result) == expected_commands, result
+    assert not any("ade install -r" in cmd for cmd in result)
+
+
+def test_commands_pre_no_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test pre-command generation with no requirements files present.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.19")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        ansible_version="2.19",
+    )
+    assert len(result) == 1
+    assert "ade install -e" in result[0]
+    assert not any("ade install -r" in cmd for cmd in result)
 
 
 def test_check_num_candidates_2(caplog: pytest.LogCaptureFixture) -> None:
