@@ -607,7 +607,8 @@ package = true
 # pre-build wheels for py310 and we don't want to build it ourselves
 # gitpython is indirect dependency of tox-extra
 constraint-dependencies = [
-  "cryptography>=43",
+  "cairosvg>=2.9.0",
+  "cryptography>=49.0.0",
   "cffi>=1.15.1",
   "gitpython>=3",
 ]
