@@ -722,26 +722,13 @@ def test_conf_deps(tmp_path: Path) -> None:
     Args:
         tmp_path: Pytest fixture.
     """
-    ini_file = tmp_path / "tox.ini"
-    ini_file.touch()
-    source = discover_source(ini_file, None)
-
     (tmp_path / "test-requirements.txt").write_text("test-requirement")
     (tmp_path / "requirements.txt").write_text("requirement")
     (tmp_path / "requirements-test.txt").write_text("requirement-test")
 
-    # test will fail if current directory is not the one with the config as we
-    # would not be able to find the extra config. Tox config objects do not
-    # include any information regarding the config file location.
+    # conf_deps reads requirement files relative to Path.cwd().
     with working_directory(tmp_path):
-        conf = Config.make(
-            Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
-            pos_args=[],
-            source=source,
-            extra_envs=[],
-        ).get_env("unit-py3.14-2.19")
-
-        result = conf_deps(env_conf=conf, test_type="unit")
+        result = conf_deps(test_type="unit")
         assert "ansible-dev-environment>=26.2.0" in result
         assert "test-requirement" in result
         assert "requirement" in result
@@ -756,41 +743,15 @@ def test_conf_deps_integration(tmp_path: Path) -> None:
     Args:
         tmp_path: Pytest fixture.
     """
-    ini_file = tmp_path / "tox.ini"
-    ini_file.touch()
-    source = discover_source(ini_file, None)
-
     with working_directory(tmp_path):
-        conf = Config.make(
-            Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
-            pos_args=[],
-            source=source,
-            extra_envs=[],
-        ).get_env("integration-py3.14-2.19")
-
-        result = conf_deps(env_conf=conf, test_type="integration")
+        result = conf_deps(test_type="integration")
         assert "ansible-dev-environment>=26.2.0" in result
         assert "molecule>=26.4.0" in result
 
 
-def test_conf_deps_sanity(tmp_path: Path) -> None:
-    """Test the conf_deps function for sanity tests.
-
-    Args:
-        tmp_path: Pytest fixture.
-    """
-    ini_file = tmp_path / "tox.ini"
-    ini_file.touch()
-    source = discover_source(ini_file, None)
-
-    conf = Config.make(
-        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
-        pos_args=[],
-        source=source,
-        extra_envs=[],
-    ).get_env("sanity-py3.13-2.19")
-
-    result = conf_deps(env_conf=conf, test_type="sanity")
+def test_conf_deps_sanity() -> None:
+    """Test the conf_deps function for sanity tests."""
+    result = conf_deps(test_type="sanity")
     assert "ansible-dev-environment>=26.2.0" in result
     assert "pytest" not in result
 

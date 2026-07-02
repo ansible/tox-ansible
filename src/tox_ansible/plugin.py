@@ -264,7 +264,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             test_type=test_type,
         ),
         description=desc_for_env(env_conf.name),
-        deps=conf_deps(env_conf=env_conf, test_type=test_type),
+        deps=conf_deps(test_type=test_type),
         passenv=conf_passenv(),
         setenv=conf_setenv(env_conf=env_conf, test_type=test_type),
         skip_install=True,
@@ -395,6 +395,25 @@ def _gen_version(candidates: list[str]) -> str:
     return f"{candidates[0][0]}.{candidates[0][1:]}"
 
 
+def _extract_py_candidates(env_name: str) -> list[str]:
+    """Extract Python version candidates from an environment name.
+
+    Args:
+        env_name: The tox environment name (e.g. "unit-py3.11-2.19").
+
+    Returns:
+        A list of Python version strings found in the environment factors.
+    """
+    if env_name == "galaxy":
+        return ["3.14"]
+    candidates = []
+    for factor in env_name.split("-"):
+        match = PY_FACTORS_RE.match(factor)
+        if match:
+            candidates.append(match[2])
+    return candidates
+
+
 def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     """Generate the github matrix.
 
@@ -406,14 +425,8 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     for env_name in env_list.envs:
         if section != "all" and not env_name.startswith(section):  # pragma: no cover
             continue
-        candidates = []
         factors = env_name.split("-")
-        for factor in factors:
-            match = PY_FACTORS_RE.match(factor)
-            if match:
-                candidates.append(match[2])
-        if env_name == "galaxy":
-            candidates = ["3.14"]
+        candidates = _extract_py_candidates(env_name)
 
         _check_num_candidates(candidates=candidates, env_name=env_name)
         version = _gen_version(candidates=candidates)
@@ -525,7 +538,6 @@ def conf_commands(
         return conf_commands_for_galaxy(
             collection=collection,
             env_conf=env_conf,
-            pos_args=pos_args,
         )
     err = f"Unknown test type {test_type}"
     logger.critical(err)
@@ -588,14 +600,12 @@ def conf_commands_for_sanity(
 def conf_commands_for_galaxy(
     collection: Collection,  # noqa: ARG001
     env_conf: EnvConfigSet,
-    pos_args: tuple[str, ...] | None,  # noqa: ARG001
 ) -> list[str]:
     """Add commands for sanity tests.
 
     Args:
         collection: The collection info.
         env_conf: The tox environment configuration object.
-        pos_args: Positional arguments passed to tox command.
 
     Returns:
         The commands to run.
@@ -721,11 +731,10 @@ def conf_commands_pre(
     return commands
 
 
-def conf_deps(env_conf: EnvConfigSet, test_type: str) -> str:  # noqa: ARG001
+def conf_deps(test_type: str) -> str:
     """Add dependencies to the tox environment.
 
     Args:
-        env_conf: The tox environment configuration object.
         test_type: The test type, either "integration", "unit", or "sanity".
 
     Returns:
