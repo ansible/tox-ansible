@@ -24,6 +24,7 @@ from tox.report import ToxHandler
 from tox.session.state import State
 
 from tox_ansible.plugin import (
+    PYTHON_DEPENDENCY_FILES,
     Collection,
     _load_pyproject_config,
     add_ansible_matrix,
@@ -735,6 +736,26 @@ def test_conf_deps(tmp_path: Path) -> None:
         assert "requirement-test" in result
         assert "github.com/ansible/ansible" not in result
         assert "molecule" not in result
+
+
+def test_conf_deps_all_dependency_files(tmp_path: Path) -> None:
+    """Test that conf_deps picks up all PYTHON_DEPENDENCY_FILES locations.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    expected: dict[str, str] = {}
+    for req_file in PYTHON_DEPENDENCY_FILES:
+        dep_name = f"dep-from-{req_file.replace('/', '-').replace('.txt', '')}"
+        req_path = tmp_path / req_file
+        req_path.parent.mkdir(parents=True, exist_ok=True)
+        req_path.write_text(dep_name)
+        expected[req_file] = dep_name
+
+    with working_directory(tmp_path):
+        result = conf_deps(test_type="unit")
+        for req_file, dep_name in expected.items():
+            assert dep_name in result, f"Dependency from {req_file} not found in result"
 
 
 def test_conf_deps_integration(tmp_path: Path) -> None:

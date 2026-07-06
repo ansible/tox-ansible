@@ -77,6 +77,16 @@ TEST_REQUIREMENTS_YML: dict[str, list[str]] = {
     ],
 }
 
+PYTHON_DEPENDENCY_FILES: list[str] = [
+    "test-requirements.txt",
+    "requirements-test.txt",
+    "requirements.txt",
+    "tests/unit/requirements.txt",
+    "tests/integration/requirements.txt",
+    # https://docs.ansible.com/projects/builder/en/latest/collection_metadata/
+    "meta/ee-requirements.txt",
+]
+
 T = TypeVar("T", bound=ConfigSet)
 
 
@@ -750,7 +760,7 @@ def conf_deps(test_type: str) -> str:
             deps.extend(OUR_DEPS)
             if test_type == "integration":
                 deps.append("molecule>=26.4.0")
-            for req_file in ("test-requirements.txt", "requirements-test.txt", "requirements.txt"):
+            for req_file in PYTHON_DEPENDENCY_FILES:
                 try:
                     with (cwd / req_file).open() as fileh:
                         deps.extend(fileh.read().splitlines())
