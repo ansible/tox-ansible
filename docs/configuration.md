@@ -9,13 +9,14 @@ Add a `[tool.tox-ansible]` section to your collection's `pyproject.toml`:
 ```toml
 # pyproject.toml
 [tool.tox-ansible]
+coverage = true
 skip = [
     "2.16",
     "devel",
 ]
 ```
 
-This will skip tests in any environment whose name contains `2.16` or `devel`. The list of strings is used for a simple substring comparison against environment names.
+This enables coverage reporting for unit test environments and skips tests in any environment whose name contains `2.16` or `devel`. The list of strings is used for a simple substring comparison against environment names.
 
 When using `pyproject.toml`, tox also needs a `[tool.tox]` section (even if empty) so it can discover the file as its configuration source:
 
@@ -41,6 +42,7 @@ Alternatively, `tox-ansible` reads the `[ansible]` section from whatever tox con
 ```ini
 # tox-ansible.ini
 [ansible]
+coverage = true
 skip =
     2.16
     devel
@@ -53,6 +55,22 @@ tox --ansible --conf tox-ansible.ini
 Using a separate `tox-ansible.ini` file avoids conflicts with an existing `tox.ini` that may already define `[testenv]` sections for other purposes.
 
 If both `pyproject.toml` and `tox-ansible.ini` contain configuration, `pyproject.toml` takes precedence.
+
+## Unit test coverage
+
+Coverage reporting is disabled by default. Enable it persistently with `coverage = true` in either configuration format, or for a single invocation with `--coverage`:
+
+```bash
+tox --ansible --coverage -e unit-py3.13-2.19
+```
+
+When enabled, tox-ansible installs `pytest-cov`, generates coverage configuration for the collection under tox's work directory, and reports coverage for Python files below the collection's `plugins/` directory. No project-level `.coveragerc` is required.
+
+Coverage applies only to `unit-*` environments. Integration, sanity, and galaxy environments remain unchanged. Explicit CLI options take precedence over project configuration, so configured coverage can be disabled temporarily:
+
+```bash
+tox --ansible --no-coverage -e unit-py3.13-2.19
+```
 
 ## Overriding the configuration
 

@@ -16,6 +16,7 @@ pip install tox-ansible
 - `pytest-ansible` version 3.1.0 or greater.
 - `pytest`
 - `pytest-xdist`
+- `pytest-cov` when unit test coverage is enabled
 - `pyyaml`
 
 Each generated test environment will also install:
