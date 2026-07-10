@@ -615,7 +615,11 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
 
 
 def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
-    """Test coverage arguments are added to unit test commands."""
+    """Test coverage arguments are added to unit test commands.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
     source = discover_source(ini_file, None)
@@ -704,7 +708,11 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
 
 
 def test_conf_commands_integration_ignores_coverage(tmp_path: Path) -> None:
-    """Test coverage configuration does not change integration commands."""
+    """Test coverage configuration does not change integration commands.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     ini_file = tmp_path / "tox.ini"
     ini_file.touch()
     source = discover_source(ini_file, None)
@@ -1275,7 +1283,15 @@ def _make_state(
     *,
     coverage: bool | None = None,
 ) -> State:
-    """Create a tox state for configuration resolution tests."""
+    """Create a tox state for configuration resolution tests.
+
+    Args:
+        config_file: The tox configuration file.
+        coverage: An explicit CLI coverage value.
+
+    Returns:
+        The configured tox state.
+    """
     source = discover_source(config_file, None)
     parsed = Parsed(
         work_dir=config_file.parent / ".tox",
@@ -1300,7 +1316,11 @@ def _make_state(
 
 
 def test_load_ansible_config_pyproject(tmp_path: Path) -> None:
-    """Test loading coverage configuration from pyproject.toml."""
+    """Test loading coverage configuration from pyproject.toml.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     config_file = tmp_path / "pyproject.toml"
     config_file.write_text(
         '[tool.tox]\nrequires = ["tox>=4.2"]\n'
@@ -1314,7 +1334,11 @@ def test_load_ansible_config_pyproject(tmp_path: Path) -> None:
 
 
 def test_load_ansible_config_ini(tmp_path: Path) -> None:
-    """Test loading coverage configuration from tox-ansible.ini."""
+    """Test loading coverage configuration from tox-ansible.ini.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     config_file = tmp_path / "tox-ansible.ini"
     config_file.write_text("[ansible]\ncoverage = true\nskip =\n    milestone\n")
 
@@ -1334,7 +1358,13 @@ def test_coverage_enabled_cli_precedence(
     cli_coverage: bool | None,
     expected: bool,
 ) -> None:
-    """Test explicit CLI coverage options override project configuration."""
+    """Test explicit CLI coverage options override project configuration.
+
+    Args:
+        tmp_path: Pytest fixture.
+        cli_coverage: An explicit CLI coverage value.
+        expected: The expected resolved coverage value.
+    """
     config_file = tmp_path / "tox-ansible.ini"
     config_file.write_text("[ansible]\ncoverage = true\n")
 
@@ -1344,7 +1374,11 @@ def test_coverage_enabled_cli_precedence(
 
 
 def test_collection_install_path(tmp_path: Path) -> None:
-    """Test the ADE collection path uses environment and collection metadata."""
+    """Test the ADE collection path uses environment and collection metadata.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     config_file = tmp_path / "tox.ini"
     config_file.touch()
     source = discover_source(config_file, None)
@@ -1372,7 +1406,11 @@ def test_collection_install_path(tmp_path: Path) -> None:
 
 
 def test_write_coverage_config(tmp_path: Path) -> None:
-    """Test generated coverage configuration maps installed and source plugins."""
+    """Test generated coverage configuration maps installed and source plugins.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     config_file = tmp_path / "tox.ini"
     config_file.touch()
     source = discover_source(config_file, None)
