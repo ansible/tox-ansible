@@ -26,6 +26,8 @@ from tox.session.state import State
 from tox_ansible.plugin import (
     PYTHON_DEPENDENCY_FILES,
     Collection,
+    _coverage_enabled,
+    _load_ansible_config,
     _load_pyproject_config,
     add_ansible_matrix,
     conf_commands,
@@ -1207,3 +1209,76 @@ def test_load_pyproject_config_empty_section(tmp_path: Path) -> None:
     result = _load_pyproject_config(tmp_path)
     assert result is not None
     assert result.get("skip", []) == []
+
+
+def _make_state(
+    config_file: Path,
+    *,
+    coverage: bool | None = None,
+) -> State:
+    """Create a tox state for configuration resolution tests."""
+    source = discover_source(config_file, None)
+    parsed = Parsed(
+        work_dir=config_file.parent / ".tox",
+        override=[],
+        config_file=config_file,
+        root_dir=config_file.parent,
+        ansible=True,
+        coverage=coverage,
+    )
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(output, encoding="utf-8", line_buffering=True)
+    return State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+
+def test_load_ansible_config_pyproject(tmp_path: Path) -> None:
+    """Test loading coverage configuration from pyproject.toml."""
+    config_file = tmp_path / "pyproject.toml"
+    config_file.write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n'
+        '[tool.tox-ansible]\ncoverage = true\nskip = ["devel"]\n',
+    )
+
+    result = _load_ansible_config(_make_state(config_file))
+
+    assert result.coverage is True
+    assert result.skip == ["devel"]
+
+
+def test_load_ansible_config_ini(tmp_path: Path) -> None:
+    """Test loading coverage configuration from tox-ansible.ini."""
+    config_file = tmp_path / "tox-ansible.ini"
+    config_file.write_text("[ansible]\ncoverage = true\nskip =\n    milestone\n")
+
+    result = _load_ansible_config(_make_state(config_file))
+
+    assert result.coverage is True
+    assert result.skip == ["milestone"]
+
+
+@pytest.mark.parametrize(
+    ("cli_coverage", "expected"),
+    ((True, True), (False, False), (None, True)),
+)
+def test_coverage_enabled_cli_precedence(
+    tmp_path: Path,
+    *,
+    cli_coverage: bool | None,
+    expected: bool,
+) -> None:
+    """Test explicit CLI coverage options override project configuration."""
+    config_file = tmp_path / "tox-ansible.ini"
+    config_file.write_text("[ansible]\ncoverage = true\n")
+
+    result = _coverage_enabled(_make_state(config_file, coverage=cli_coverage))
+
+    assert result is expected

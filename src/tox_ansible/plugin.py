@@ -96,11 +96,30 @@ class AnsibleConfigSet(ConfigSet):
     def register_config(self) -> None:
         """Register the ansible configuration."""
         self.add_config(
+            "coverage",
+            of_type=bool,
+            default=False,
+            desc="enable coverage reporting for unit tests",
+        )
+        self.add_config(
             "skip",
             of_type=list[str],
             default=[],
             desc="ansible configuration",
         )
+
+
+@dataclass
+class AnsibleConfiguration:
+    """User-provided tox-ansible configuration.
+
+    Attributes:
+        coverage: Enable coverage reporting for unit tests.
+        skip: Environment name fragments to skip.
+    """
+
+    coverage: bool = False
+    skip: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -182,6 +201,21 @@ def tox_add_option(parser: ToxParser) -> None:
         help="Enable ansible testing",
     )
 
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        default=None,
+        help="Enable coverage reporting for unit tests",
+    )
+
+    parser.add_argument(
+        "--no-coverage",
+        action="store_false",
+        default=None,
+        dest="coverage",
+        help="Disable coverage reporting for unit tests",
+    )
+
 
 @impl
 def tox_add_core_config(
@@ -196,6 +230,11 @@ def tox_add_core_config(
     """
     if state.conf.options.gh_matrix and not state.conf.options.ansible:  # pragma: no cover
         err = "The --gh-matrix option requires --ansible"
+        logger.critical(err)
+        sys.exit(1)
+
+    if state.conf.options.coverage and not state.conf.options.ansible:  # pragma: no cover
+        err = "The --coverage option requires --ansible"
         logger.critical(err)
         sys.exit(1)
 
@@ -336,6 +375,53 @@ def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
     return data.get("tool", {}).get("tox-ansible")
 
 
+def _load_ansible_config(state: State) -> AnsibleConfiguration:
+    """Load tox-ansible configuration using TOML-over-INI precedence.
+
+    Args:
+        state: The tox state object.
+
+    Returns:
+        The resolved tox-ansible configuration.
+    """
+    project_dir = state.conf.src_path.parent.resolve()
+    pyproject_config = _load_pyproject_config(project_dir)
+
+    if pyproject_config is not None:
+        return AnsibleConfiguration(
+            coverage=pyproject_config.get("coverage", False),
+            skip=pyproject_config.get("skip", []),
+        )
+
+    ansible_config = state.conf.get_section_config(
+        Section(None, "ansible"),
+        base=[],
+        of_type=AnsibleConfigSet,
+        for_env=None,
+    )
+    return AnsibleConfiguration(
+        coverage=ansible_config["coverage"],
+        skip=ansible_config["skip"],
+    )
+
+
+def _coverage_enabled(state: State) -> bool:
+    """Resolve coverage from the CLI and project configuration.
+
+    Explicit CLI options take precedence over project configuration.
+
+    Args:
+        state: The tox state object.
+
+    Returns:
+        Whether unit test coverage is enabled.
+    """
+    cli_coverage: bool | None = state.conf.options.coverage
+    if cli_coverage is not None:
+        return cli_coverage
+    return _load_ansible_config(state).coverage
+
+
 def add_ansible_matrix(state: State) -> EnvList:
     """Add the ansible matrix to the state.
 
@@ -345,19 +431,7 @@ def add_ansible_matrix(state: State) -> EnvList:
     Returns:
         The environment list.
     """
-    project_dir = state.conf.src_path.parent.resolve()
-    pyproject_config = _load_pyproject_config(project_dir)
-
-    if pyproject_config is not None:
-        skip_list: list[str] = pyproject_config.get("skip", [])
-    else:
-        ansible_config = state.conf.get_section_config(
-            Section(None, "ansible"),
-            base=[],
-            of_type=AnsibleConfigSet,
-            for_env=None,
-        )
-        skip_list = ansible_config["skip"]
+    skip_list = _load_ansible_config(state).skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
     env_list.envs = [env for env in env_list.envs if all(skip not in env for skip in skip_list)]
