@@ -46,7 +46,7 @@ def test_pyproject_skip(
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
         print(exc.stderr)
-        pytest.fail(exc.stderr)
+        pytest.fail(f"stdout:\n{exc.stdout}\n\nstderr:\n{exc.stderr}")
 
     warning = "Using a default tox.ini file with tox-ansible plugin is not recommended"
     assert warning not in proc.stdout

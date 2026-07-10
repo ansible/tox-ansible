@@ -339,7 +339,7 @@ def add_ansible_matrix(state: State) -> EnvList:
     project_dir = state.conf.src_path.parent.resolve()
     pyproject_config = _load_pyproject_config(project_dir)
 
-    if state.conf.src_path.name == "tox.ini" and pyproject_config is None:  # pragma: no cover
+    if state.conf.src_path.name == "tox.ini" and pyproject_config is None:
         msg = (
             "Using a default tox.ini file with tox-ansible plugin is not recommended."
             " Consider adding a [tool.tox-ansible] section to pyproject.toml or using"
