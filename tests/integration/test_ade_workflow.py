@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -149,10 +150,15 @@ def test_ade_workflow_coverage_config(
     integration = cfg_parser["testenv:integration-py3.13-2.19"]
     coverage_config = collection_dir / ".tox/.tox-ansible/coverage/unit-py3.13-2.19.ini"
 
+    assert "coverage>=7.0.0" in unit["deps"]
     assert "pytest-cov>=4.1.0" in unit["deps"]
     assert "--cov --cov-config=" in unit["commands"]
     assert coverage_config.is_file()
-    assert "ansible_collections/test_ns/test_col/plugins" in coverage_config.read_text()
+    coverage_content = coverage_config.read_text()
+    assert "source =\n    plugins\n" in coverage_content
+    assert "ansible_collections/test_ns/test_col/plugins" in coverage_content
+    assert "include_namespace_packages = true" in coverage_content
+    assert f"data_file = {collection_dir}/.tox/unit-py3.13-2.19/.coverage" in coverage_content
     assert "pytest-cov" not in integration["deps"]
     assert "--cov" not in integration["commands"]
     assert not (collection_dir / ".coveragerc").exists()
@@ -214,6 +220,11 @@ def test_ade_workflow_e2e(
 
     assert proc.returncode == 0, f"tox run failed:\n{proc.stdout}\n{proc.stderr}"
     assert "plugins/modules/hello.py" in proc.stdout
+    assert re.search(
+        r"plugins/module_utils/untested\.py\s+\d+\s+\d+\s+0%",
+        proc.stdout,
+    )
     assert "site-packages/ansible_collections/test_ns/test_col/plugins" not in proc.stdout
-    assert (collection_dir / ".coverage").is_file()
+    assert (collection_dir / ".tox" / env_name / ".coverage").is_file()
+    assert not (collection_dir / ".coverage").exists()
     assert not (collection_dir / ".coveragerc").exists()
