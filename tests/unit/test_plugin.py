@@ -1446,9 +1446,10 @@ def test_write_coverage_config(tmp_path: Path) -> None:
         / ".tox/unit-py3.13-2.21/lib/python3.13/site-packages"
         / "ansible_collections/example/widgets/plugins"
     )
+    expected_installed_path_entries = 2
     assert "include =" not in content
     assert "source =\n    plugins\n" in content
-    assert content.count(f"    {installed_plugins}\n") == 2
+    assert content.count(f"    {installed_plugins}\n") == expected_installed_path_entries
     assert f"data_file = {tmp_path}/.tox/unit-py3.13-2.21/.coverage" in content
     assert "include_namespace_packages = true" in content
     assert "show_missing = true" in content
