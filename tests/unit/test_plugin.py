@@ -26,6 +26,7 @@ from tox.session.state import State
 from tox_ansible.plugin import (
     PYTHON_DEPENDENCY_FILES,
     Collection,
+    _env_in_scope,
     _load_pyproject_config,
     add_ansible_matrix,
     conf_commands,
@@ -40,6 +41,25 @@ from tox_ansible.plugin import (
 
 if typing.TYPE_CHECKING:
     from collections.abc import Generator
+
+
+@pytest.mark.parametrize(
+    "scope",
+    ("all", "galaxy", "integration", "sanity", "unit"),
+)
+def test_env_in_scope(scope: str) -> None:
+    """Test matching an environment against every supported matrix scope.
+
+    Args:
+        scope: The matrix scope to test.
+    """
+    assert _env_in_scope("unit-py3.13-2.21", scope) is (scope in ("all", "unit"))
+
+
+def test_galaxy_env_in_scope() -> None:
+    """Test matching the unfactored galaxy environment."""
+    assert _env_in_scope("galaxy", "galaxy")
+    assert not _env_in_scope("galaxyimport", "galaxy")
 
 
 def test_commands_pre_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -1085,8 +1105,9 @@ def test_add_ansible_matrix_pyproject(
         args=[],
     )
 
-    env_list = add_ansible_matrix(state)
+    env_list = add_ansible_matrix(state, scope="unit")
     for env_name in env_list.envs:
+        assert env_name.startswith("unit-")
         assert "devel" not in env_name
         assert "milestone" not in env_name
     assert any("unit" in name for name in env_list.envs)
