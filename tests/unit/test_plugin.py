@@ -57,9 +57,9 @@ def test_env_in_scope(scope: str) -> None:
 
 
 def test_galaxy_env_in_scope() -> None:
-    """Test matching the unfactored galaxy environment."""
+    """Test matching the single-name galaxy environment."""
     assert _env_in_scope("galaxy", "galaxy")
-    assert not _env_in_scope("galaxyimport", "galaxy")
+    assert not _env_in_scope("galaxy_import", "galaxy")
 
 
 def test_commands_pre_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
