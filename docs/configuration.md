@@ -64,7 +64,9 @@ Coverage reporting is disabled by default. Enable it persistently with `coverage
 tox --ansible --coverage -e unit-py3.13-2.19
 ```
 
-When enabled, tox-ansible installs `pytest-cov`, generates coverage configuration for the collection under tox's work directory, and reports coverage for Python files below the collection's `plugins/` directory. No project-level `.coveragerc` is required.
+When enabled, tox-ansible installs `pytest-cov`, generates coverage configuration for the collection under tox's work directory, and reports coverage for Python files below the collection's `plugins/` directory. Eligible files that the unit tests do not import appear with 0% coverage. No project-level `.coveragerc` is required.
+
+Raw coverage data is stored inside each tox unit environment. This keeps parallel environments isolated; reports from the Python and ansible-core matrix are independent and are not automatically combined.
 
 Coverage applies only to `unit-*` environments. Integration, sanity, and galaxy environments remain unchanged. Explicit CLI options take precedence over project configuration, so configured coverage can be disabled temporarily:
 

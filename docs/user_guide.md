@@ -143,7 +143,9 @@ Use `--coverage` to generate a coverage report for Python files in the collectio
 tox -e unit-py3.13-2.19 --ansible --coverage
 ```
 
-tox-ansible installs `pytest-cov` and generates the required path mappings automatically, including the collection-specific installation path created by Ansible Dev Environment. The collection does not need a `.coveragerc` or a custom unit test command.
+tox-ansible installs `pytest-cov` and generates the required path mappings automatically, including the collection-specific installation path created by Ansible Dev Environment. Eligible Python files below `plugins/` that the unit tests do not import appear with 0% coverage. The collection does not need a `.coveragerc` or a custom unit test command.
+
+Each unit environment stores its raw coverage data in its own tox environment directory. Parallel environments therefore produce independent reports; tox-ansible does not automatically combine results across the Python and ansible-core matrix.
 
 Coverage can also be enabled persistently with `coverage = true` in `[tool.tox-ansible]` in `pyproject.toml` or `[ansible]` in `tox-ansible.ini`. See the [Configuration](configuration.md#unit-test-coverage) page for examples and precedence rules.
 

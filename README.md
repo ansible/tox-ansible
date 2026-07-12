@@ -140,7 +140,7 @@ Coverage is disabled by default and can also be enabled for a single invocation:
 tox --ansible --coverage -e unit-py3.13-2.19
 ```
 
-tox-ansible installs `pytest-cov` and generates the collection-specific coverage configuration automatically. Use `--no-coverage` to override configuration that enables coverage.
+tox-ansible installs `pytest-cov` and generates the collection-specific coverage configuration automatically. Reports include eligible Python files below `plugins/` that the unit tests do not import, showing them with 0% coverage. Raw coverage data is stored separately inside each tox unit environment, so parallel environments produce independent reports rather than a combined matrix report. Use `--no-coverage` to override configuration that enables coverage.
 
 See the [configuration guide] for details on overriding environment settings.
 
