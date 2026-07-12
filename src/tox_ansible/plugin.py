@@ -64,6 +64,7 @@ OUR_DEPS = [
     "ansible-compat>=25.11.0",  # Nov 2025
 ]
 COVERAGE_DEPS = [
+    "coverage>=7.0.0",  # Dec 2022
     "pytest-cov>=4.1.0",  # May 2023
 ]
 
@@ -639,11 +640,13 @@ def _write_coverage_config(
     coverage_dir.mkdir(parents=True, exist_ok=True)
     coverage_config = coverage_dir / f"{env_conf.name}.ini"
     installed_plugins = _collection_install_path(env_conf, collection) / "plugins"
+    coverage_data = Path(env_conf["env_dir"]).resolve() / ".coverage"
     coverage_config.write_text(
         "[run]\n"
-        "include =\n"
-        "    plugins/**/*.py\n"
-        f"    {installed_plugins}/**/*.py\n"
+        f"data_file = {coverage_data}\n"
+        "source =\n"
+        "    plugins\n"
+        f"    {installed_plugins}\n"
         "\n"
         "[paths]\n"
         "source =\n"
@@ -651,6 +654,7 @@ def _write_coverage_config(
         f"    {installed_plugins}\n"
         "\n"
         "[report]\n"
+        "include_namespace_packages = true\n"
         "show_missing = true\n",
         encoding="utf-8",
     )

@@ -841,9 +841,16 @@ def test_conf_deps_sanity() -> None:
 
 def test_conf_deps_coverage() -> None:
     """Test pytest-cov is installed only for opted-in unit tests."""
-    assert "pytest-cov>=4.1.0" in conf_deps(test_type="unit", coverage_enabled=True)
-    assert "pytest-cov" not in conf_deps(test_type="unit")
-    assert "pytest-cov" not in conf_deps(test_type="integration", coverage_enabled=True)
+    enabled_unit_deps = conf_deps(test_type="unit", coverage_enabled=True)
+    disabled_unit_deps = conf_deps(test_type="unit")
+    integration_deps = conf_deps(test_type="integration", coverage_enabled=True)
+
+    assert "coverage>=7.0.0" in enabled_unit_deps
+    assert "pytest-cov>=4.1.0" in enabled_unit_deps
+    assert "coverage>=7.0.0" not in disabled_unit_deps
+    assert "pytest-cov" not in disabled_unit_deps
+    assert "coverage>=7.0.0" not in integration_deps
+    assert "pytest-cov" not in integration_deps
 
 
 def test_conf_setenv_collections_path(tmp_path: Path) -> None:
@@ -1439,8 +1446,44 @@ def test_write_coverage_config(tmp_path: Path) -> None:
         / ".tox/unit-py3.13-2.21/lib/python3.13/site-packages"
         / "ansible_collections/example/widgets/plugins"
     )
-    assert "plugins/**/*.py" in content
-    assert f"{installed_plugins}/**/*.py" in content
-    assert f"    {installed_plugins}\n" in content
+    assert "include =" not in content
+    assert "source =\n    plugins\n" in content
+    assert content.count(f"    {installed_plugins}\n") == 2
+    assert f"data_file = {tmp_path}/.tox/unit-py3.13-2.21/.coverage" in content
+    assert "include_namespace_packages = true" in content
     assert "show_missing = true" in content
     assert not (tmp_path / ".coveragerc").exists()
+
+
+def test_write_coverage_config_isolates_data_by_environment(tmp_path: Path) -> None:
+    """Test each unit environment receives a separate coverage data file.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "tox.ini"
+    config_file.touch()
+    source = discover_source(config_file, None)
+    config = Config.make(
+        Parsed(work_dir=tmp_path / ".tox", override=[], config_file=config_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    )
+    collection = Collection(name="widgets", namespace="example", version="1.0.0")
+    data_files = []
+
+    for env_name in ("unit-py3.13-2.20", "unit-py3.13-2.21"):
+        env_dir = tmp_path / ".tox" / env_name
+        env_conf = config.get_env(env_name)
+        env_conf.add_config(
+            keys=["env_dir", "envdir"],
+            of_type=Path,
+            default=env_dir,
+            desc="",
+        )
+        coverage_config = _write_coverage_config(env_conf=env_conf, collection=collection)
+        data_files.append(f"data_file = {env_dir}/.coverage")
+        assert data_files[-1] in coverage_config.read_text()
+
+    assert data_files[0] != data_files[1]
