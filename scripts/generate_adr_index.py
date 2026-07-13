@@ -22,6 +22,7 @@ STATUS_ORDER = [
     "Implemented",
     "Accepted",
     "Proposed",
+    "Deprecated",
     "Superseded",
 ]
 
@@ -29,6 +30,7 @@ _STATUS_DESCRIPTIONS: dict[str, str] = {
     "Implemented": "Decisions that are fully reflected in the codebase.",
     "Accepted": "Decisions that have been accepted but are not yet fully implemented.",
     "Proposed": "Decisions under consideration — not yet accepted or implemented.",
+    "Deprecated": "Decisions that remain documented but should no longer be followed.",
     "Superseded": "Decisions replaced by newer ADRs.",
 }
 
@@ -45,6 +47,8 @@ def _normalize_status(raw: str) -> str:
     low = raw.lower().strip()
     if "superseded" in low:
         return "Superseded"
+    if "deprecated" in low:
+        return "Deprecated"
     if "implemented" in low:
         return "Implemented"
     if "accepted" in low:
@@ -138,12 +142,13 @@ def _render(adrs: list[dict[str, str]]) -> str:
             "   - Status (Proposed → Accepted → Implemented)",
             "   - Date",
             "   - Context",
-            "   - Options Considered",
+            "   - Alternatives Considered",
             "   - Decision",
-            "   - Rationale",
             "   - Consequences (positive/negative)",
             "   - Implementation Notes",
             "   - Related Decisions",
+            "   - References",
+            "   - Revision History",
             "",
         ]
     )

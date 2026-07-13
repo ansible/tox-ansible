@@ -26,7 +26,7 @@ tox-ansible Python floor/ceiling: **3.11–3.14**.
 
 **Upstream `ENV_LIST` fragment** (non-EOL only + milestone/devel):
 
-```
+```text
 galaxy
 {integration, sanity, unit}-py3.11-{2.19}
 {integration, sanity, unit}-py3.12-{2.19, 2.20, 2.21}
@@ -37,7 +37,7 @@ galaxy
 **`DOWNSTREAM_EXTRA`** (AAP cores not already in upstream; Hub cert Python
 floor **3.12+**):
 
-```
+```text
 {integration, sanity, unit}-py3.12-{2.16, 2.18}
 {integration, sanity, unit}-py3.13-{2.18}
 ```

@@ -20,9 +20,10 @@ Decisions that are fully reflected in the codebase.
    - Status (Proposed → Accepted → Implemented)
    - Date
    - Context
-   - Options Considered
+   - Alternatives Considered
    - Decision
-   - Rationale
    - Consequences (positive/negative)
    - Implementation Notes
    - Related Decisions
+   - References
+   - Revision History

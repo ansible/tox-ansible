@@ -57,7 +57,7 @@ Initial `DOWNSTREAM_EXTRA` (AAP default/EE cores not already in upstream,
 intersected with each core’s control-node Python range and the Hub/partner
 certification Python floor **3.12+** — not tox-ansible’s upstream floor 3.11):
 
-```
+```text
 {integration, sanity, unit}-py3.12-{2.16, 2.18}
 {integration, sanity, unit}-py3.13-{2.18}
 ```
@@ -154,7 +154,6 @@ turning tox-ansible into a free-form matrix editor.
 - https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
 - https://access.redhat.com/support/policy/updates/ansible-automation-platform
 - https://github.com/ansible/tox-ansible/pull/562
-- Internal DevTools discussion on partner cert requirements vs community EOL
 - Skill: `.agents/skills/update-matrix/SKILL.md`
 
 ---
