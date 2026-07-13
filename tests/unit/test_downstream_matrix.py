@@ -99,6 +99,27 @@ def test_load_ansible_config_downstream_string_false(tmp_path: Path) -> None:
     assert result.downstream is False
 
 
+def test_load_ansible_config_downstream_int_bools(tmp_path: Path) -> None:
+    """Test TOML integer 0/1 coerce to boolean for downstream.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    true_dir = tmp_path / "true"
+    true_dir.mkdir()
+    (true_dir / "pyproject.toml").write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n[tool.tox-ansible]\ndownstream = 1\n',
+    )
+    false_dir = tmp_path / "false"
+    false_dir.mkdir()
+    (false_dir / "pyproject.toml").write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n[tool.tox-ansible]\ndownstream = 0\n',
+    )
+
+    assert _load_ansible_config(_make_state(true_dir / "pyproject.toml")).downstream is True
+    assert _load_ansible_config(_make_state(false_dir / "pyproject.toml")).downstream is False
+
+
 def test_add_ansible_matrix_default_excludes_extras(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

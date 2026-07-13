@@ -395,7 +395,7 @@ def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
 
 
 def _coerce_bool(value: object, *, default: bool = False) -> bool:
-    """Coerce a config value to bool with explicit string handling.
+    """Coerce a config value to bool with explicit string and int handling.
 
     Args:
         value: Raw value from TOML or similar.
@@ -406,15 +406,15 @@ def _coerce_bool(value: object, *, default: bool = False) -> bool:
     """
     if isinstance(value, bool):
         return value
+    if isinstance(value, int) and value in {0, 1}:
+        return bool(value)
     if isinstance(value, str):
         normalized = value.strip().lower()
         if normalized in {"true", "1", "yes", "on"}:
             return True
         if normalized in {"false", "0", "no", "off", ""}:
             return False
-        logger.warning("Invalid boolean config value %r; using %s", value, default)
-        return default
-    if value is None:
+    elif value is None:
         return default
     logger.warning("Invalid boolean config value %r; using %s", value, default)
     return default
@@ -499,7 +499,8 @@ def add_ansible_matrix(state: State) -> EnvList:
     env_list = StrConvert().to_env_list(ENV_LIST)
     if ansible_config.downstream:
         extra = StrConvert().to_env_list(DOWNSTREAM_EXTRA)
-        # Preserve order: upstream first, then extras not already present.
+        # Deduplicate extras against the upstream env list (final order is
+        # set by custom_sort below).
         seen = set(env_list.envs)
         for env_name in extra.envs:
             if env_name not in seen:
