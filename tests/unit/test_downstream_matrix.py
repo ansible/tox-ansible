@@ -12,13 +12,27 @@ from tox.config.source import discover_source
 from tox.report import ToxHandler
 from tox.session.state import State
 
-from tox_ansible.plugin import _load_ansible_config, add_ansible_matrix
+from tox_ansible.plugin import _coerce_bool, _load_ansible_config, add_ansible_matrix
 
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     import pytest
+
+
+def test_coerce_bool_string_true_aliases() -> None:
+    """Test string aliases that should coerce to True."""
+    assert _coerce_bool("true") is True
+    assert _coerce_bool("YES") is True
+    assert _coerce_bool("on") is True
+    assert _coerce_bool("1") is True
+
+
+def test_coerce_bool_none_uses_default() -> None:
+    """Test None returns the explicit default."""
+    assert _coerce_bool(None) is False
+    assert _coerce_bool(None, default=True) is True
 
 
 def _make_state(config_file: Path) -> State:
