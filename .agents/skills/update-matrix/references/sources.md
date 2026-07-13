@@ -34,16 +34,19 @@ galaxy
 {integration, sanity, unit}-py3.14-{2.20, 2.21, milestone, devel}
 ```
 
-**`DOWNSTREAM_EXTRA`** (AAP cores not already in upstream):
+**`DOWNSTREAM_EXTRA`** (AAP cores not already in upstream; Hub cert Python
+floor **3.12+**):
 
 ```
-{integration, sanity, unit}-py3.11-{2.16, 2.18}
 {integration, sanity, unit}-py3.12-{2.16, 2.18}
 {integration, sanity, unit}-py3.13-{2.18}
 ```
 
 Notes:
 
+- No `py3.11` × `2.16` / `2.18` in extras — valid as control nodes on the
+  community table, but below Hub/partner cert Python minimum (3.12). Upstream
+  `ENV_LIST` may still use py3.11 for maintained cores (e.g. 2.19).
 - No `py3.14` × `2.16` / `2.18` (outside those cores’ control-node Python).
 - No `2.19+` in extras (already in upstream).
 - With `downstream = true`, partners get 2.16/2.18 **and** still run 2.19+ /

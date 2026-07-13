@@ -64,8 +64,12 @@ Fetch both pages (WebFetch or equivalent). Produce a short summary:
   in support).
 - Keep only environment combos **not already present** in the proposed
   `ENV_LIST` (extras are additive; no duplicates).
-- Intersect Python with the tox-ansible floor and each core’s control-node
-  range (community table and/or AAP Table 1.3).
+- Intersect Python with each core’s control-node range (community table and/or
+  AAP Table 1.3), then apply the **Hub/partner certification Python floor**
+  (today **3.12+**). Do **not** use tox-ansible’s upstream floor (3.11) for
+  extras — Automation Hub certified collections require Python 3.12 minimum.
+  Example: even though ansible-core 2.16/2.18 control nodes include 3.11, omit
+  `py3.11` from `DOWNSTREAM_EXTRA`.
 - Remember ADR-001: downstream mode is **upstream ∪ extras**, so it is fine if
   upstream contains cores not yet in AAP.
 

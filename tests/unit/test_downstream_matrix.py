@@ -204,6 +204,8 @@ def test_add_ansible_matrix_downstream_extends(
     assert any("devel" in name for name in env_list.envs)
     assert "unit-py3.12-2.16" in env_list.envs
     assert "unit-py3.13-2.18" in env_list.envs
+    assert not any("py3.11-2.16" in name for name in env_list.envs)
+    assert not any("py3.11-2.18" in name for name in env_list.envs)
     assert not any("py3.14-2.16" in name for name in env_list.envs)
 
 
@@ -242,7 +244,7 @@ def test_add_ansible_matrix_downstream_dedupes_overlap(
     # Force an overlap so the `if env_name not in seen` false branch is hit.
     monkeypatch.setattr(
         "tox_ansible.plugin.DOWNSTREAM_EXTRA",
-        "{integration, sanity, unit}-py3.12-2.19\n{integration, sanity, unit}-py3.11-2.16\n",
+        "{integration, sanity, unit}-py3.12-2.19\n{integration, sanity, unit}-py3.12-2.16\n",
     )
     ini_file = tmp_path / "tox-ansible.ini"
     ini_file.write_text("[ansible]\ndownstream = true\n")
@@ -251,4 +253,4 @@ def test_add_ansible_matrix_downstream_dedupes_overlap(
 
     env_list = add_ansible_matrix(_make_state(ini_file))
     assert env_list.envs.count("unit-py3.12-2.19") == 1
-    assert "unit-py3.11-2.16" in env_list.envs
+    assert "unit-py3.12-2.16" in env_list.envs

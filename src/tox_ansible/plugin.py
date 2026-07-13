@@ -57,9 +57,9 @@ galaxy
 
 # Additive AAP/cert cores not already present in ENV_LIST (ADR-001).
 # Used when downstream=true -> upstream union DOWNSTREAM_EXTRA.
+# Python floor for extras is Hub/partner cert minimum (3.12+), not tox's 3.11 floor.
 # https://access.redhat.com/support/policy/updates/ansible-automation-platform
 DOWNSTREAM_EXTRA = """
-{integration, sanity, unit}-py3.11-{2.16, 2.18}
 {integration, sanity, unit}-py3.12-{2.16, 2.18}
 {integration, sanity, unit}-py3.13-{2.18}
 """

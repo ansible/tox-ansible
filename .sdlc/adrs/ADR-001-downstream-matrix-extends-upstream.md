@@ -53,11 +53,11 @@ Semantics:
   when downstream mode is on — intentional forward-looking coverage.
 - Use `skip` to tighten (e.g. drop `devel` / `milestone` / a specific core).
 
-Initial `DOWNSTREAM_EXTRA` (AAP default/EE cores not already in upstream, intersected
-with tox-ansible’s Python floor 3.11+ and each core’s control-node Python range):
+Initial `DOWNSTREAM_EXTRA` (AAP default/EE cores not already in upstream,
+intersected with each core’s control-node Python range and the Hub/partner
+certification Python floor **3.12+** — not tox-ansible’s upstream floor 3.11):
 
 ```
-{integration, sanity, unit}-py3.11-{2.16, 2.18}
 {integration, sanity, unit}-py3.12-{2.16, 2.18}
 {integration, sanity, unit}-py3.13-{2.18}
 ```
@@ -164,3 +164,4 @@ turning tox-ansible into a free-form matrix editor.
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-07-13 | Brad Thornton | Initial decision and implementation |
+| 2026-07-13 | Brad Thornton | Drop py3.11 from DOWNSTREAM_EXTRA (Hub cert floor 3.12+) |

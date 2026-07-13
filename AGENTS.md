@@ -12,7 +12,9 @@ change, write an ADR first (see below).
    path without an ADR.
 2. **Matrices live in `src/tox_ansible/plugin.py`.** Upstream environments are
    `ENV_LIST`. AAP/cert extras are `DOWNSTREAM_EXTRA`. Do not introduce a second
-   competing matrix definition without an ADR.
+   competing matrix definition without an ADR. Upstream uses tox’s Python
+   floor/ceiling (today 3.11–3.14); extras use the Hub/partner cert Python
+   floor (today **3.12+**) — see `/update-matrix` and ADR-001.
 3. **Config surfaces are INI and TOML.** User settings come from `[ansible]` in
    `tox-ansible.ini` or `[tool.tox-ansible]` in `pyproject.toml` (TOML wins).
    Keep both in sync when adding options.
