@@ -890,6 +890,31 @@ def conf_commands_pre(
     return commands
 
 
+def _test_deps(test_type: str, *, coverage_enabled: bool) -> list[str]:
+    """Assemble dependencies for integration and unit test environments.
+
+    Args:
+        test_type: The test type, either "integration" or "unit".
+        coverage_enabled: Whether unit test coverage is enabled.
+
+    Returns:
+        The dependencies as a list of requirement strings.
+    """
+    deps = list(OUR_DEPS)
+    if test_type == "unit" and coverage_enabled:
+        deps.extend(COVERAGE_DEPS)
+    if test_type == "integration":
+        deps.append("molecule>=26.4.0")
+    cwd = Path.cwd()
+    for req_file in PYTHON_DEPENDENCY_FILES:
+        try:
+            with (cwd / req_file).open() as fileh:
+                deps.extend(fileh.read().splitlines())
+        except FileNotFoundError:  # noqa: PERF203
+            pass
+    return deps
+
+
 def conf_deps(test_type: str, *, coverage_enabled: bool = False) -> str:
     """Add dependencies to the tox environment.
 
@@ -900,25 +925,13 @@ def conf_deps(test_type: str, *, coverage_enabled: bool = False) -> str:
     Returns:
         The dependencies.
     """
-    deps = []
-    cwd = Path.cwd()
+    deps: list[str] = []
     if test_type == "galaxy":
         deps.append("galaxy-importer>=0.4.31")
     else:
         deps.append("ansible-dev-environment>=26.2.0")
         if test_type in ("integration", "unit"):
-            deps.extend(OUR_DEPS)
-            if test_type == "unit" and coverage_enabled:
-                deps.extend(COVERAGE_DEPS)
-            if test_type == "integration":
-                deps.append("molecule>=26.4.0")
-            for req_file in PYTHON_DEPENDENCY_FILES:
-                try:
-                    with (cwd / req_file).open() as fileh:
-                        deps.extend(fileh.read().splitlines())
-                except FileNotFoundError:  # noqa: PERF203
-                    pass
-
+            deps.extend(_test_deps(test_type, coverage_enabled=coverage_enabled))
     return "\n".join(deps)
 
 
