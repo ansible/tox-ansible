@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -111,6 +112,58 @@ def test_ade_workflow_collection_requirements(
             )
 
 
+@pytest.mark.parametrize("config_format", ("ini", "toml"))
+def test_ade_workflow_coverage_config(
+    config_format: str,
+    module_fixture_dir: Path,
+    tmp_path: Path,
+    tox_bin: Path,
+) -> None:
+    """Validate INI and TOML configuration enable unit coverage only.
+
+    Args:
+        config_format: The tox-ansible configuration format to test.
+        module_fixture_dir: Pytest fixture for the module fixture directory.
+        tmp_path: Pytest fixture for a temporary directory.
+        tox_bin: Pytest fixture for the tox binary.
+    """
+    collection_dir = tmp_path / config_format
+    shutil.copytree(module_fixture_dir, collection_dir)
+    if config_format == "ini":
+        with (collection_dir / "tox-ansible.ini").open("a") as config_file:
+            config_file.write("\n[ansible]\ncoverage = true\n")
+    else:
+        (collection_dir / "pyproject.toml").write_text(
+            '[tool.tox]\nrequires = ["tox>=4.2"]\n\n[tool.tox-ansible]\ncoverage = true\n',
+        )
+
+    proc = run(
+        f"{tox_bin} config --ansible --root {collection_dir} --conf tox-ansible.ini "
+        "-e unit-py3.13-2.19,integration-py3.13-2.19 -k commands deps -qq",
+        cwd=collection_dir,
+        check=True,
+        timeout=10,
+    )
+    cfg_parser = ConfigParser()
+    cfg_parser.read_string(proc.stdout)
+    unit = cfg_parser["testenv:unit-py3.13-2.19"]
+    integration = cfg_parser["testenv:integration-py3.13-2.19"]
+    coverage_config = collection_dir / ".tox/.tox-ansible/coverage/unit-py3.13-2.19.ini"
+
+    assert "coverage>=7.0.0" in unit["deps"]
+    assert "pytest-cov>=4.1.0" in unit["deps"]
+    assert "--cov --cov-config=" in unit["commands"]
+    assert coverage_config.is_file()
+    coverage_content = coverage_config.read_text()
+    assert "source =\n    plugins\n" in coverage_content
+    assert "ansible_collections/test_ns/test_col/plugins" in coverage_content
+    assert "include_namespace_packages = true" in coverage_content
+    assert f"data_file = {collection_dir}/.tox/unit-py3.13-2.19/.coverage" in coverage_content
+    assert "pytest-cov" not in integration["deps"]
+    assert "--cov" not in integration["commands"]
+    assert not (collection_dir / ".coveragerc").exists()
+
+
 @pytest.mark.slow
 def test_ade_workflow_e2e(
     module_fixture_dir: Path,
@@ -158,7 +211,7 @@ def test_ade_workflow_e2e(
     env_name = f"unit-py{py_ver}-{core_ver}"
 
     proc = subprocess.run(
-        [tox_bin, "--ansible", "--conf", "tox-ansible.ini", "-e", env_name],
+        [tox_bin, "--ansible", "--coverage", "--conf", "tox-ansible.ini", "-e", env_name],
         check=False,
         cwd=str(collection_dir),
         capture_output=True,
@@ -166,3 +219,12 @@ def test_ade_workflow_e2e(
     )
 
     assert proc.returncode == 0, f"tox run failed:\n{proc.stdout}\n{proc.stderr}"
+    assert "plugins/modules/hello.py" in proc.stdout
+    assert re.search(
+        r"plugins/module_utils/untested\.py\s+\d+\s+\d+\s+0%",
+        proc.stdout,
+    )
+    assert "site-packages/ansible_collections/test_ns/test_col/plugins" not in proc.stdout
+    assert (collection_dir / ".tox" / env_name / ".coverage").is_file()
+    assert not (collection_dir / ".coverage").exists()
+    assert not (collection_dir / ".coveragerc").exists()

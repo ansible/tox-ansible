@@ -63,6 +63,10 @@ OUR_DEPS = [
     "pytest-ansible>=v4.1.1",  # latest version still supporting py39 (Oct 2023)
     "ansible-compat>=25.11.0",  # Nov 2025
 ]
+COVERAGE_DEPS = [
+    "coverage>=7.0.0",  # Dec 2022
+    "pytest-cov>=4.1.0",  # May 2023
+]
 
 # Paths checked for collection requirements files, keyed by test type.
 # From https://github.com/ansible/ansible-compat/blob/main/src/ansible_compat/constants.py#L6-L14
@@ -96,11 +100,30 @@ class AnsibleConfigSet(ConfigSet):
     def register_config(self) -> None:
         """Register the ansible configuration."""
         self.add_config(
+            "coverage",
+            of_type=bool,
+            default=False,
+            desc="enable coverage reporting for unit tests",
+        )
+        self.add_config(
             "skip",
             of_type=list[str],
             default=[],
             desc="ansible configuration",
         )
+
+
+@dataclass
+class AnsibleConfiguration:
+    """User-provided tox-ansible configuration.
+
+    Attributes:
+        coverage: Enable coverage reporting for unit tests.
+        skip: Environment name fragments to skip.
+    """
+
+    coverage: bool = False
+    skip: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -182,6 +205,21 @@ def tox_add_option(parser: ToxParser) -> None:
         help="Enable ansible testing",
     )
 
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        default=None,
+        help="Enable coverage reporting for unit tests",
+    )
+
+    parser.add_argument(
+        "--no-coverage",
+        action="store_false",
+        default=None,
+        dest="coverage",
+        help="Disable coverage reporting for unit tests",
+    )
+
 
 @impl
 def tox_add_core_config(
@@ -196,6 +234,11 @@ def tox_add_core_config(
     """
     if state.conf.options.gh_matrix and not state.conf.options.ansible:  # pragma: no cover
         err = "The --gh-matrix option requires --ansible"
+        logger.critical(err)
+        sys.exit(1)
+
+    if state.conf.options.coverage and not state.conf.options.ansible:  # pragma: no cover
+        err = "The --coverage option requires --ansible"
         logger.critical(err)
         sys.exit(1)
 
@@ -257,6 +300,12 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         base_python = [factors[1]]
     test_type = factors[0]
     ansible_version = factors[-1] if len(factors) == expected_factors else ""
+    coverage_enabled = test_type == "unit" and _coverage_enabled(state)
+    coverage_config = (
+        _write_coverage_config(env_conf=env_conf, collection=collection)
+        if coverage_enabled
+        else None
+    )
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
@@ -272,9 +321,10 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             env_conf=env_conf,
             pos_args=pos_args,
             test_type=test_type,
+            coverage_config=coverage_config,
         ),
         description=desc_for_env(env_conf.name),
-        deps=conf_deps(test_type=test_type),
+        deps=conf_deps(test_type=test_type, coverage_enabled=coverage_enabled),
         passenv=conf_passenv(),
         setenv=conf_setenv(env_conf=env_conf, test_type=test_type),
         skip_install=True,
@@ -336,6 +386,53 @@ def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
     return data.get("tool", {}).get("tox-ansible")
 
 
+def _load_ansible_config(state: State) -> AnsibleConfiguration:
+    """Load tox-ansible configuration using TOML-over-INI precedence.
+
+    Args:
+        state: The tox state object.
+
+    Returns:
+        The resolved tox-ansible configuration.
+    """
+    project_dir = state.conf.src_path.parent.resolve()
+    pyproject_config = _load_pyproject_config(project_dir)
+
+    if pyproject_config is not None:
+        return AnsibleConfiguration(
+            coverage=pyproject_config.get("coverage", False),
+            skip=pyproject_config.get("skip", []),
+        )
+
+    ansible_config = state.conf.get_section_config(
+        Section(None, "ansible"),
+        base=[],
+        of_type=AnsibleConfigSet,
+        for_env=None,
+    )
+    return AnsibleConfiguration(
+        coverage=ansible_config["coverage"],
+        skip=ansible_config["skip"],
+    )
+
+
+def _coverage_enabled(state: State) -> bool:
+    """Resolve coverage from the CLI and project configuration.
+
+    Explicit CLI options take precedence over project configuration.
+
+    Args:
+        state: The tox state object.
+
+    Returns:
+        Whether unit test coverage is enabled.
+    """
+    cli_coverage: bool | None = getattr(state.conf.options, "coverage", None)
+    if cli_coverage is not None:
+        return cli_coverage
+    return _load_ansible_config(state).coverage
+
+
 def add_ansible_matrix(state: State) -> EnvList:
     """Add the ansible matrix to the state.
 
@@ -345,19 +442,7 @@ def add_ansible_matrix(state: State) -> EnvList:
     Returns:
         The environment list.
     """
-    project_dir = state.conf.src_path.parent.resolve()
-    pyproject_config = _load_pyproject_config(project_dir)
-
-    if pyproject_config is not None:
-        skip_list: list[str] = pyproject_config.get("skip", [])
-    else:
-        ansible_config = state.conf.get_section_config(
-            Section(None, "ansible"),
-            base=[],
-            of_type=AnsibleConfigSet,
-            for_env=None,
-        )
-        skip_list = ansible_config["skip"]
+    skip_list = _load_ansible_config(state).skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
     env_list.envs = [env for env in env_list.envs if all(skip not in env for skip in skip_list)]
@@ -516,11 +601,72 @@ def get_collection(galaxy_path: Path) -> Collection:
     return Collection(name=c_name, namespace=c_namespace, version=c_version)
 
 
+def _collection_install_path(env_conf: EnvConfigSet, collection: Collection) -> Path:
+    """Build the collection installation path inside a tox environment.
+
+    Args:
+        env_conf: The tox environment configuration object.
+        collection: The collection info.
+
+    Returns:
+        The installed collection path.
+    """
+    py_ver = env_conf.name.split("-")[1].replace("py", "")
+    return (
+        Path(env_conf["env_dir"])
+        / "lib"
+        / f"python{py_ver}"
+        / "site-packages"
+        / "ansible_collections"
+        / collection.namespace
+        / collection.name
+    )
+
+
+def _write_coverage_config(
+    env_conf: EnvConfigSet,
+    collection: Collection,
+) -> Path:
+    """Write an environment-specific coverage configuration.
+
+    Args:
+        env_conf: The tox environment configuration object.
+        collection: The collection info.
+
+    Returns:
+        The generated coverage configuration path.
+    """
+    coverage_dir = Path(env_conf["env_dir"]).parent / ".tox-ansible" / "coverage"
+    coverage_dir.mkdir(parents=True, exist_ok=True)
+    coverage_config = coverage_dir / f"{env_conf.name}.ini"
+    installed_plugins = _collection_install_path(env_conf, collection) / "plugins"
+    coverage_data = Path(env_conf["env_dir"]).resolve() / ".coverage"
+    coverage_config.write_text(
+        "[run]\n"
+        f"data_file = {coverage_data}\n"
+        "source =\n"
+        "    plugins\n"
+        f"    {installed_plugins}\n"
+        "\n"
+        "[paths]\n"
+        "source =\n"
+        "    plugins\n"
+        f"    {installed_plugins}\n"
+        "\n"
+        "[report]\n"
+        "include_namespace_packages = true\n"
+        "show_missing = true\n",
+        encoding="utf-8",
+    )
+    return coverage_config
+
+
 def conf_commands(
     collection: Collection,
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
     test_type: str,
+    coverage_config: Path | None = None,
 ) -> list[str]:
     """Build the commands for the tox environment.
 
@@ -529,6 +675,7 @@ def conf_commands(
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
         test_type: The test type, either "integration", "unit", or "sanity".
+        coverage_config: The generated coverage configuration path.
 
     Returns:
         The commands to run.
@@ -537,6 +684,7 @@ def conf_commands(
         return conf_commands_for_integration_unit(
             pos_args=pos_args,
             test_type=test_type,
+            coverage_config=coverage_config,
         )
     if test_type == "sanity":
         return conf_commands_for_sanity(
@@ -557,21 +705,31 @@ def conf_commands(
 def conf_commands_for_integration_unit(
     pos_args: tuple[str, ...] | None,
     test_type: str,
+    coverage_config: Path | None = None,
 ) -> list[str]:
     """Build the commands for integration and unit tests.
 
     Args:
         pos_args: Positional arguments passed to tox command.
         test_type: The test type, either "integration" or "unit".
+        coverage_config: The generated coverage configuration path.
 
     Returns:
         The commands to run.
     """
     args = f" {' '.join(pos_args)} " if pos_args else " "
+    coverage_args = (
+        f" --cov --cov-config={coverage_config}"
+        if test_type == "unit" and coverage_config is not None
+        else ""
+    )
 
     # Use pytest ansible unit inject only to inject the collection path
     # into the collection finder
-    command = f"python3 -m pytest --ansible-unit-inject-only{args}{Path()}/tests/{test_type}"
+    command = (
+        f"python3 -m pytest{coverage_args} "
+        f"--ansible-unit-inject-only{args}{Path()}/tests/{test_type}"
+    )
     return [command]
 
 
@@ -595,11 +753,7 @@ def conf_commands_for_sanity(
     args = f" {' '.join(pos_args)}" if pos_args else ""
 
     py_ver = env_conf.name.split("-")[1].replace("py", "")
-
-    envdir = env_conf["env_dir"]
-    site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
-    col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
-    collection_path = f"{site_packages}/{col_rel}"
+    collection_path = _collection_install_path(env_conf, collection)
 
     command = f"ansible-test sanity --local --requirements --python {py_ver}{args}"
     full_command = f"bash -c 'cd {collection_path} && {command}'"
@@ -665,7 +819,6 @@ def _add_sanity_git_init(
     commands: list[str],
     env_conf: EnvConfigSet,
     collection: Collection,
-    envdir: str,
     end_group: str,
 ) -> None:
     """Append git-init commands needed to work around ansible/ansible#68499.
@@ -674,13 +827,9 @@ def _add_sanity_git_init(
         commands: The command list to append to.
         env_conf: The tox environment configuration object.
         collection: The collection info.
-        envdir: The tox environment directory.
         end_group: The CI group-close command string.
     """
-    py_ver = env_conf.name.split("-")[1].replace("py", "")
-    site_packages = f"{envdir}/lib/python{py_ver}/site-packages"
-    col_rel = f"ansible_collections/{collection.namespace}/{collection.name}"
-    collection_path = f"{site_packages}/{col_rel}"
+    collection_path = _collection_install_path(env_conf, collection)
     if in_action():  # pragma: no cover
         commands.append("echo ::group::Initialize the collection to avoid ansible #68499")
     git_cfg = "git config --global init.defaultBranch main"
@@ -736,37 +885,53 @@ def conf_commands_pre(
         _add_collection_req_commands(commands, found_reqs, envdir, acv, end_group)
 
     if test_type == "sanity":
-        _add_sanity_git_init(commands, env_conf, collection, envdir, end_group)
+        _add_sanity_git_init(commands, env_conf, collection, end_group)
 
     return commands
 
 
-def conf_deps(test_type: str) -> str:
+def _test_deps(test_type: str, *, coverage_enabled: bool) -> list[str]:
+    """Assemble dependencies for integration and unit test environments.
+
+    Args:
+        test_type: The test type, either "integration" or "unit".
+        coverage_enabled: Whether unit test coverage is enabled.
+
+    Returns:
+        The dependencies as a list of requirement strings.
+    """
+    deps = list(OUR_DEPS)
+    if test_type == "unit" and coverage_enabled:
+        deps.extend(COVERAGE_DEPS)
+    if test_type == "integration":
+        deps.append("molecule>=26.4.0")
+    cwd = Path.cwd()
+    for req_file in PYTHON_DEPENDENCY_FILES:
+        try:
+            with (cwd / req_file).open() as fileh:
+                deps.extend(fileh.read().splitlines())
+        except FileNotFoundError:  # noqa: PERF203
+            pass
+    return deps
+
+
+def conf_deps(test_type: str, *, coverage_enabled: bool = False) -> str:
     """Add dependencies to the tox environment.
 
     Args:
         test_type: The test type, either "integration", "unit", or "sanity".
+        coverage_enabled: Whether unit test coverage is enabled.
 
     Returns:
         The dependencies.
     """
-    deps = []
-    cwd = Path.cwd()
+    deps: list[str] = []
     if test_type == "galaxy":
         deps.append("galaxy-importer>=0.4.31")
     else:
         deps.append("ansible-dev-environment>=26.2.0")
         if test_type in ("integration", "unit"):
-            deps.extend(OUR_DEPS)
-            if test_type == "integration":
-                deps.append("molecule>=26.4.0")
-            for req_file in PYTHON_DEPENDENCY_FILES:
-                try:
-                    with (cwd / req_file).open() as fileh:
-                        deps.extend(fileh.read().splitlines())
-                except FileNotFoundError:  # noqa: PERF203
-                    pass
-
+            deps.extend(_test_deps(test_type, coverage_enabled=coverage_enabled))
     return "\n".join(deps)
 
 
