@@ -45,6 +45,6 @@ def test_molecule_disabled(
     env_names = proc.stdout.strip().splitlines()
     for name in env_names:
         assert "molecule" not in name, f"molecule should be disabled: {name}"
+        assert not name.startswith("integration-"), f"no integration content: {name}"
     assert any("unit" in name for name in env_names)
     assert any("sanity" in name for name in env_names)
-    assert any("integration" in name for name in env_names)

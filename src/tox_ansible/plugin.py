@@ -46,11 +46,10 @@ ALLOWED_EXTERNALS = [
 ]
 ENV_LIST = """
 galaxy
-molecule-py3.14-2.20
-{integration, sanity, unit}-py3.11-{ 2.19 }
-{integration, sanity, unit}-py3.12-{2.19, 2.20, 2.21}
-{integration, sanity, unit}-py3.13-{2.19, 2.20, 2.21, milestone, devel}
-{integration, sanity, unit}-py3.14-{2.20, 2.21, milestone, devel}
+{integration, molecule, sanity, unit}-py3.11-{ 2.19 }
+{integration, molecule, sanity, unit}-py3.12-{2.19, 2.20, 2.21}
+{integration, molecule, sanity, unit}-py3.13-{2.19, 2.20, 2.21, milestone, devel}
+{integration, molecule, sanity, unit}-py3.14-{2.20, 2.21, milestone, devel}
 """
 # ^ py314 is NOT supported before 2.20! If is in official metadata of the
 # release branch, is not supported.
@@ -134,10 +133,16 @@ class AnsibleConfigSet(ConfigSet):
             desc="molecule test type: 'auto' (discover), 'true' (force on), 'false' (force off)",
         )
         self.add_config(
+            "molecule_append",
+            of_type=list[str],
+            default=[],
+            desc="extra argv appended to the default 'molecule test --all' command",
+        )
+        self.add_config(
             "molecule_commands",
             of_type=list[str],
             default=[],
-            desc="custom molecule commands (empty = default pytest --molecule)",
+            desc="full replacement molecule commands (ignores default and molecule_append)",
         )
 
 
@@ -150,13 +155,15 @@ class AnsibleConfiguration:
         skip: Environment name fragments to skip.
         downstream: When true, union DOWNSTREAM_EXTRA onto ENV_LIST.
         molecule: Molecule test type mode ("auto", "true", or "false").
-        molecule_commands: Custom molecule commands.
+        molecule_append: Extra argv appended to the default molecule command.
+        molecule_commands: Full-replacement molecule commands.
     """
 
     coverage: bool = False
     skip: list[str] = field(default_factory=list)
     downstream: bool = False
     molecule: str = "auto"
+    molecule_append: list[str] = field(default_factory=list)
     molecule_commands: list[str] = field(default_factory=list)
 
 
@@ -334,6 +341,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     )
     ansible_config = _load_ansible_config(state)
     molecule_commands = ansible_config.molecule_commands if test_type == "molecule" else []
+    molecule_append = ansible_config.molecule_append if test_type == "molecule" else []
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
@@ -351,6 +359,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             test_type=test_type,
             coverage_config=coverage_config,
             molecule_commands=molecule_commands,
+            molecule_append=molecule_append,
         ),
         description=desc_for_env(env_conf.name),
         deps=conf_deps(test_type=test_type, coverage_enabled=coverage_enabled),
@@ -463,6 +472,32 @@ def discover_molecule_scenarios(project_dir: Path) -> bool:
     )
 
 
+def discover_integration_tests(project_dir: Path) -> bool:
+    """Check if ansible-test or pytest-style integration tests exist.
+
+    Looks for non-empty ``tests/integration/targets/`` (ansible-test) or
+    pytest modules under ``tests/integration/`` (``test_*.py`` / ``*_test.py``).
+
+    Args:
+        project_dir: The project root directory.
+
+    Returns:
+        True if integration test content is found.
+    """
+    targets = project_dir / "tests" / "integration" / "targets"
+    if targets.is_dir() and any(targets.iterdir()):
+        return True
+
+    integration_dir = project_dir / "tests" / "integration"
+    if not integration_dir.is_dir():
+        return False
+
+    return any(
+        path.name.startswith("test_") or path.name.endswith("_test.py")
+        for path in integration_dir.rglob("*.py")
+    )
+
+
 def _should_include_molecule(
     molecule_setting: str,
     project_dir: Path,
@@ -502,6 +537,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
             skip=pyproject_config.get("skip", []),
             downstream=_coerce_bool(pyproject_config.get("downstream", False)),
             molecule=pyproject_config.get("molecule", "auto"),
+            molecule_append=pyproject_config.get("molecule_append", []),
             molecule_commands=pyproject_config.get("molecule_commands", []),
         )
 
@@ -516,6 +552,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         skip=ansible_config["skip"],
         downstream=ansible_config["downstream"],
         molecule=ansible_config["molecule"],
+        molecule_append=ansible_config["molecule_append"],
         molecule_commands=ansible_config["molecule_commands"],
     )
 
@@ -594,6 +631,8 @@ def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
     ]
     if not _should_include_molecule(ansible_config.molecule, project_dir):
         env_list.envs = [env for env in env_list.envs if not env.startswith("molecule-")]
+    if not discover_integration_tests(project_dir):
+        env_list.envs = [env for env in env_list.envs if not env.startswith("integration-")]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
         0,
@@ -817,6 +856,7 @@ def conf_commands(  # noqa: PLR0913
     *,
     coverage_config: Path | None = None,
     molecule_commands: list[str] | None = None,
+    molecule_append: list[str] | None = None,
 ) -> list[str]:
     """Build the commands for the tox environment.
 
@@ -826,7 +866,8 @@ def conf_commands(  # noqa: PLR0913
         pos_args: Positional arguments passed to tox command.
         test_type: The test type.
         coverage_config: The generated coverage configuration path.
-        molecule_commands: Custom molecule commands from config.
+        molecule_commands: Full-replacement molecule commands from config.
+        molecule_append: Extra argv appended to the default molecule command.
 
     Returns:
         The commands to run.
@@ -841,6 +882,7 @@ def conf_commands(  # noqa: PLR0913
         return conf_commands_for_molecule(
             pos_args=pos_args,
             molecule_commands=molecule_commands,
+            molecule_append=molecule_append,
         )
     if test_type == "sanity":
         return conf_commands_for_sanity(
@@ -892,12 +934,18 @@ def conf_commands_for_integration_unit(
 def conf_commands_for_molecule(
     pos_args: tuple[str, ...] | None,
     molecule_commands: list[str] | None = None,
+    molecule_append: list[str] | None = None,
 ) -> list[str]:
     """Build the commands for molecule tests.
 
+    Default is ``python3 -m molecule test --all``. ``molecule_append`` adds
+    argv after that default. Non-empty ``molecule_commands`` fully replaces the
+    default (and ignores ``molecule_append`` / ``pos_args``).
+
     Args:
         pos_args: Positional arguments passed to tox command.
-        molecule_commands: Custom molecule commands from config.
+        molecule_commands: Full-replacement molecule commands from config.
+        molecule_append: Extra argv appended to the default molecule command.
 
     Returns:
         The commands to run.
@@ -905,9 +953,12 @@ def conf_commands_for_molecule(
     if molecule_commands:
         return list(molecule_commands)
 
-    args = f" {' '.join(pos_args)} " if pos_args else " "
-    command = f"python3 -m pytest --molecule{args}{Path()}/tests/integration"
-    return [command]
+    parts = ["python3", "-m", "molecule", "test", "--all"]
+    if molecule_append:
+        parts.extend(molecule_append)
+    if pos_args:
+        parts.extend(pos_args)
+    return [" ".join(parts)]
 
 
 def conf_commands_for_sanity(

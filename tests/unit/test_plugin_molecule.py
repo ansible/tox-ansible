@@ -26,6 +26,7 @@ from tox_ansible.plugin import (
     conf_commands_for_molecule,
     conf_commands_pre,
     conf_deps,
+    discover_integration_tests,
     discover_molecule_scenarios,
 )
 
@@ -53,15 +54,32 @@ def test_conf_commands_molecule() -> None:
     """Test default molecule command generation."""
     result = conf_commands_for_molecule(pos_args=None)
     assert len(result) == 1
-    assert result[0] == "python3 -m pytest --molecule ./tests/integration"
+    assert result[0] == "python3 -m molecule test --all"
 
 
 def test_conf_commands_molecule_with_args() -> None:
     """Test molecule command generation with pos_args."""
     result = conf_commands_for_molecule(pos_args=("--verbose", "-x"))
     assert len(result) == 1
-    assert "--verbose -x" in result[0]
-    assert "pytest --molecule" in result[0]
+    assert result[0] == "python3 -m molecule test --all --verbose -x"
+
+
+def test_conf_commands_molecule_append() -> None:
+    """Test molecule_append adds argv after the default command."""
+    result = conf_commands_for_molecule(
+        pos_args=None,
+        molecule_append=["--workers", "4"],
+    )
+    assert result == ["python3 -m molecule test --all --workers 4"]
+
+
+def test_conf_commands_molecule_append_and_pos_args() -> None:
+    """Test molecule_append and tox pos_args are both applied."""
+    result = conf_commands_for_molecule(
+        pos_args=("--shared-state",),
+        molecule_append=["--workers", "2"],
+    )
+    assert result == ["python3 -m molecule test --all --workers 2 --shared-state"]
 
 
 def test_conf_commands_molecule_custom() -> None:
@@ -71,10 +89,14 @@ def test_conf_commands_molecule_custom() -> None:
     assert result == custom
 
 
-def test_conf_commands_molecule_custom_ignores_pos_args() -> None:
-    """Test that custom molecule_commands are used as-is, ignoring pos_args."""
+def test_conf_commands_molecule_custom_ignores_append_and_pos_args() -> None:
+    """Test that molecule_commands fully replaces default/append/pos_args."""
     custom = ["molecule test"]
-    result = conf_commands_for_molecule(pos_args=("--verbose",), molecule_commands=custom)
+    result = conf_commands_for_molecule(
+        pos_args=("--verbose",),
+        molecule_commands=custom,
+        molecule_append=["--workers", "4"],
+    )
     assert result == custom
 
 
@@ -101,8 +123,7 @@ def test_conf_commands_molecule_via_conf_commands(tmp_path: Path) -> None:
         test_type="molecule",
         pos_args=None,
     )
-    assert len(result) == 1
-    assert "pytest --molecule" in result[0]
+    assert result == ["python3 -m molecule test --all"]
 
 
 def test_conf_deps_molecule(tmp_path: Path) -> None:
@@ -283,6 +304,10 @@ def test_add_ansible_matrix_molecule_auto_found(
 
     env_list = add_ansible_matrix(state)
     assert any("molecule" in name for name in env_list.envs)
+    molecule_envs = [name for name in env_list.envs if name.startswith("molecule-")]
+    assert len(molecule_envs) > 1
+    assert "molecule-py3.12-2.19" in molecule_envs
+    assert "molecule-py3.14-2.20" in molecule_envs
 
 
 def test_add_ansible_matrix_molecule_auto_not_found(
@@ -412,3 +437,77 @@ def test_add_ansible_matrix_molecule_pyproject_false(
 
     env_list = add_ansible_matrix(state)
     assert not any("molecule" in name for name in env_list.envs)
+
+
+def test_discover_integration_tests_targets(tmp_path: Path) -> None:
+    """Test integration discovery via ansible-test targets.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    target = tmp_path / "tests" / "integration" / "targets" / "ping"
+    target.mkdir(parents=True)
+    (target / "tasks").mkdir()
+    assert discover_integration_tests(tmp_path) is True
+
+
+def test_discover_integration_tests_pytest(tmp_path: Path) -> None:
+    """Test integration discovery via pytest modules.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    integration = tmp_path / "tests" / "integration"
+    integration.mkdir(parents=True)
+    (integration / "test_smoke.py").write_text("def test_smoke():\n    assert True\n")
+    assert discover_integration_tests(tmp_path) is True
+
+
+def test_discover_integration_tests_missing(tmp_path: Path) -> None:
+    """Test integration discovery when no content exists.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    assert discover_integration_tests(tmp_path) is False
+
+
+def test_add_ansible_matrix_strips_integration_without_tests(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test integration envs are omitted when no integration content exists.
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(buffer=output, encoding="utf-8", line_buffering=True)
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    env_list = add_ansible_matrix(state)
+    assert not any(name.startswith("integration-") for name in env_list.envs)
+    assert any(name.startswith("unit-") for name in env_list.envs)

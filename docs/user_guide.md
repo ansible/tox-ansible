@@ -235,13 +235,29 @@ skip =
 
 ## Testing molecule scenarios
 
-Molecule is a first-class test type in `tox-ansible`. When molecule scenarios are detected in your collection, a `molecule-*` environment is automatically added to the test matrix.
+Molecule is a first-class test type in `tox-ansible`. When molecule scenarios
+are detected in your collection, `molecule-*` environments are added across the
+same Python × ansible-core matrix as the other test types.
 
 ### How it works
 
-`tox-ansible` looks for molecule scenarios under `extensions/molecule/` in your collection root. Each subdirectory containing a `molecule.yml` file is treated as a scenario. When at least one scenario is found, a `molecule-py3.14-2.20` environment is added to the matrix (using the latest stable Python and ansible-core versions).
+`tox-ansible` looks for molecule scenarios under `extensions/molecule/` in your
+collection root. Each subdirectory containing a `molecule.yml` file is treated
+as a scenario. When at least one scenario is found (or `molecule = "true"`),
+molecule environments are included for every supported Python/ansible-core
+pair.
 
-The `molecule` package is automatically installed as a dependency. Additional molecule plugins (e.g., `molecule-plugins[docker]`) can be added via your collection's `requirements.txt` or `test-requirements.txt`.
+The default command is `python3 -m molecule test --all`. Use
+`molecule_append` for extra CLI flags (for example `--workers 4`), or
+`molecule_commands` to fully replace the command list.
+
+If the collection has no ansible-test `tests/integration/targets/` and no
+pytest integration modules, `integration-*` environments are omitted
+automatically — useful after migrating targets into Molecule scenarios.
+
+The `molecule` package is automatically installed as a dependency. Additional
+molecule plugins (e.g., `molecule-plugins[docker]`) can be added via your
+collection's `requirements.txt` or `test-requirements.txt`.
 
 ### Collection directory structure
 
@@ -291,13 +307,13 @@ By default, molecule environments are auto-discovered (`molecule = "auto"`). You
 molecule = "auto"  # "auto", "true", or "false"
 ```
 
-To provide custom commands instead of the default `pytest --molecule` invocation:
+To provide custom commands instead of the default `molecule test --all`
+invocation, either append flags or fully replace:
 
 ```toml
 [tool.tox-ansible]
-molecule_commands = [
-    "molecule test -s default",
-]
+molecule_append = ["--workers", "4"]
+# molecule_commands = ["molecule test -s default"]
 ```
 
 See the [Configuration](configuration.md) page for full details.

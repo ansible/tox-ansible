@@ -35,14 +35,36 @@ molecule = "auto"  # "auto" (default), "true", or "false"
 - **`true`**: always include molecule environments, even if no scenarios are discovered.
 - **`false`**: never include molecule environments.
 
-Custom molecule commands can be specified with `molecule_commands`. When empty (the default), `tox-ansible` runs `python3 -m pytest --molecule ./tests/integration`:
+When included, molecule uses the **same Python × ansible-core matrix** as
+integration, unit, and sanity.
+
+The default command is `python3 -m molecule test --all`. Add CLI flags with
+`molecule_append`, or fully replace the command list with
+`molecule_commands` (which ignores the default and `molecule_append`):
 
 ```toml
 [tool.tox-ansible]
-molecule_commands = [
-    "molecule test -s default",
-]
+# Append to the default: python3 -m molecule test --all --workers 4
+molecule_append = ["--workers", "4"]
+
+# Or fully replace:
+# molecule_commands = ["molecule test -s default"]
 ```
+
+`shared_state`, `prerun`, inventory, and other scenario behavior belong in
+`extensions/molecule/config.yml` (Molecule's config), not in tox-ansible.
+
+### Integration autodetection
+
+`integration-*` environments are included only when the collection has
+integration content:
+
+- a non-empty `tests/integration/targets/` directory (ansible-test style), or
+- pytest modules under `tests/integration/` (`test_*.py` / `*_test.py`)
+
+Collections that migrate fully to Molecule scenarios (and remove ansible-test
+targets) automatically drop the integration matrix without extra `skip`
+entries.
 
 When using `pyproject.toml`, tox also needs a `[tool.tox]` section (even if empty) so it can discover the file as its configuration source:
 
@@ -54,6 +76,7 @@ requires = ["tox>=4.2"]
 [tool.tox-ansible]
 skip = ["devel"]
 molecule = "auto"
+molecule_append = ["--workers", "4"]
 ```
 
 With this in place, no `--conf` flag is needed:
@@ -74,6 +97,9 @@ downstream = true
 skip =
     devel
 molecule = auto
+molecule_append =
+    --workers
+    4
 molecule_commands =
 ```
 
