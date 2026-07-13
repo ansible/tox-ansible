@@ -99,7 +99,13 @@ To review the specific commands and configuration for each of the integration, s
 tox config --ansible
 ```
 
-Generate specific GitHub action matrix as per scope mentioned with `--matrix-scope`:
+Limit test execution to a specific scope with `--matrix-scope`:
+
+```bash
+tox --ansible --matrix-scope unit
+```
+
+The same option limits GitHub Actions matrix output when used with `--gh-matrix`:
 
 ```bash
 tox --ansible --gh-matrix --matrix-scope unit
