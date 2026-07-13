@@ -26,18 +26,18 @@ def test_pyproject_downstream(
     """
     try:
         proc = subprocess.run(
-            f"{tox_bin} list --ansible --root {module_fixture_dir}",
+            [str(tox_bin), "list", "--ansible", "--root", str(module_fixture_dir)],
             capture_output=True,
             cwd=str(module_fixture_dir),
             text=True,
             check=True,
-            shell=True,
+            shell=False,
             env=os.environ,
         )
     except subprocess.CalledProcessError as exc:
         print(exc.stdout)
         print(exc.stderr)
-        pytest.fail(exc.stderr)
+        pytest.fail(f"stdout:\n{exc.stdout}\n\nstderr:\n{exc.stderr}")
 
     env_names = proc.stdout.strip().splitlines()
     assert any("2.16" in name for name in env_names)
