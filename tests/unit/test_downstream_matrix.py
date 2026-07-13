@@ -227,3 +227,28 @@ def test_add_ansible_matrix_downstream_with_skip(
         assert "2.16" not in env_name
         assert "devel" not in env_name
     assert any("2.18" in name for name in env_list.envs)
+
+
+def test_add_ansible_matrix_downstream_dedupes_overlap(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test extras already present in ENV_LIST are not appended twice.
+
+    Args:
+        tmp_path: Pytest fixture for temporary directory.
+        monkeypatch: Pytest fixture for patching.
+    """
+    # Force an overlap so the `if env_name not in seen` false branch is hit.
+    monkeypatch.setattr(
+        "tox_ansible.plugin.DOWNSTREAM_EXTRA",
+        "{integration, sanity, unit}-py3.12-2.19\n{integration, sanity, unit}-py3.11-2.16\n",
+    )
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\ndownstream = true\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+
+    env_list = add_ansible_matrix(_make_state(ini_file))
+    assert env_list.envs.count("unit-py3.12-2.19") == 1
+    assert "unit-py3.11-2.16" in env_list.envs
