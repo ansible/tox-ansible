@@ -188,7 +188,7 @@ def tox_add_option(parser: ToxParser) -> None:
         "--matrix-scope",
         default="all",
         choices=["all", "galaxy", "sanity", "integration", "unit"],
-        help="Emit a github matrix specific to scope mentioned",
+        help="Limit Ansible environments and GitHub matrix output to the selected scope",
     )
 
     parser.add_argument(
@@ -245,7 +245,7 @@ def tox_add_core_config(
     if not state.conf.options.ansible:  # pragma: no cover
         return
 
-    env_list = add_ansible_matrix(state)
+    env_list = add_ansible_matrix(state, scope=state.conf.options.matrix_scope)
 
     if not state.conf.options.gh_matrix:  # pragma: no cover
         return
@@ -424,11 +424,25 @@ def _coverage_enabled(state: State) -> bool:
     return _load_ansible_config(state).coverage
 
 
-def add_ansible_matrix(state: State) -> EnvList:
+def _env_in_scope(env_name: str, scope: str) -> bool:
+    """Return whether an environment belongs to the requested scope.
+
+    Args:
+        env_name: The tox environment name.
+        scope: The requested matrix scope.
+
+    Returns:
+        Whether the environment belongs to the scope.
+    """
+    return scope in ("all", env_name) or env_name.startswith(f"{scope}-")
+
+
+def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
     """Add the ansible matrix to the state.
 
     Args:
         state: The state object.
+        scope: The matrix scope to add.
 
     Returns:
         The environment list.
@@ -448,7 +462,11 @@ def add_ansible_matrix(state: State) -> EnvList:
     skip_list = _load_ansible_config(state).skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
-    env_list.envs = [env for env in env_list.envs if all(skip not in env for skip in skip_list)]
+    env_list.envs = [
+        env
+        for env in env_list.envs
+        if _env_in_scope(env, scope) and all(skip not in env for skip in skip_list)
+    ]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
         0,
@@ -521,7 +539,7 @@ def generate_gh_matrix(env_list: EnvList, section: str) -> None:
     """
     results = []
     for env_name in env_list.envs:
-        if section != "all" and not env_name.startswith(section):  # pragma: no cover
+        if not _env_in_scope(env_name, section):  # pragma: no cover
             continue
         factors = env_name.split("-")
         candidates = _extract_py_candidates(env_name)
