@@ -120,6 +120,33 @@ def test_load_ansible_config_downstream_int_bools(tmp_path: Path) -> None:
     assert _load_ansible_config(_make_state(false_dir / "pyproject.toml")).downstream is False
 
 
+def test_load_ansible_config_downstream_invalid_bool(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid TOML downstream values fall back to false with a warning.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest log capture fixture.
+    """
+    bad_str = tmp_path / "bad-str"
+    bad_str.mkdir()
+    (bad_str / "pyproject.toml").write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n[tool.tox-ansible]\ndownstream = "maybe"\n',
+    )
+    bad_list = tmp_path / "bad-list"
+    bad_list.mkdir()
+    (bad_list / "pyproject.toml").write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n[tool.tox-ansible]\ndownstream = [true]\n',
+    )
+
+    with caplog.at_level("WARNING"):
+        assert _load_ansible_config(_make_state(bad_str / "pyproject.toml")).downstream is False
+        assert _load_ansible_config(_make_state(bad_list / "pyproject.toml")).downstream is False
+    assert "Invalid boolean config value" in caplog.text
+
+
 def test_add_ansible_matrix_default_excludes_extras(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
