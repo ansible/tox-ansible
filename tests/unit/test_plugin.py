@@ -26,8 +26,12 @@ from tox.session.state import State
 from tox_ansible.plugin import (
     PYTHON_DEPENDENCY_FILES,
     Collection,
+    _collection_install_path,
+    _coverage_enabled,
     _env_in_scope,
+    _load_ansible_config,
     _load_pyproject_config,
+    _write_coverage_config,
     add_ansible_matrix,
     conf_commands,
     conf_commands_pre,
@@ -630,6 +634,37 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
     assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/unit"
 
 
+def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
+    """Test coverage arguments are added to unit test commands.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.14-2.19")
+    coverage_config = tmp_path / "coverage.ini"
+
+    result = conf_commands(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        pos_args=("--cov-report=xml", "-v"),
+        coverage_config=coverage_config,
+    )
+
+    assert result == [
+        f"python3 -m pytest --cov --cov-config={coverage_config} "
+        "--ansible-unit-inject-only --cov-report=xml -v ./tests/unit",
+    ]
+
+
 def test_conf_commands_sanity(tmp_path: Path) -> None:
     """Test the conf_commands function.
 
@@ -692,6 +727,33 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
     assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/integration"
 
 
+def test_conf_commands_integration_ignores_coverage(tmp_path: Path) -> None:
+    """Test coverage configuration does not change integration commands.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("integration-py3.14-2.19")
+
+    result = conf_commands(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="integration",
+        pos_args=None,
+        coverage_config=tmp_path / "coverage.ini",
+    )
+
+    assert result == ["python3 -m pytest --ansible-unit-inject-only ./tests/integration"]
+
+
 def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
     """Test the conf_commands function.
 
@@ -710,10 +772,11 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
         extra_envs=[],
     ).get_env("invalid-py3.14-2.19")
 
+    collection = Collection(name="test", namespace="test", version="1.0.0")
     with pytest.raises(SystemExit, match="1"):
         conf_commands(
             env_conf=conf,
-            collection=Collection(name="test", namespace="test", version="1.0.0"),
+            collection=collection,
             test_type="invalid",
             pos_args=None,
         )
@@ -795,6 +858,20 @@ def test_conf_deps_sanity() -> None:
     result = conf_deps(test_type="sanity")
     assert "ansible-dev-environment>=26.2.0" in result
     assert "pytest" not in result
+
+
+def test_conf_deps_coverage() -> None:
+    """Test pytest-cov is installed only for opted-in unit tests."""
+    enabled_unit_deps = conf_deps(test_type="unit", coverage_enabled=True)
+    disabled_unit_deps = conf_deps(test_type="unit")
+    integration_deps = conf_deps(test_type="integration", coverage_enabled=True)
+
+    assert "coverage>=7.0.0" in enabled_unit_deps
+    assert "pytest-cov>=4.1.0" in enabled_unit_deps
+    assert "coverage>=7.0.0" not in disabled_unit_deps
+    assert "pytest-cov" not in disabled_unit_deps
+    assert "coverage>=7.0.0" not in integration_deps
+    assert "pytest-cov" not in integration_deps
 
 
 def test_conf_setenv_collections_path(tmp_path: Path) -> None:
@@ -1116,14 +1193,16 @@ def test_add_ansible_matrix_pyproject(
 def test_add_ansible_matrix_ini_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test add_ansible_matrix falls back to [ansible] section when no pyproject.toml.
+    """Test add_ansible_matrix falls back to [ansible] and warns for tox.ini.
 
     Args:
         tmp_path: Pytest fixture for temporary directory.
         monkeypatch: Pytest fixture for patching.
+        caplog: Pytest fixture for log capture.
     """
-    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file = tmp_path / "tox.ini"
     ini_file.write_text("[ansible]\nskip =\n    devel\n")
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
     monkeypatch.chdir(tmp_path)
@@ -1155,6 +1234,8 @@ def test_add_ansible_matrix_ini_fallback(
     )
 
     env_list = add_ansible_matrix(state)
+    expected = "Using a default tox.ini file with tox-ansible plugin is not recommended"
+    assert expected in caplog.text
     for env_name in env_list.envs:
         assert "devel" not in env_name
     assert any("unit" in name for name in env_list.envs)
@@ -1228,3 +1309,208 @@ def test_load_pyproject_config_empty_section(tmp_path: Path) -> None:
     result = _load_pyproject_config(tmp_path)
     assert result is not None
     assert result.get("skip", []) == []
+
+
+def _make_state(
+    config_file: Path,
+    *,
+    coverage: bool | None = None,
+) -> State:
+    """Create a tox state for configuration resolution tests.
+
+    Args:
+        config_file: The tox configuration file.
+        coverage: An explicit CLI coverage value.
+
+    Returns:
+        The configured tox state.
+    """
+    source = discover_source(config_file, None)
+    parsed = Parsed(
+        work_dir=config_file.parent / ".tox",
+        override=[],
+        config_file=config_file,
+        root_dir=config_file.parent,
+        ansible=True,
+        coverage=coverage,
+    )
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(output, encoding="utf-8", line_buffering=True)
+    return State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+
+def test_load_ansible_config_pyproject(tmp_path: Path) -> None:
+    """Test loading coverage configuration from pyproject.toml.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "pyproject.toml"
+    config_file.write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n'
+        '[tool.tox-ansible]\ncoverage = true\nskip = ["devel"]\n',
+    )
+
+    result = _load_ansible_config(_make_state(config_file))
+
+    assert result.coverage is True
+    assert result.skip == ["devel"]
+
+
+def test_load_ansible_config_ini(tmp_path: Path) -> None:
+    """Test loading coverage configuration from tox-ansible.ini.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "tox-ansible.ini"
+    config_file.write_text("[ansible]\ncoverage = true\nskip =\n    milestone\n")
+
+    result = _load_ansible_config(_make_state(config_file))
+
+    assert result.coverage is True
+    assert result.skip == ["milestone"]
+
+
+@pytest.mark.parametrize(
+    ("cli_coverage", "expected"),
+    ((True, True), (False, False), (None, True)),
+)
+def test_coverage_enabled_cli_precedence(
+    tmp_path: Path,
+    *,
+    cli_coverage: bool | None,
+    expected: bool,
+) -> None:
+    """Test explicit CLI coverage options override project configuration.
+
+    Args:
+        tmp_path: Pytest fixture.
+        cli_coverage: An explicit CLI coverage value.
+        expected: The expected resolved coverage value.
+    """
+    config_file = tmp_path / "tox-ansible.ini"
+    config_file.write_text("[ansible]\ncoverage = true\n")
+
+    result = _coverage_enabled(_make_state(config_file, coverage=cli_coverage))
+
+    assert result is expected
+
+
+def test_collection_install_path(tmp_path: Path) -> None:
+    """Test the ADE collection path uses environment and collection metadata.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "tox.ini"
+    config_file.touch()
+    source = discover_source(config_file, None)
+    env_conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=config_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.21")
+    env_conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path / "custom-env",
+        desc="",
+    )
+
+    result = _collection_install_path(
+        env_conf,
+        Collection(name="widgets", namespace="example", version="1.0.0"),
+    )
+
+    assert result == (
+        tmp_path / "custom-env/lib/python3.13/site-packages/ansible_collections/example/widgets"
+    )
+
+
+def test_write_coverage_config(tmp_path: Path) -> None:
+    """Test generated coverage configuration maps installed and source plugins.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "tox.ini"
+    config_file.touch()
+    source = discover_source(config_file, None)
+    env_conf = Config.make(
+        Parsed(work_dir=tmp_path / ".tox", override=[], config_file=config_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.13-2.21")
+    env_conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path / ".tox/unit-py3.13-2.21",
+        desc="",
+    )
+
+    result = _write_coverage_config(
+        env_conf=env_conf,
+        collection=Collection(name="widgets", namespace="example", version="1.0.0"),
+    )
+
+    assert result == tmp_path / ".tox/.tox-ansible/coverage/unit-py3.13-2.21.ini"
+    content = result.read_text()
+    installed_plugins = (
+        tmp_path
+        / ".tox/unit-py3.13-2.21/lib/python3.13/site-packages"
+        / "ansible_collections/example/widgets/plugins"
+    )
+    expected_installed_path_entries = 2
+    assert "include =" not in content
+    assert "source =\n    plugins\n" in content
+    assert content.count(f"    {installed_plugins}\n") == expected_installed_path_entries
+    assert f"data_file = {tmp_path}/.tox/unit-py3.13-2.21/.coverage" in content
+    assert "include_namespace_packages = true" in content
+    assert "show_missing = true" in content
+    assert not (tmp_path / ".coveragerc").exists()
+
+
+def test_write_coverage_config_isolates_data_by_environment(tmp_path: Path) -> None:
+    """Test each unit environment receives a separate coverage data file.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "tox.ini"
+    config_file.touch()
+    source = discover_source(config_file, None)
+    config = Config.make(
+        Parsed(work_dir=tmp_path / ".tox", override=[], config_file=config_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    )
+    collection = Collection(name="widgets", namespace="example", version="1.0.0")
+    data_files = []
+
+    for env_name in ("unit-py3.13-2.20", "unit-py3.13-2.21"):
+        env_dir = tmp_path / ".tox" / env_name
+        env_conf = config.get_env(env_name)
+        env_conf.add_config(
+            keys=["env_dir", "envdir"],
+            of_type=Path,
+            default=env_dir,
+            desc="",
+        )
+        coverage_config = _write_coverage_config(env_conf=env_conf, collection=collection)
+        data_files.append(f"data_file = {env_dir}/.coverage")
+        assert data_files[-1] in coverage_config.read_text()
+
+    assert data_files[0] != data_files[1]

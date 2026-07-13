@@ -3,6 +3,7 @@ autouse
 calver
 caplog
 capsys
+coveragerc
 delenv
 endgroup
 envdir

@@ -120,23 +120,33 @@ tox --ansible --gh-matrix --matrix-scope unit
 ```toml
 # pyproject.toml
 [tool.tox-ansible]
+coverage = true
 skip = [
     "2.16",
     "devel",
 ]
 ```
 
-This will skip tests in any environment that uses Ansible 2.16 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
+This will generate plugin coverage reports for unit test environments and skip tests in any environment that uses Ansible 2.16 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
 
 Alternatively, if using a `tox-ansible.ini` file, configure the `[ansible]` section:
 
 ```ini
 # tox-ansible.ini
 [ansible]
+coverage = true
 skip =
     2.16
     devel
 ```
+
+Coverage is disabled by default and can also be enabled for a single invocation:
+
+```bash
+tox --ansible --coverage -e unit-py3.13-2.19
+```
+
+tox-ansible installs `pytest-cov` and generates the collection-specific coverage configuration automatically. Reports include eligible Python files below `plugins/` that the unit tests do not import, showing them with 0% coverage. Raw coverage data is stored separately inside each tox unit environment, so parallel environments produce independent reports rather than a combined matrix report. Use `--no-coverage` to override configuration that enables coverage.
 
 See the [configuration guide] for details on overriding environment settings.
 
