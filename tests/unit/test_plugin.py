@@ -752,10 +752,11 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
         extra_envs=[],
     ).get_env("invalid-py3.14-2.19")
 
+    collection = Collection(name="test", namespace="test", version="1.0.0")
     with pytest.raises(SystemExit, match="1"):
         conf_commands(
             env_conf=conf,
-            collection=Collection(name="test", namespace="test", version="1.0.0"),
+            collection=collection,
             test_type="invalid",
             pos_args=None,
         )
