@@ -1172,14 +1172,16 @@ def test_add_ansible_matrix_pyproject(
 def test_add_ansible_matrix_ini_fallback(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test add_ansible_matrix falls back to [ansible] section when no pyproject.toml.
+    """Test add_ansible_matrix falls back to [ansible] and warns for tox.ini.
 
     Args:
         tmp_path: Pytest fixture for temporary directory.
         monkeypatch: Pytest fixture for patching.
+        caplog: Pytest fixture for log capture.
     """
-    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file = tmp_path / "tox.ini"
     ini_file.write_text("[ansible]\nskip =\n    devel\n")
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
     monkeypatch.chdir(tmp_path)
@@ -1211,6 +1213,8 @@ def test_add_ansible_matrix_ini_fallback(
     )
 
     env_list = add_ansible_matrix(state)
+    expected = "Using a default tox.ini file with tox-ansible plugin is not recommended"
+    assert expected in caplog.text
     for env_name in env_list.envs:
         assert "devel" not in env_name
     assert any("unit" in name for name in env_list.envs)

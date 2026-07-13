@@ -245,15 +245,6 @@ def tox_add_core_config(
     if not state.conf.options.ansible:  # pragma: no cover
         return
 
-    if state.conf.src_path.name == "tox.ini":  # pragma: no cover
-        msg = (
-            "Using a default tox.ini file with tox-ansible plugin is not recommended."
-            " Consider adding a [tool.tox-ansible] section to pyproject.toml or using"
-            " a tox-ansible.ini file (`tox --ansible -c tox-ansible.ini`) to avoid"
-            " unintentionally overriding the tox-ansible environment configurations."
-        )
-        logger.warning(msg)
-
     env_list = add_ansible_matrix(state)
 
     if not state.conf.options.gh_matrix:  # pragma: no cover
@@ -442,6 +433,18 @@ def add_ansible_matrix(state: State) -> EnvList:
     Returns:
         The environment list.
     """
+    project_dir = state.conf.src_path.parent.resolve()
+    pyproject_config = _load_pyproject_config(project_dir)
+
+    if state.conf.src_path.name == "tox.ini" and pyproject_config is None:
+        msg = (
+            "Using a default tox.ini file with tox-ansible plugin is not recommended."
+            " Consider adding a [tool.tox-ansible] section to pyproject.toml or using"
+            " a tox-ansible.ini file (`tox --ansible -c tox-ansible.ini`) to avoid"
+            " unintentionally overriding the tox-ansible environment configurations."
+        )
+        logger.warning(msg)
+
     skip_list = _load_ansible_config(state).skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
