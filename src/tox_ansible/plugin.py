@@ -55,6 +55,15 @@ galaxy
 # release branch, is not supported.
 # https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
 
+# Additive AAP/cert cores not already present in ENV_LIST (ADR-001).
+# Used when downstream=true -> upstream union DOWNSTREAM_EXTRA.
+# https://access.redhat.com/support/policy/updates/ansible-automation-platform
+DOWNSTREAM_EXTRA = """
+{integration, sanity, unit}-py3.11-{2.16, 2.18}
+{integration, sanity, unit}-py3.12-{2.16, 2.18}
+{integration, sanity, unit}-py3.13-{2.18}
+"""
+
 # Without the minimal pytest-ansible condition, installation may fail in some
 # cases (pip, uv).
 OUR_DEPS = [
@@ -111,6 +120,12 @@ class AnsibleConfigSet(ConfigSet):
             default=[],
             desc="ansible configuration",
         )
+        self.add_config(
+            "downstream",
+            of_type=bool,
+            default=False,
+            desc="union AAP/cert extras onto the upstream matrix (ADR-001)",
+        )
 
 
 @dataclass
@@ -120,10 +135,12 @@ class AnsibleConfiguration:
     Attributes:
         coverage: Enable coverage reporting for unit tests.
         skip: Environment name fragments to skip.
+        downstream: When true, union DOWNSTREAM_EXTRA onto ENV_LIST.
     """
 
     coverage: bool = False
     skip: list[str] = field(default_factory=list)
+    downstream: bool = False
 
 
 @dataclass
@@ -393,6 +410,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         return AnsibleConfiguration(
             coverage=pyproject_config.get("coverage", False),
             skip=pyproject_config.get("skip", []),
+            downstream=pyproject_config.get("downstream", False),
         )
 
     ansible_config = state.conf.get_section_config(
@@ -404,6 +422,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
     return AnsibleConfiguration(
         coverage=ansible_config["coverage"],
         skip=ansible_config["skip"],
+        downstream=ansible_config["downstream"],
     )
 
 
@@ -445,9 +464,18 @@ def add_ansible_matrix(state: State) -> EnvList:
         )
         logger.warning(msg)
 
-    skip_list = _load_ansible_config(state).skip
+    ansible_config = _load_ansible_config(state)
+    skip_list = ansible_config.skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
+    if ansible_config.downstream:
+        extra = StrConvert().to_env_list(DOWNSTREAM_EXTRA)
+        # Preserve order: upstream first, then extras not already present.
+        seen = set(env_list.envs)
+        for env_name in extra.envs:
+            if env_name not in seen:
+                env_list.envs.append(env_name)
+                seen.add(env_name)
     env_list.envs = [env for env in env_list.envs if all(skip not in env for skip in skip_list)]
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
