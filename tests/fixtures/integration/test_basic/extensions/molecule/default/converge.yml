@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Run sample task
+      ansible.builtin.debug:
+        msg: "Converge complete"

@@ -1,0 +1,6 @@
+---
+driver:
+  name: delegated
+platforms:
+  - name: instance
+    managed: false

@@ -235,71 +235,69 @@ skip =
 
 ## Testing molecule scenarios
 
-Although the `tox-ansible` plugin does not have functionality specific to molecule, it can be a powerful tool to run `molecule` scenarios across a matrix of Ansible and Python versions.
+Molecule is a first-class test type in `tox-ansible`. When molecule scenarios are detected in your collection, a `molecule-*` environment is automatically added to the test matrix.
 
-This can be accomplished by presenting molecule scenarios as integration tests available through `pytest` using the [pytest-ansible](https://github.com/ansible-community/pytest-ansible) plugin, which is installed when `tox-ansible` is installed.
+### How it works
 
-Assuming the following collection directory structure:
+`tox-ansible` looks for molecule scenarios under `extensions/molecule/` in your collection root. Each subdirectory containing a `molecule.yml` file is treated as a scenario. When at least one scenario is found, a `molecule-py3.14-2.20` environment is added to the matrix (using the latest stable Python and ansible-core versions).
+
+The `molecule` package is automatically installed as a dependency. Additional molecule plugins (e.g., `molecule-plugins[docker]`) can be added via your collection's `requirements.txt` or `test-requirements.txt`.
+
+### Collection directory structure
 
 ```bash
 namespace.name
 ├── extensions
-│   ├── molecule
-│   │   ├── playbook
-│   │   │   ├── create.yml
-│   │   │   ├── converge.yml
-│   │   │   ├── molecule.yml
-│   │   │   └── verify.yml
-│   │   ├── plugins
-│   │   │   ├── create.yml
-│   │   │   ├── converge.yml
-│   │   │   ├── molecule.yml
-│   │   │   └── verify.yml
-│   │   ├── targets
-│   │   │   ├── create.yml
-│   │   │   ├── converge.yml
-│   │   │   ├── molecule.yml
-│   │   │   └── verify.yml
-├── playbooks
-│   └── site.yaml
+│   └── molecule
+│       ├── default
+│       │   ├── converge.yml
+│       │   ├── molecule.yml
+│       │   └── verify.yml
+│       └── another_scenario
+│           ├── converge.yml
+│           ├── molecule.yml
+│           └── verify.yml
 ├── plugins
-│   ├── action
-│   │   └── action_plugin.py
-│   ├── modules
-│   │   └── module.py
+│   └── modules
+│       └── my_module.py
 ├── tests
-│   ├── integration
-│   │   │── targets
-│   │   │   ├── success
-│   │   │   │   └── tasks
-│   │   │   │       └── main.yaml
-│   │   └── test_integration.py
+│   └── integration
+│       └── ...
 ├── pyproject.toml
 └── galaxy.yml
 ```
 
-Individual `molecule` scenarios can be added to the collection's extension directory to test playbooks, roles, and integration targets.
+### Running molecule tests
 
-In order to present each `molecule` scenario as an individual `pytest` test a new `helper` file is added.
+To run molecule tests:
 
-```python
-# tests/integration/test_integration.py
-
-"""Tests for molecule scenarios."""
-from __future__ import absolute_import, division, print_function
-
-from pytest_ansible.molecule import MoleculeScenario
-
-
-def test_integration(molecule_scenario: MoleculeScenario) -> None:
-    """Run molecule for each scenario.
-
-    :param molecule_scenario: The molecule scenario object
-    """
-    proc = molecule_scenario.test()
-    assert proc.returncode == 0
+```bash
+tox -f molecule --ansible
 ```
 
-The `molecule_scenario` fixture parametrizes the `molecule` scenarios found within the collection and creates an individual `pytest` test for each which will be run during any `integration-*` environment.
+To filter the GitHub Actions matrix to only molecule:
 
-This approach provides the flexibility of running the `molecule` scenarios directly with `molecule`, `pytest` or `tox`. Additionally, presented as native `pytest` tests, the `molecule` scenarios should show in the `pytest` test tree in the user's IDE.
+```bash
+tox --ansible --gh-matrix --matrix-scope molecule
+```
+
+### Configuration
+
+By default, molecule environments are auto-discovered (`molecule = "auto"`). You can override this in your configuration:
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+molecule = "auto"  # "auto", "true", or "false"
+```
+
+To provide custom commands instead of the default `pytest --molecule` invocation:
+
+```toml
+[tool.tox-ansible]
+molecule_commands = [
+    "molecule test -s default",
+]
+```
+
+See the [Configuration](configuration.md) page for full details.
