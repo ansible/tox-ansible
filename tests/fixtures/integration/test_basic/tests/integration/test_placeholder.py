@@ -3,4 +3,4 @@
 
 def test_placeholder() -> None:
     """Minimal pytest integration module."""
-    assert True
+    pass
