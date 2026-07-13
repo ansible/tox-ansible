@@ -140,7 +140,7 @@ turning tox-ansible into a free-form matrix editor.
 
 - Constants and config loading live in `src/tox_ansible/plugin.py`.
 - `add_ansible_matrix` parses both lists when `downstream` is true, unions env
-  names, sorts with `custom_sort`, then applies `skip`.
+  names, applies `skip`, then sorts with `custom_sort`.
 - Document the flag in `docs/configuration.md` and `docs/user_guide.md`.
 - Refresh versions with `/update-matrix` (do not invent cores from memory).
 - Policy changes to “extends vs replaces” require a new or amended ADR.
@@ -154,7 +154,7 @@ turning tox-ansible into a free-form matrix editor.
 - https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
 - https://access.redhat.com/support/policy/updates/ansible-automation-platform
 - https://github.com/ansible/tox-ansible/pull/562
-- Slack: https://redhat-internal.slack.com/archives/C01NQV614EA/p1783938151492289
+- Internal DevTools discussion on partner cert requirements vs community EOL
 - Skill: `.agents/skills/update-matrix/SKILL.md`
 
 ---

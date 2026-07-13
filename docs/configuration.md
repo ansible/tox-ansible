@@ -69,6 +69,10 @@ upstream cores for forward-looking content testing.
 `downstream = true` means **upstream ∪ extras**, not an AAP-only matrix. Use
 `skip` to drop unwanted factors (for example `devel`, `milestone`, or `2.21`).
 
+If `pyproject.toml` contains any `[tool.tox-ansible]` section, it takes
+precedence over `[ansible]` in `tox-ansible.ini` for the whole section — put
+`downstream` in the TOML file when both configs exist.
+
 ## Unit test coverage
 
 Coverage reporting is disabled by default. Enable it persistently with `coverage = true` in either configuration format, or for a single invocation with `--coverage`:

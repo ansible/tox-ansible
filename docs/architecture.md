@@ -40,6 +40,7 @@ When `tox-ansible` sets up a test environment (e.g. `unit-py3.13-2.19`), it runs
 - **Environment configuration**: Sets up each tox env with the right dependencies, environment variables, and commands
 - **Test commands**: Configures `pytest` for unit/integration tests, `ansible-test sanity` for sanity tests, and `galaxy-importer` for galaxy tests
 - **Skip/filter**: Allows users to skip specific Ansible versions via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini)
+- **Downstream extras**: Optional `downstream = true` unions AAP/cert cores onto the upstream matrix (ADR-001); still not an AAP-only list
 - **Pre-test setup**: Delegates to ade with a single `ade install` call
 
 ### ansible-dev-environment (ade)

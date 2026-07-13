@@ -394,6 +394,32 @@ def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
     return data.get("tool", {}).get("tox-ansible")
 
 
+def _coerce_bool(value: object, *, default: bool = False) -> bool:
+    """Coerce a config value to bool with explicit string handling.
+
+    Args:
+        value: Raw value from TOML or similar.
+        default: Fallback when the value cannot be interpreted.
+
+    Returns:
+        The coerced boolean.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off", ""}:
+            return False
+        logger.warning("Invalid boolean config value %r; using %s", value, default)
+        return default
+    if value is None:
+        return default
+    logger.warning("Invalid boolean config value %r; using %s", value, default)
+    return default
+
+
 def _load_ansible_config(state: State) -> AnsibleConfiguration:
     """Load tox-ansible configuration using TOML-over-INI precedence.
 
@@ -408,9 +434,9 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
 
     if pyproject_config is not None:
         return AnsibleConfiguration(
-            coverage=pyproject_config.get("coverage", False),
+            coverage=_coerce_bool(pyproject_config.get("coverage", False)),
             skip=pyproject_config.get("skip", []),
-            downstream=pyproject_config.get("downstream", False),
+            downstream=_coerce_bool(pyproject_config.get("downstream", False)),
         )
 
     ansible_config = state.conf.get_section_config(
@@ -445,6 +471,9 @@ def _coverage_enabled(state: State) -> bool:
 
 def add_ansible_matrix(state: State) -> EnvList:
     """Add the ansible matrix to the state.
+
+    When ``downstream`` is enabled in project config, unions ``DOWNSTREAM_EXTRA``
+    onto the upstream ``ENV_LIST`` before applying ``skip``.
 
     Args:
         state: The state object.

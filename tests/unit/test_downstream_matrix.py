@@ -83,6 +83,43 @@ def test_load_ansible_config_downstream_ini(tmp_path: Path) -> None:
     assert result.downstream is True
 
 
+def test_load_ansible_config_downstream_string_false(tmp_path: Path) -> None:
+    """Test quoted TOML 'false' does not enable downstream.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    config_file = tmp_path / "pyproject.toml"
+    config_file.write_text(
+        '[tool.tox]\nrequires = ["tox>=4.2"]\n[tool.tox-ansible]\ndownstream = "false"\n',
+    )
+
+    result = _load_ansible_config(_make_state(config_file))
+
+    assert result.downstream is False
+
+
+def test_add_ansible_matrix_default_excludes_extras(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test default matrix does not include DOWNSTREAM_EXTRA cores.
+
+    Args:
+        tmp_path: Pytest fixture for temporary directory.
+        monkeypatch: Pytest fixture for patching.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+
+    env_list = add_ansible_matrix(_make_state(ini_file))
+    assert not any("2.16" in name for name in env_list.envs)
+    assert not any("2.18" in name for name in env_list.envs)
+    assert any("2.19" in name for name in env_list.envs)
+
+
 def test_add_ansible_matrix_downstream_extends(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
