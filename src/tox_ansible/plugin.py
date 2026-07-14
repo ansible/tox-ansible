@@ -457,6 +457,42 @@ def _coerce_bool(value: object, *, default: bool = False) -> bool:
     return default
 
 
+def _coerce_molecule_setting(value: object, *, default: str = "auto") -> str:
+    """Coerce a pyproject ``molecule`` value to ``auto``, ``true``, or ``false``.
+
+    Args:
+        value: Raw value from TOML (bool, int, str) or INI (str).
+        default: Fallback when the value cannot be interpreted.
+
+    Returns:
+        Normalized molecule mode string.
+    """
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int) and value in {0, 1}:
+        return "true" if value else "false"
+    if value is None:
+        return default
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        modes = {
+            "true": "true",
+            "1": "true",
+            "yes": "true",
+            "on": "true",
+            "false": "false",
+            "0": "false",
+            "no": "false",
+            "off": "false",
+            "auto": "auto",
+            "": "auto",
+        }
+        if normalized in modes:
+            return modes[normalized]
+    logger.warning("Invalid molecule config value %r; using %r", value, default)
+    return default
+
+
 def discover_molecule_scenarios(project_dir: Path) -> bool:
     """Check if molecule scenarios exist in the collection.
 
@@ -525,7 +561,6 @@ def _should_include_molecule(
     return discover_molecule_scenarios(project_dir)
 
 
-
 def _load_ansible_config(state: State) -> AnsibleConfiguration:
     """Load tox-ansible configuration using TOML-over-INI precedence.
 
@@ -543,7 +578,9 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
             coverage=_coerce_bool(pyproject_config.get("coverage", False)),
             skip=pyproject_config.get("skip", []),
             downstream=_coerce_bool(pyproject_config.get("downstream", False)),
-            molecule=pyproject_config.get("molecule", "auto"),
+            molecule=_coerce_molecule_setting(
+                pyproject_config.get("molecule", "auto"),
+            ),
             molecule_append=pyproject_config.get("molecule_append", []),
             molecule_commands=pyproject_config.get("molecule_commands", []),
         )

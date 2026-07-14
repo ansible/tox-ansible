@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pytest  # noqa: TC002
+import pytest
 
 from tox.config.cli.parse import Options
 from tox.config.cli.parser import Parsed
@@ -20,6 +20,7 @@ from tox.session.state import State
 
 from tox_ansible.plugin import (
     Collection,
+    _coerce_molecule_setting,
     _should_include_molecule,
     add_ansible_matrix,
     conf_commands,
@@ -314,6 +315,72 @@ def test_should_include_molecule_auto_without_scenarios(tmp_path: Path) -> None:
         tmp_path: Pytest fixture.
     """
     assert _should_include_molecule("auto", tmp_path) is False
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        (True, "true"),
+        (False, "false"),
+        (1, "true"),
+        (0, "false"),
+        ("true", "true"),
+        ("FALSE", "false"),
+        ("auto", "auto"),
+        (None, "auto"),
+    ),
+)
+def test_coerce_molecule_setting(raw: object, expected: str) -> None:
+    """Test TOML-friendly coercion for molecule config values.
+
+    Args:
+        raw: Raw config value from TOML.
+        expected: Normalized molecule mode string.
+    """
+    assert _coerce_molecule_setting(raw) == expected
+
+
+def test_add_ansible_matrix_molecule_pyproject_bool_true(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test molecule envs included when pyproject uses a TOML boolean true.
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    (tmp_path / "pyproject.toml").write_text(
+        "[tool.tox-ansible]\nmolecule = true\n",
+    )
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(buffer=output, encoding="utf-8", line_buffering=True)
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    env_list = add_ansible_matrix(state)
+    assert any("molecule" in name for name in env_list.envs)
 
 
 def test_add_ansible_matrix_molecule_auto_found(
