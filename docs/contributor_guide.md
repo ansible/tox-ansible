@@ -23,6 +23,10 @@ Prerequisites:
 
 2. Before sending a PR, make sure that `tox -e lint` passes.
 
+3. Architectural decisions (matrix semantics, config surfaces, plugin behavior)
+   need an ADR under `.sdlc/adrs/`. See `AGENTS.md` and use `/adr-new`. To refresh
+   the ansible-core matrices from the official lifecycle pages, use `/update-matrix`.
+
 Feel free to raise issues in the repo if you feel unable to contribute a code
 fix.
 

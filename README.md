@@ -115,19 +115,24 @@ tox --ansible --gh-matrix --matrix-scope unit
 
 ## Configuration
 
-`tox-ansible` is configured via a `[tool.tox-ansible]` section in `pyproject.toml`. The `skip` keyword filters environments by substring match:
+`tox-ansible` is configured via a `[tool.tox-ansible]` section in `pyproject.toml`.
+Set `downstream = true` to union AAP/cert ansible-core extras onto the upstream
+matrix (see ADR-001). The `skip` keyword filters environments by substring match:
 
 ```toml
 # pyproject.toml
 [tool.tox-ansible]
 coverage = true
+downstream = true
 skip = [
-    "2.16",
     "devel",
 ]
 ```
 
-This will generate plugin coverage reports for unit test environments and skip tests in any environment that uses Ansible 2.16 or the devel branch. The list of strings is used for a simple string in string comparison of environment names.
+This will generate plugin coverage reports for unit test environments, include
+AAP-supported cores such as 2.16/2.18 when `downstream` is enabled, and skip
+tests in any environment whose name contains `devel`. The list of strings is
+used for a simple string in string comparison of environment names.
 
 Alternatively, if using a `tox-ansible.ini` file, configure the `[ansible]` section:
 
@@ -135,8 +140,8 @@ Alternatively, if using a `tox-ansible.ini` file, configure the `[ansible]` sect
 # tox-ansible.ini
 [ansible]
 coverage = true
+downstream = true
 skip =
-    2.16
     devel
 ```
 

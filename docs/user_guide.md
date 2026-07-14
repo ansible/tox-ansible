@@ -208,12 +208,19 @@ jobs:
 
 Circumstances may require certain tests to be skipped. `tox-ansible` supports skipping tests via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini).
 
+To include AAP/cert ansible-core versions that extend the upstream community
+matrix (for example 2.16 and 2.18), set `downstream = true`. That unions
+extras onto the upstream list; it does **not** replace newer community cores.
+Combine with `skip` if you need a tighter set. See
+[Configuration](configuration.md#downstream-matrix-aap--cert).
+
 Example for `pyproject.toml`:
 
 ```toml
 # pyproject.toml
 [tool.tox-ansible]
-skip = sanity-py3.13
+downstream = true
+skip = ["sanity-py3.13"]
 ```
 
 Example for `tox-ansible.ini`:
@@ -221,6 +228,7 @@ Example for `tox-ansible.ini`:
 ```ini
 # tox-ansible.ini
 [ansible]
+downstream = true
 skip =
     sanity-py3.13
 ```

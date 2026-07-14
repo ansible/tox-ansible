@@ -1,4 +1,5 @@
 Metafunc
+adrs
 autouse
 calver
 caplog
@@ -12,9 +13,12 @@ envlogdir
 envtmpdir
 fileh
 fixturenames
+lifecycle
 metafunc
 passenv
 redef
 reqs
+sdlc
 toxfile
 toxinidir
+unioned

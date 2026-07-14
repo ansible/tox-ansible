@@ -55,6 +55,15 @@ galaxy
 # release branch, is not supported.
 # https://docs.ansible.com/projects/ansible/latest/reference_appendices/release_and_maintenance.html#ansible-core-support-matrix
 
+# Additive AAP/cert cores not already present in ENV_LIST (ADR-001).
+# Used when downstream=true -> upstream union DOWNSTREAM_EXTRA.
+# Python floor for extras is Hub/partner cert minimum (3.12+), not tox's 3.11 floor.
+# https://access.redhat.com/support/policy/updates/ansible-automation-platform
+DOWNSTREAM_EXTRA = """
+{integration, sanity, unit}-py3.12-{2.16, 2.18}
+{integration, sanity, unit}-py3.13-{2.18}
+"""
+
 # Without the minimal pytest-ansible condition, installation may fail in some
 # cases (pip, uv).
 OUR_DEPS = [
@@ -111,6 +120,12 @@ class AnsibleConfigSet(ConfigSet):
             default=[],
             desc="ansible configuration",
         )
+        self.add_config(
+            "downstream",
+            of_type=bool,
+            default=False,
+            desc="union AAP/cert extras onto the upstream matrix (ADR-001)",
+        )
 
 
 @dataclass
@@ -120,10 +135,12 @@ class AnsibleConfiguration:
     Attributes:
         coverage: Enable coverage reporting for unit tests.
         skip: Environment name fragments to skip.
+        downstream: When true, union DOWNSTREAM_EXTRA onto ENV_LIST.
     """
 
     coverage: bool = False
     skip: list[str] = field(default_factory=list)
+    downstream: bool = False
 
 
 @dataclass
@@ -377,6 +394,32 @@ def _load_pyproject_config(project_dir: Path) -> dict[str, Any] | None:
     return data.get("tool", {}).get("tox-ansible")
 
 
+def _coerce_bool(value: object, *, default: bool = False) -> bool:
+    """Coerce a config value to bool with explicit string and int handling.
+
+    Args:
+        value: Raw value from TOML or similar.
+        default: Fallback when the value cannot be interpreted.
+
+    Returns:
+        The coerced boolean.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int) and value in {0, 1}:
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "off", ""}:
+            return False
+    elif value is None:
+        return default
+    logger.warning("Invalid boolean config value %r; using %s", value, default)
+    return default
+
+
 def _load_ansible_config(state: State) -> AnsibleConfiguration:
     """Load tox-ansible configuration using TOML-over-INI precedence.
 
@@ -391,8 +434,9 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
 
     if pyproject_config is not None:
         return AnsibleConfiguration(
-            coverage=pyproject_config.get("coverage", False),
+            coverage=_coerce_bool(pyproject_config.get("coverage", False)),
             skip=pyproject_config.get("skip", []),
+            downstream=_coerce_bool(pyproject_config.get("downstream", False)),
         )
 
     ansible_config = state.conf.get_section_config(
@@ -404,6 +448,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
     return AnsibleConfiguration(
         coverage=ansible_config["coverage"],
         skip=ansible_config["skip"],
+        downstream=ansible_config["downstream"],
     )
 
 
@@ -440,6 +485,9 @@ def _env_in_scope(env_name: str, scope: str) -> bool:
 def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
     """Add the ansible matrix to the state.
 
+    When ``downstream`` is enabled in project config, unions ``DOWNSTREAM_EXTRA``
+    onto the upstream ``ENV_LIST`` before applying ``skip``.
+
     Args:
         state: The state object.
         scope: The matrix scope to add.
@@ -459,9 +507,19 @@ def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
         )
         logger.warning(msg)
 
-    skip_list = _load_ansible_config(state).skip
+    ansible_config = _load_ansible_config(state)
+    skip_list = ansible_config.skip
 
     env_list = StrConvert().to_env_list(ENV_LIST)
+    if ansible_config.downstream:
+        extra = StrConvert().to_env_list(DOWNSTREAM_EXTRA)
+        # Deduplicate extras against the upstream env list (final order is
+        # set by custom_sort below).
+        seen = set(env_list.envs)
+        for env_name in extra.envs:
+            if env_name not in seen:
+                env_list.envs.append(env_name)
+                seen.add(env_name)
     env_list.envs = [
         env
         for env in env_list.envs

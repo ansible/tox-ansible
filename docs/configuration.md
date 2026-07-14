@@ -10,13 +10,16 @@ Add a `[tool.tox-ansible]` section to your collection's `pyproject.toml`:
 # pyproject.toml
 [tool.tox-ansible]
 coverage = true
+downstream = true
 skip = [
-    "2.16",
     "devel",
 ]
 ```
 
-This enables coverage reporting for unit test environments and skips tests in any environment whose name contains `2.16` or `devel`. The list of strings is used for a simple substring comparison against environment names.
+This enables coverage reporting for unit test environments, unions AAP/cert
+ansible-core extras onto the upstream matrix (`downstream = true`; see ADR-001),
+and skips tests in any environment whose name contains `devel`. The `skip` list
+is a simple substring comparison against environment names.
 
 When using `pyproject.toml`, tox also needs a `[tool.tox]` section (even if empty) so it can discover the file as its configuration source:
 
@@ -43,8 +46,8 @@ Alternatively, `tox-ansible` reads the `[ansible]` section from whatever tox con
 # tox-ansible.ini
 [ansible]
 coverage = true
+downstream = true
 skip =
-    2.16
     devel
 ```
 
@@ -55,6 +58,20 @@ tox --ansible --conf tox-ansible.ini
 Using a separate `tox-ansible.ini` file avoids conflicts with an existing `tox.ini` that may already define `[testenv]` sections for other purposes.
 
 If both `pyproject.toml` and `tox-ansible.ini` contain configuration, `pyproject.toml` takes precedence.
+
+## Downstream matrix (AAP / cert)
+
+By default the environment list follows the community ansible-core support
+matrix. Set `downstream = true` to **extend** that list with AAP-supported
+cores that community has EOL'd (for example 2.16 and 2.18), while keeping newer
+upstream cores for forward-looking content testing.
+
+`downstream = true` means **upstream ∪ extras**, not an AAP-only matrix. Use
+`skip` to drop unwanted factors (for example `devel`, `milestone`, or `2.21`).
+
+If `pyproject.toml` contains any `[tool.tox-ansible]` section, it takes
+precedence over `[ansible]` in `tox-ansible.ini` for the whole section — put
+`downstream` in the TOML file when both configs exist.
 
 ## Unit test coverage
 
