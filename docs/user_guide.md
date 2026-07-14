@@ -251,6 +251,10 @@ The default command is `python3 -m molecule test --all`. Use
 `molecule_append` for extra CLI flags (for example `--workers 4`), or
 `molecule_commands` to fully replace the command list.
 
+Before running Molecule, tox-ansible installs collection requirements with ADE
+from `tests/requirements.yml`, `tests/integration/requirements.yml`, and
+(optionally) `tests/molecule/requirements.yml` when those files exist.
+
 If the collection has no ansible-test `tests/integration/targets/` and no
 pytest integration modules, `integration-*` environments are omitted
 automatically — useful after migrating targets into Molecule scenarios.

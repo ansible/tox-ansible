@@ -88,6 +88,13 @@ TEST_REQUIREMENTS_YML: dict[str, list[str]] = {
         "tests/requirements.yml",
         "tests/integration/requirements.yml",
     ],
+    # Molecule shares integration collection deps during migration; also
+    # accepts a dedicated molecule requirements file when collections split.
+    "molecule": [
+        "tests/requirements.yml",
+        "tests/integration/requirements.yml",
+        "tests/molecule/requirements.yml",
+    ],
 }
 
 PYTHON_DEPENDENCY_FILES: list[str] = [

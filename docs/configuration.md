@@ -53,6 +53,14 @@ molecule_append = ["--workers", "4"]
 
 `shared_state`, `prerun`, inventory, and other scenario behavior belong in
 `extensions/molecule/config.yml` (Molecule's config), not in tox-ansible.
+ansible-creator scaffolds that file; leave `prerun` under collection control.
+
+Molecule `commands_pre` installs collection requirements (via ADE) from, when
+present:
+
+- `tests/requirements.yml`
+- `tests/integration/requirements.yml` (shared with integration during migration)
+- `tests/molecule/requirements.yml` (optional molecule-only deps)
 
 ### Integration autodetection
 

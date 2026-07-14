@@ -177,6 +177,59 @@ def test_commands_pre_molecule(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
     assert "--acv stable-2.20 --no-seed" in result[0]
 
 
+def test_commands_pre_molecule_with_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test molecule pre-commands install shared and molecule requirements.yml.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+    (tmp_path / "tests" / "integration").mkdir()
+    (tmp_path / "tests" / "integration" / "requirements.yml").write_text("collections: []")
+    (tmp_path / "tests" / "molecule").mkdir()
+    (tmp_path / "tests" / "molecule" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("molecule-py3.14-2.20")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="molecule",
+        ansible_version="2.20",
+    )
+    expected_commands = 8
+    assert len(result) == expected_commands, result
+    assert result[3] == "echo ::group::Install collection requirements with ade"
+    assert "ade install -r tests/requirements.yml" in result[4]
+    assert "ade install -r tests/integration/requirements.yml" in result[5]
+    assert "ade install -r tests/molecule/requirements.yml" in result[6]
+    assert result[7] == "echo ::endgroup::"
+
+
 def test_discover_molecule_scenarios_found(tmp_path: Path) -> None:
     """Test molecule discovery when scenarios exist.
 
