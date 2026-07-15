@@ -33,6 +33,7 @@ def test_ansible_environments(module_fixture_dir: Path, tox_bin: Path) -> None:
         print(exc.stderr)
         pytest.fail(exc.stderr)
     assert "integration" in proc.stdout
+    assert "molecule" in proc.stdout
     assert "sanity" in proc.stdout
     assert "unit" in proc.stdout
 

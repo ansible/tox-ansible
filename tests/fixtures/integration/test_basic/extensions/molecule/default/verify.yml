@@ -1,0 +1,8 @@
+---
+- name: Verify
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Verify success
+      ansible.builtin.assert:
+        that: true

@@ -38,7 +38,9 @@ When `tox-ansible` sets up a test environment (e.g. `unit-py3.13-2.19`), it runs
 - **Test matrix**: Generates the Python version x Ansible version matrix (`py3.13-2.19`, `py3.12-devel`, etc.)
 - **GitHub Actions integration**: Produces JSON matrix output for CI workflows via `--gh-matrix`
 - **Environment configuration**: Sets up each tox env with the right dependencies, environment variables, and commands
-- **Test commands**: Configures `pytest` for unit/integration tests, `ansible-test sanity` for sanity tests, and `galaxy-importer` for galaxy tests
+- **Test commands**: Configures `pytest` for unit/integration tests, `molecule`
+  for molecule scenarios, `ansible-test sanity` for sanity tests, and
+  `galaxy-importer` for galaxy tests
 - **Skip/filter**: Allows users to skip specific Ansible versions via `skip` in `[tool.tox-ansible]` (pyproject.toml) or `[ansible]` (tox-ansible.ini)
 - **Downstream extras**: Optional `downstream = true` unions AAP/cert cores onto the upstream matrix (ADR-001); still not an AAP-only list
 - **Pre-test setup**: Delegates to ade with a single `ade install` call

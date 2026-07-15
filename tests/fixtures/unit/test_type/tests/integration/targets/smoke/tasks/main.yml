@@ -1,0 +1,4 @@
+---
+- name: Smoke
+  ansible.builtin.debug:
+    msg: ok

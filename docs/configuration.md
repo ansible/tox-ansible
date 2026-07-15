@@ -21,6 +21,59 @@ ansible-core extras onto the upstream matrix (`downstream = true`; see ADR-001),
 and skips tests in any environment whose name contains `devel`. The `skip` list
 is a simple substring comparison against environment names.
 
+### Molecule configuration
+
+Molecule testing is controlled by the `molecule` option:
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+molecule = "auto"  # "auto" (default), "true", or "false"
+```
+
+- **`auto`** (default): molecule environments are included only if `extensions/molecule/` contains at least one scenario (a subdirectory with `molecule.yml`).
+- **`true`**: always include molecule environments, even if no scenarios are discovered.
+- **`false`**: never include molecule environments.
+
+When included, molecule uses the **same Python × ansible-core matrix** as
+integration, unit, and sanity.
+
+The default command is `python3 -m molecule test --all`. Add CLI flags with
+`molecule_append`, or fully replace the command list with
+`molecule_commands` (which ignores the default and `molecule_append`):
+
+```toml
+[tool.tox-ansible]
+# Append to the default: python3 -m molecule test --all --workers 4
+molecule_append = ["--workers", "4"]
+
+# Or fully replace:
+# molecule_commands = ["molecule test -s default"]
+```
+
+`shared_state`, `prerun`, inventory, and other scenario behavior belong in
+`extensions/molecule/config.yml` (Molecule's config), not in tox-ansible.
+ansible-creator scaffolds that file; leave `prerun` under collection control.
+
+Molecule `commands_pre` installs collection requirements (via ADE) from, when
+present:
+
+- `tests/requirements.yml`
+- `tests/integration/requirements.yml` (shared with integration during migration)
+- `tests/molecule/requirements.yml` (optional molecule-only deps)
+
+### Integration autodetection
+
+`integration-*` environments are included only when the collection has
+integration content:
+
+- a non-empty `tests/integration/targets/` directory (ansible-test style), or
+- pytest modules under `tests/integration/` (`test_*.py` / `*_test.py`)
+
+Collections that migrate fully to Molecule scenarios (and remove ansible-test
+targets) automatically drop the integration matrix without extra `skip`
+entries.
+
 When using `pyproject.toml`, tox also needs a `[tool.tox]` section (even if empty) so it can discover the file as its configuration source:
 
 ```toml
@@ -30,6 +83,8 @@ requires = ["tox>=4.2"]
 
 [tool.tox-ansible]
 skip = ["devel"]
+molecule = "auto"
+molecule_append = ["--workers", "4"]
 ```
 
 With this in place, no `--conf` flag is needed:
@@ -49,6 +104,11 @@ coverage = true
 downstream = true
 skip =
     devel
+molecule = auto
+molecule_append =
+    --workers
+    4
+molecule_commands =
 ```
 
 ```bash
@@ -85,7 +145,7 @@ When enabled, tox-ansible installs `pytest-cov`, generates coverage configuratio
 
 Raw coverage data is stored inside each tox unit environment. This keeps parallel environments isolated; reports from the Python and ansible-core matrix are independent and are not automatically combined.
 
-Coverage applies only to `unit-*` environments. Integration, sanity, and galaxy environments remain unchanged. Explicit CLI options take precedence over project configuration, so configured coverage can be disabled temporarily:
+Coverage applies only to `unit-*` environments. Integration, sanity, molecule, and galaxy environments remain unchanged. Explicit CLI options take precedence over project configuration, so configured coverage can be disabled temporarily:
 
 ```bash
 tox --ansible --no-coverage -e unit-py3.13-2.19
