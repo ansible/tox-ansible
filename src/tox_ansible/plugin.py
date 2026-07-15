@@ -347,9 +347,13 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         if coverage_enabled
         else None
     )
-    ansible_config = _load_ansible_config(state)
-    molecule_commands = ansible_config.molecule_commands if test_type == "molecule" else []
-    molecule_append = ansible_config.molecule_append if test_type == "molecule" else []
+    if test_type == "molecule":
+        ansible_config = _load_ansible_config(state)
+        molecule_commands = ansible_config.molecule_commands
+        molecule_append = ansible_config.molecule_append
+    else:
+        molecule_commands = []
+        molecule_append = []
 
     conf = AnsibleTestConf(
         allowlist_externals=ALLOWED_EXTERNALS,
@@ -596,7 +600,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         coverage=ansible_config["coverage"],
         skip=ansible_config["skip"],
         downstream=ansible_config["downstream"],
-        molecule=ansible_config["molecule"],
+        molecule=_coerce_molecule_setting(ansible_config["molecule"]),
         molecule_append=ansible_config["molecule_append"],
         molecule_commands=ansible_config["molecule_commands"],
     )

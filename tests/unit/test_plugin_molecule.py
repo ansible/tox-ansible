@@ -13,6 +13,7 @@ import pytest
 
 from tox.config.cli.parse import Options
 from tox.config.cli.parser import Parsed
+from tox.config.loader.memory import MemoryLoader
 from tox.config.main import Config
 from tox.config.source import discover_source
 from tox.report import ToxHandler
@@ -29,6 +30,7 @@ from tox_ansible.plugin import (
     conf_deps,
     discover_integration_tests,
     discover_molecule_scenarios,
+    tox_add_env_config,
 )
 
 
@@ -481,6 +483,108 @@ def test_add_ansible_matrix_molecule_auto_not_found(
 
     env_list = add_ansible_matrix(state)
     assert not any("molecule" in name for name in env_list.envs)
+
+
+def test_add_ansible_matrix_molecule_ini_true_case_insensitive(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test INI molecule=True is coerced and forces molecule envs on.
+
+    Without coercion, tox would preserve ``True`` and auto-discovery would
+    incorrectly omit molecule environments when no scenarios exist.
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\nmolecule = True\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(buffer=output, encoding="utf-8", line_buffering=True)
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    env_list = add_ansible_matrix(state)
+    assert any(name.startswith("molecule-") for name in env_list.envs)
+
+
+def test_tox_add_env_config_molecule_loads_append(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test tox_add_env_config loads molecule_append for molecule envs.
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text(
+        "[ansible]\nmolecule = true\nmolecule_append =\n    --workers\n    4\n",
+    )
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+    )
+
+    env_conf = Config.make(
+        parsed=parsed,
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("molecule-py3.14-2.20")
+
+    env_conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(buffer=output, encoding="utf-8", line_buffering=True)
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    tox_add_env_config(env_conf, state)
+
+    assert isinstance(env_conf.loaders[0], MemoryLoader)
+    commands = env_conf.loaders[0].raw["commands"]
+    assert any("--workers" in cmd and "4" in cmd for cmd in commands)
 
 
 def test_add_ansible_matrix_molecule_pyproject_true(
