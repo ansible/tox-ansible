@@ -340,6 +340,19 @@ def test_coerce_molecule_setting(raw: object, expected: str) -> None:
     assert _coerce_molecule_setting(raw) == expected
 
 
+def test_coerce_molecule_setting_invalid(caplog: pytest.LogCaptureFixture) -> None:
+    """Test invalid molecule values fall back to auto with a warning.
+
+    Args:
+        caplog: Pytest fixture.
+    """
+    with caplog.at_level("WARNING"):
+        assert _coerce_molecule_setting("maybe") == "auto"
+        assert _coerce_molecule_setting(2) == "auto"
+        assert _coerce_molecule_setting(["true"]) == "auto"
+    assert "Invalid molecule config value" in caplog.text
+
+
 def test_add_ansible_matrix_molecule_pyproject_bool_true(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
