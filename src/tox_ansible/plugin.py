@@ -79,19 +79,20 @@ COVERAGE_DEPS = [
 
 # Paths checked for collection requirements files, keyed by test type.
 # From https://github.com/ansible/ansible-compat/blob/main/src/ansible_compat/constants.py#L6-L14
+SHARED_REQUIREMENTS_YML = "tests/requirements.yml"
 TEST_REQUIREMENTS_YML: dict[str, list[str]] = {
     "unit": [
-        "tests/requirements.yml",
+        SHARED_REQUIREMENTS_YML,
         "tests/unit/requirements.yml",
     ],
     "integration": [
-        "tests/requirements.yml",
+        SHARED_REQUIREMENTS_YML,
         "tests/integration/requirements.yml",
     ],
     # Molecule shares integration collection deps during migration; also
     # accepts a dedicated molecule requirements file when collections split.
     "molecule": [
-        "tests/requirements.yml",
+        SHARED_REQUIREMENTS_YML,
         "tests/integration/requirements.yml",
         "tests/molecule/requirements.yml",
     ],
