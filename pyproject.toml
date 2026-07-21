@@ -46,7 +46,7 @@ tox-ansible = "tox_ansible.plugin"
 
 [dependency-groups]
 dev = [
-  "ansible-core>=2.16.14",
+  "ansible-core>=2.16.19,!=2.17.*",
   "coverage[toml]>=7.10.2",
   "mypy>=1.17.1",
   "pydoclint>=0.6.6",
