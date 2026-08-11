@@ -51,6 +51,7 @@ def _make_state(config_file: Path) -> State:
         config_file=config_file,
         root_dir=config_file.parent,
         ansible=True,
+        result_json=None,
     )
     output = io.BytesIO()
     wrapper = io.TextIOWrapper(output, encoding="utf-8", line_buffering=True)
