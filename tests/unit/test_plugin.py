@@ -660,8 +660,10 @@ def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
     )
 
     assert result == [
-        f"python3 -m pytest --cov --cov-config={coverage_config} "
-        "--ansible-unit-inject-only --cov-report=xml -v ./tests/unit",
+        (
+            f"python3 -m pytest --cov --cov-config={coverage_config} "
+            "--ansible-unit-inject-only --cov-report=xml -v ./tests/unit"
+        ),
     ]
 
 

@@ -387,6 +387,7 @@ target-version = "py310"
 [tool.ruff.lint]
 ignore = [
   "COM812",  # conflicts with ISC001 on format
+  "CPY001",  # no copyright header required
   "ISC001",  # conflicts with COM812 on format
   "SLF001",  # we cannot avoid using tox internals
   "S604",  # shell=True is a must when using tools like mise
