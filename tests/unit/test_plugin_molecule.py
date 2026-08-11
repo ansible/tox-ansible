@@ -114,7 +114,13 @@ def test_conf_commands_molecule_via_conf_commands(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path, result_json=None),
+        Parsed(
+            work_dir=tmp_path,
+            override=[],
+            config_file=ini_file,
+            root_dir=tmp_path,
+            result_json=None,
+        ),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -156,7 +162,13 @@ def test_commands_pre_molecule(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) 
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path, result_json=None),
+        Parsed(
+            work_dir=tmp_path,
+            override=[],
+            config_file=ini_file,
+            root_dir=tmp_path,
+            result_json=None,
+        ),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -205,7 +217,13 @@ def test_commands_pre_molecule_with_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(work_dir=tmp_path, override=[], config_file=ini_file, root_dir=tmp_path, result_json=None),
+        Parsed(
+            work_dir=tmp_path,
+            override=[],
+            config_file=ini_file,
+            root_dir=tmp_path,
+            result_json=None,
+        ),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -379,7 +397,7 @@ def test_add_ansible_matrix_molecule_pyproject_bool_true(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -423,7 +441,7 @@ def test_add_ansible_matrix_molecule_auto_found(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -468,7 +486,7 @@ def test_add_ansible_matrix_molecule_auto_not_found(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -512,7 +530,7 @@ def test_add_ansible_matrix_molecule_ini_true_case_insensitive(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -555,7 +573,7 @@ def test_tox_add_env_config_molecule_loads_append(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     env_conf = Config.make(
@@ -616,7 +634,7 @@ def test_add_ansible_matrix_molecule_pyproject_true(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -663,7 +681,7 @@ def test_add_ansible_matrix_molecule_pyproject_false(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
@@ -737,7 +755,7 @@ def test_add_ansible_matrix_strips_integration_without_tests(
         config_file=ini_file,
         root_dir=tmp_path,
         ansible=True,
-    result_json=None,
+        result_json=None,
     )
 
     output = io.BytesIO()
