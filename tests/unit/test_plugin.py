@@ -47,6 +47,12 @@ if typing.TYPE_CHECKING:
     from collections.abc import Generator
 
 
+def _parsed(**kwargs: object) -> Parsed:
+    kwargs.setdefault("override", [])
+    kwargs.setdefault("result_json", None)
+    return Parsed(**kwargs)
+
+
 @pytest.mark.parametrize(
     "scope",
     ("all", "galaxy", "integration", "sanity", "unit"),
@@ -81,13 +87,7 @@ def test_commands_pre_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -129,13 +129,7 @@ def test_commands_pre_sanity(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -188,13 +182,7 @@ def test_commands_pre_devel(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -233,13 +221,7 @@ def test_commands_pre_milestone(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -286,13 +268,7 @@ def test_commands_pre_unit_with_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -342,13 +318,7 @@ def test_commands_pre_integration_with_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -394,13 +364,7 @@ def test_commands_pre_unit_partial_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -446,13 +410,7 @@ def test_commands_pre_sanity_ignores_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -494,13 +452,7 @@ def test_commands_pre_no_requirements(
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -672,13 +624,7 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -704,13 +650,7 @@ def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
     ini_file.touch()
     source = discover_source(ini_file, None)
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -744,13 +684,7 @@ def test_conf_commands_sanity(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -785,13 +719,7 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -817,13 +745,7 @@ def test_conf_commands_integration_ignores_coverage(tmp_path: Path) -> None:
     ini_file.touch()
     source = discover_source(ini_file, None)
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -852,13 +774,7 @@ def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture)
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -977,13 +893,7 @@ def test_conf_setenv_collections_path(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -1012,13 +922,7 @@ def test_conf_setenv_galaxy(tmp_path: Path) -> None:
     source = discover_source(ini_file, None)
 
     conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=ini_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -1057,14 +961,7 @@ def test_tox_add_env_config_valid(
         work_dir.mkdir(exist_ok=True)
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
-    parsed = Parsed(
-        work_dir=work_dir,
-        override=[],
-        config_file=ini_file,
-        root_dir=tmp_path,
-        ansible=True,
-        result_json=None,
-    )
+    parsed = _parsed(work_dir=work_dir, config_file=ini_file, root_dir=tmp_path, ansible=True)
 
     env_conf = Config.make(
         parsed=parsed,
@@ -1119,14 +1016,7 @@ def test_tox_add_env_config_invalid(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test")
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
-    parsed = Parsed(
-        work_dir=tmp_path,
-        override=[],
-        config_file=ini_file,
-        root_dir=tmp_path,
-        ansible=True,
-        result_json=None,
-    )
+    parsed = _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path, ansible=True)
 
     env_conf = Config.make(
         parsed=parsed,
@@ -1176,14 +1066,7 @@ def test_tox_add_env_config_no_base_python(
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
-    parsed = Parsed(
-        work_dir=tmp_path,
-        override=[],
-        config_file=ini_file,
-        root_dir=tmp_path,
-        ansible=True,
-        result_json=None,
-    )
+    parsed = _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path, ansible=True)
 
     env_conf = Config.make(
         parsed=parsed,
@@ -1263,14 +1146,7 @@ def test_add_ansible_matrix_pyproject(
     )
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
-    parsed = Parsed(
-        work_dir=tmp_path,
-        override=[],
-        config_file=ini_file,
-        root_dir=tmp_path,
-        ansible=True,
-        result_json=None,
-    )
+    parsed = _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path, ansible=True)
 
     output = io.BytesIO()
     wrapper = io.TextIOWrapper(
@@ -1315,14 +1191,7 @@ def test_add_ansible_matrix_ini_fallback(
     (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
     monkeypatch.chdir(tmp_path)
     source = discover_source(ini_file, None)
-    parsed = Parsed(
-        work_dir=tmp_path,
-        override=[],
-        config_file=ini_file,
-        root_dir=tmp_path,
-        ansible=True,
-        result_json=None,
-    )
+    parsed = _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path, ansible=True)
 
     output = io.BytesIO()
     wrapper = io.TextIOWrapper(
@@ -1435,14 +1304,12 @@ def _make_state(
         The configured tox state.
     """
     source = discover_source(config_file, None)
-    parsed = Parsed(
+    parsed = _parsed(
         work_dir=config_file.parent / ".tox",
-        override=[],
         config_file=config_file,
         root_dir=config_file.parent,
         ansible=True,
         coverage=coverage,
-        result_json=None,
     )
     output = io.BytesIO()
     wrapper = io.TextIOWrapper(output, encoding="utf-8", line_buffering=True)
@@ -1526,13 +1393,7 @@ def test_collection_install_path(tmp_path: Path) -> None:
     config_file.touch()
     source = discover_source(config_file, None)
     env_conf = Config.make(
-        Parsed(
-            work_dir=tmp_path,
-            override=[],
-            config_file=config_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path, config_file=config_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -1564,13 +1425,7 @@ def test_write_coverage_config(tmp_path: Path) -> None:
     config_file.touch()
     source = discover_source(config_file, None)
     env_conf = Config.make(
-        Parsed(
-            work_dir=tmp_path / ".tox",
-            override=[],
-            config_file=config_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path / ".tox", config_file=config_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
@@ -1614,13 +1469,7 @@ def test_write_coverage_config_isolates_data_by_environment(tmp_path: Path) -> N
     config_file.touch()
     source = discover_source(config_file, None)
     config = Config.make(
-        Parsed(
-            work_dir=tmp_path / ".tox",
-            override=[],
-            config_file=config_file,
-            root_dir=tmp_path,
-            result_json=None,
-        ),
+        _parsed(work_dir=tmp_path / ".tox", config_file=config_file, root_dir=tmp_path),
         pos_args=[],
         source=source,
         extra_envs=[],
