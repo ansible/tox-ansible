@@ -200,8 +200,10 @@ jobs:
     steps:
       # ...
       - name: Run tox environment ${{ matrix.env.name }}
+        env:
+          TOX_ENV: ${{ matrix.env.name }}
         run: |
-          tox --ansible --conf tox-ansible.ini -e ${{ matrix.env.name }}
+          tox --ansible --conf tox-ansible.ini -e "$TOX_ENV"
 ```
 
 ## Skip functionality
