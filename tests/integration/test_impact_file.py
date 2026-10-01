@@ -24,6 +24,12 @@ def _impact_file_available(tox_bin: Path) -> bool:
 
     Note: This checks the installed tox-ansible plugin, not the source version.
     The plugin is loaded via entry points, so PYTHONPATH doesn't help.
+
+    Args:
+        tox_bin: Path to the tox binary.
+
+    Returns:
+        True if --impact-file is recognized, False otherwise.
     """
     # Run without inheriting env to ensure we check the installed version
     env = {"PATH": os.environ.get("PATH", "")}
@@ -39,7 +45,11 @@ def _impact_file_available(tox_bin: Path) -> bool:
 
 @pytest.fixture(autouse=True)
 def skip_if_impact_file_unavailable(tox_bin: Path) -> None:
-    """Skip tests if impact_file feature is not available in installed plugin."""
+    """Skip tests if impact_file feature is not available in installed plugin.
+
+    Args:
+        tox_bin: Path to the tox binary.
+    """
     if not _impact_file_available(tox_bin):
         pytest.skip("--impact-file not available in installed tox-ansible")
 

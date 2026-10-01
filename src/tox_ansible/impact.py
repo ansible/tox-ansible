@@ -175,9 +175,6 @@ def load_impact_report(  # noqa: C901
 
     Returns:
         The parsed ImpactReport, or None if impact_file is empty.
-
-    Raises:
-        SystemExit: If the file is invalid or fails validation.
     """
     if not impact_file:
         return None
