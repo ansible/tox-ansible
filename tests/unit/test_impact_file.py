@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 import stat
 
 from pathlib import Path
@@ -203,6 +204,34 @@ class TestLoadImpactReport:
         finally:
             # Restore permissions for cleanup
             impact_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
+
+    def test_invalid_utf8_file(self, tmp_path: Path) -> None:
+        """File with invalid UTF-8 causes exit.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        impact_file = tmp_path / "impact.json"
+        # Write invalid UTF-8 bytes (0xFF is not valid in UTF-8)
+        impact_file.write_bytes(b'{"collection": "\xff\xfe invalid"}')
+        with pytest.raises(SystemExit, match="1"):
+            load_impact_report(str(impact_file), tmp_path)
+
+    def test_fifo_as_path(self, tmp_path: Path) -> None:
+        """FIFO (named pipe) as impact file path causes exit.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        fifo_path = tmp_path / "impact.fifo"
+        try:
+            os.mkfifo(fifo_path)
+        except (OSError, AttributeError):
+            # mkfifo not available on Windows or if filesystem doesn't support it
+            pytest.skip("FIFO not supported on this platform")
+
+        with pytest.raises(SystemExit, match="1"):
+            load_impact_report(str(fifo_path), tmp_path)
 
     def test_invalid_json(self, tmp_path: Path) -> None:
         """Invalid JSON causes exit.
