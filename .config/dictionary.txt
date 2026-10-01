@@ -15,6 +15,7 @@ fileh
 fixturenames
 lifecycle
 metafunc
+mkfifo
 passenv
 prerun
 redef
