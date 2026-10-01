@@ -181,7 +181,7 @@ impact_file = impact.json
 When an impact file is configured:
 
 - **Molecule environments**: If `molecule_scenarios` is empty or absent, all `molecule-*` environments are omitted from the matrix. When scenarios are listed, molecule commands are scoped to run only those specific scenarios.
-- **Integration environments**: If `integration_targets` is empty or absent, all `integration-*` environments are omitted. When targets are listed, integration commands use `ansible-test integration` with only those specific targets.
+- **Integration environments**: If `integration_targets` is empty or absent, all `integration-*` environments are omitted. When targets are listed, integration commands use `ansible-test integration` with only those specific targets. If a listed target does not exist as an ansible-test style target (under `tests/integration/targets/<name>`), a warning is logged and the target is skipped. If no valid ansible-test targets remain, the command falls back to the default pytest-based integration tests with a warning.
 - **Unit, sanity, and galaxy environments**: Unaffected by the impact file.
 
 When no `impact_file` is configured, existing behavior is fully preserved.

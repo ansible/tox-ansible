@@ -183,8 +183,13 @@ def load_impact_report(  # noqa: C901
     if not impact_path.is_absolute():
         impact_path = project_dir / impact_path
 
-    if not impact_path.exists():
-        err = f"Impact file not found: {impact_path}"
+    if not impact_path.is_file():
+        if impact_path.is_dir():
+            err = f"Impact file path is a directory: {impact_path}"
+        elif not impact_path.exists():
+            err = f"Impact file not found: {impact_path}"
+        else:
+            err = f"Impact file is not a regular file: {impact_path}"
         logger.critical(err)
         sys.exit(1)
 
@@ -193,6 +198,14 @@ def load_impact_report(  # noqa: C901
             data = json.load(fh)
     except json.JSONDecodeError as exc:
         err = f"Invalid JSON in impact file {impact_path}: {exc}"
+        logger.critical(err)
+        sys.exit(1)
+    except UnicodeDecodeError as exc:
+        err = f"Impact file is not valid UTF-8: {impact_path}: {exc}"
+        logger.critical(err)
+        sys.exit(1)
+    except OSError as exc:
+        err = f"Cannot read impact file {impact_path}: {exc}"
         logger.critical(err)
         sys.exit(1)
 

@@ -1138,12 +1138,24 @@ def conf_commands_for_integration(
         # Check if all targets exist as ansible-test style targets
         targets_dir = Path.cwd() / "tests" / "integration" / "targets"
         ansible_test_targets = []
+        missing_targets = []
         for target_path in impact_report.integration_targets:
             path = Path(target_path)
             target_name = path.name
             # Only use ansible-test if the target directory exists
             if (targets_dir / target_name).is_dir():
                 ansible_test_targets.append(target_name)
+            else:
+                missing_targets.append(target_name)
+
+        # Warn about missing targets
+        for target in missing_targets:
+            logger.warning(
+                "Integration target '%s' from impact report not found at %s/%s",
+                target,
+                targets_dir,
+                target,
+            )
 
         # Use ansible-test only if we found valid ansible-test style targets
         if ansible_test_targets:
@@ -1160,6 +1172,13 @@ def conf_commands_for_integration(
             )
             full_command = f"bash -c 'cd {collection_path} && {command}'"
             return [full_command]
+
+        # Warn when falling back to pytest because no ansible-test targets found
+        if missing_targets:
+            logger.warning(
+                "No valid ansible-test targets found from impact report; "
+                "falling back to pytest integration tests"
+            )
 
     # Default pytest-based integration test command
     return conf_commands_for_integration_unit(
