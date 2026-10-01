@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import stat
 
 from pathlib import Path
 
@@ -173,6 +174,34 @@ class TestLoadImpactReport:
         """
         with pytest.raises(SystemExit, match="1"):
             load_impact_report("nonexistent.json", tmp_path)
+
+    def test_directory_as_path(self, tmp_path: Path) -> None:
+        """Directory as impact file path causes exit.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        impact_dir = tmp_path / "impact_dir"
+        impact_dir.mkdir()
+        with pytest.raises(SystemExit, match="1"):
+            load_impact_report(str(impact_dir), tmp_path)
+
+    def test_unreadable_file(self, tmp_path: Path) -> None:
+        """Unreadable file causes exit.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        impact_file = tmp_path / "impact.json"
+        impact_file.write_text('{"collection": "test.test"}')
+        # Remove read permissions
+        impact_file.chmod(0o000)
+        try:
+            with pytest.raises(SystemExit, match="1"):
+                load_impact_report(str(impact_file), tmp_path)
+        finally:
+            # Restore permissions for cleanup
+            impact_file.chmod(stat.S_IRUSR | stat.S_IWUSR)
 
     def test_invalid_json(self, tmp_path: Path) -> None:
         """Invalid JSON causes exit.
@@ -756,6 +785,7 @@ class TestConfCommandsForIntegrationImpact:
             collection=collection,
             env_conf=env_conf,
             pos_args=None,
+            project_dir=tmp_path,
             impact_report=impact_report,
         )
 
@@ -805,6 +835,7 @@ class TestConfCommandsForIntegrationImpact:
             collection=collection,
             env_conf=env_conf,
             pos_args=("-v", "--docker"),
+            project_dir=tmp_path,
             impact_report=impact_report,
         )
 
@@ -843,6 +874,7 @@ class TestConfCommandsForIntegrationImpact:
             collection=collection,
             env_conf=env_conf,
             pos_args=None,
+            project_dir=tmp_path,
             impact_report=impact_report,
         )
 

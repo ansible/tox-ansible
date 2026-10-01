@@ -161,7 +161,7 @@ def _validate_impact_collection(
             sys.exit(1)
 
 
-def load_impact_report(  # noqa: C901
+def load_impact_report(  # noqa: C901, PLR0912
     impact_file: str,
     project_dir: Path,
     collection: Collection | None = None,

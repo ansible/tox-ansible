@@ -398,6 +398,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             env_conf=env_conf,
             pos_args=pos_args,
             test_type=test_type,
+            project_dir=project_dir,
             coverage_config=coverage_config,
             molecule_commands=molecule_commands,
             molecule_append=molecule_append,
@@ -968,6 +969,7 @@ def conf_commands(  # noqa: PLR0913
     pos_args: tuple[str, ...] | None,
     test_type: str,
     *,
+    project_dir: Path | None = None,
     coverage_config: Path | None = None,
     molecule_commands: list[str] | None = None,
     molecule_append: list[str] | None = None,
@@ -980,6 +982,7 @@ def conf_commands(  # noqa: PLR0913
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
         test_type: The test type.
+        project_dir: The project root directory.
         coverage_config: The generated coverage configuration path.
         molecule_commands: Full-replacement molecule commands from config.
         molecule_append: Extra argv appended to the default molecule command.
@@ -993,6 +996,7 @@ def conf_commands(  # noqa: PLR0913
             collection=collection,
             env_conf=env_conf,
             pos_args=pos_args,
+            project_dir=project_dir,
             impact_report=impact_report,
         )
     if test_type == "unit":
@@ -1116,6 +1120,7 @@ def conf_commands_for_integration(
     collection: Collection,
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
+    project_dir: Path | None = None,
     impact_report: ImpactReport | None = None,
 ) -> list[str]:
     """Build the commands for integration tests.
@@ -1128,6 +1133,7 @@ def conf_commands_for_integration(
         collection: The collection info.
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
+        project_dir: The project root directory.
         impact_report: Optional ImpactReport for scoped testing.
 
     Returns:
@@ -1136,7 +1142,8 @@ def conf_commands_for_integration(
     # If we have an impact report with integration targets, check if ansible-test style
     if impact_report and impact_report.integration_targets:
         # Check if all targets exist as ansible-test style targets
-        targets_dir = Path.cwd() / "tests" / "integration" / "targets"
+        base_dir = project_dir or Path.cwd()
+        targets_dir = base_dir / "tests" / "integration" / "targets"
         ansible_test_targets = []
         missing_targets = []
         for target_path in impact_report.integration_targets:
