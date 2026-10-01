@@ -1180,12 +1180,13 @@ def conf_commands_for_integration(
             full_command = f"bash -c 'cd {collection_path} && {command}'"
             return [full_command]
 
-        # Warn when falling back to pytest because no ansible-test targets found
-        if missing_targets:
-            logger.warning(
-                "No valid ansible-test targets found from impact report; "
-                "falling back to pytest integration tests"
-            )
+        # All targets were missing - warn about fallback to pytest
+        # (missing_targets is guaranteed non-empty here since we had targets
+        # but none were found, otherwise we'd have returned above)
+        logger.warning(
+            "No valid ansible-test targets found from impact report; "
+            "falling back to pytest integration tests"
+        )
 
     # Default pytest-based integration test command
     return conf_commands_for_integration_unit(
