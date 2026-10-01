@@ -16,13 +16,15 @@ from tox.config.source import discover_source
 from tox.report import ToxHandler
 from tox.session.state import State
 
-from tox_ansible.plugin import (
-    Collection,
+from tox_ansible.impact import (
     ImpactReport,
-    _load_ansible_config,
-    _load_impact_report,
     _validate_impact_path,
     _validate_safe_name,
+    load_impact_report,
+)
+from tox_ansible.plugin import (
+    Collection,
+    _load_ansible_config,
     add_ansible_matrix,
     conf_commands_for_integration,
     conf_commands_for_molecule,
@@ -134,45 +136,45 @@ class TestValidateSafeName:
 
 
 class TestLoadImpactReport:
-    """Tests for _load_impact_report function."""
+    """Tests for load_impact_report function."""
 
     def test_empty_path_returns_none(self, tmp_path: Path) -> None:
         """Empty impact_file path returns None."""
-        result = _load_impact_report("", tmp_path)
+        result = load_impact_report("", tmp_path)
         assert result is None
 
     def test_file_not_found(self, tmp_path: Path) -> None:
         """Missing file causes exit."""
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report("nonexistent.json", tmp_path)
+            load_impact_report("nonexistent.json", tmp_path)
 
     def test_invalid_json(self, tmp_path: Path) -> None:
         """Invalid JSON causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text("{ invalid json }")
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_not_an_object(self, tmp_path: Path) -> None:
         """Non-object JSON causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('["list", "not", "object"]')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_missing_collection_field(self, tmp_path: Path) -> None:
         """Missing collection field causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"changed_files": []}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_collection_not_string(self, tmp_path: Path) -> None:
         """Non-string collection causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": 123}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_collection_mismatch(self, tmp_path: Path) -> None:
         """Mismatched collection name causes exit."""
@@ -180,35 +182,35 @@ class TestLoadImpactReport:
         impact_file.write_text('{"collection": "wrong.collection"}')
         collection = Collection(name="test", namespace="test", version="1.0.0")
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path, collection=collection)
+            load_impact_report(str(impact_file), tmp_path, collection=collection)
 
     def test_list_field_not_list(self, tmp_path: Path) -> None:
         """Non-list in list field causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": "test.test", "changed_files": "not a list"}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_list_item_not_string(self, tmp_path: Path) -> None:
         """Non-string item in list causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": "test.test", "changed_files": [123]}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_reasons_not_object(self, tmp_path: Path) -> None:
         """Non-object reasons causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": "test.test", "reasons": "not an object"}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_reasons_value_not_list(self, tmp_path: Path) -> None:
         """Non-list value in reasons causes exit."""
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": "test.test", "reasons": {"key": "not a list"}}')
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_path_traversal_in_changed_files(self, tmp_path: Path) -> None:
         """Path traversal in changed_files causes exit."""
@@ -217,7 +219,7 @@ class TestLoadImpactReport:
             '{"collection": "test.test", "changed_files": ["../../../etc/passwd"]}'
         )
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_absolute_path_in_integration_targets(self, tmp_path: Path) -> None:
         """Absolute path in integration_targets causes exit."""
@@ -226,7 +228,7 @@ class TestLoadImpactReport:
             '{"collection": "test.test", "integration_targets": ["/etc/passwd"]}'
         )
         with pytest.raises(SystemExit, match="1"):
-            _load_impact_report(str(impact_file), tmp_path)
+            load_impact_report(str(impact_file), tmp_path)
 
     def test_valid_report(self, tmp_path: Path) -> None:
         """Valid report is parsed correctly."""
@@ -241,7 +243,7 @@ class TestLoadImpactReport:
         }
         impact_file.write_text(json.dumps(report_data))
 
-        result = _load_impact_report(str(impact_file), tmp_path)
+        result = load_impact_report(str(impact_file), tmp_path)
 
         assert result is not None
         assert result.collection == "test.test"
@@ -256,7 +258,7 @@ class TestLoadImpactReport:
         impact_file = tmp_path / "impact.json"
         impact_file.write_text('{"collection": "test.test"}')
 
-        result = _load_impact_report(str(impact_file), tmp_path)
+        result = load_impact_report(str(impact_file), tmp_path)
 
         assert result is not None
         assert result.collection == "test.test"
@@ -270,7 +272,7 @@ class TestLoadImpactReport:
         impact_file.write_text('{"collection": "test.test"}')
         collection = Collection(name="test", namespace="test", version="1.0.0")
 
-        result = _load_impact_report(str(impact_file), tmp_path, collection=collection)
+        result = load_impact_report(str(impact_file), tmp_path, collection=collection)
 
         assert result is not None
         assert result.collection == "test.test"

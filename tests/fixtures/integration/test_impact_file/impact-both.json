@@ -1,10 +1,10 @@
 {
-  "collection": "test.test",
-  "changed_files": ["plugins/modules/hello.py"],
-  "affected_plugins": ["test.test.hello"],
-  "molecule_scenarios": ["extensions/molecule/default"],
-  "integration_targets": ["tests/integration/targets/smoke"],
-  "reasons": {
-    "tests/integration/targets/smoke": ["plugin:test.test.hello"]
-  }
+	"collection": "test.test",
+	"changed_files": ["plugins/modules/hello.py"],
+	"affected_plugins": ["test.test.hello"],
+	"molecule_scenarios": ["extensions/molecule/default"],
+	"integration_targets": ["tests/integration/targets/smoke"],
+	"reasons": {
+		"tests/integration/targets/smoke": ["plugin:test.test.hello"]
+	}
 }
