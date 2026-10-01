@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import logging
 import stat
 
 from pathlib import Path
@@ -882,6 +883,49 @@ class TestConfCommandsForIntegrationImpact:
         assert len(result) == 1
         assert "pytest" in result[0]
         assert "ansible-test" not in result[0]
+
+    def test_integration_targets_missing_logs_warning(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Missing targets log warning and fallback message.
+
+        Args:
+            tmp_path: Pytest fixture.
+            monkeypatch: Pytest fixture.
+            caplog: Pytest fixture for capturing logs.
+        """
+        monkeypatch.chdir(tmp_path)
+
+        config_file = tmp_path / "tox.ini"
+        config_file.touch()
+        source = discover_source(config_file, None)
+        env_conf = Config.make(
+            _parsed(work_dir=tmp_path, config_file=config_file, root_dir=tmp_path),
+            pos_args=[],
+            source=source,
+            extra_envs=[],
+        ).get_env("integration-py3.14-2.19")
+        collection = Collection(name="test", namespace="test", version="1.0.0")
+        impact_report = ImpactReport(
+            collection="test.test",
+            integration_targets=["tests/integration/targets/nonexistent"],
+        )
+
+        with caplog.at_level(logging.WARNING):
+            conf_commands_for_integration(
+                collection=collection,
+                env_conf=env_conf,
+                pos_args=None,
+                project_dir=tmp_path,
+                impact_report=impact_report,
+            )
+
+        # Check that warnings were logged
+        assert any("nonexistent" in record.message for record in caplog.records)
+        assert any("falling back to pytest" in record.message for record in caplog.records)
 
 
 # =============================================================================
