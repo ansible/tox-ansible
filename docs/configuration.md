@@ -151,6 +151,84 @@ Coverage applies only to `unit-*` environments. Integration, sanity, molecule, a
 tox --ansible --no-coverage -e unit-py3.13-2.19
 ```
 
+## Scoped testing with impact_file
+
+The `impact_file` option enables scoped testing by consuming an ImpactReport JSON artifact from [content-plugin-finder](https://github.com/ansible/content-plugin-finder). This solves the problem of CI pipelines running the full test matrix even when only a small subset of content was changed.
+
+### Configuration
+
+Configure `impact_file` via CLI, INI, or TOML (TOML takes precedence over INI, CLI takes precedence over both):
+
+```bash
+# CLI
+tox --ansible --impact-file impact.json
+```
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+impact_file = "impact.json"
+```
+
+```ini
+# tox-ansible.ini
+[ansible]
+impact_file = impact.json
+```
+
+### Behavior
+
+When an impact file is configured:
+
+- **Molecule environments**: If `molecule_scenarios` is empty or absent, all `molecule-*` environments are omitted from the matrix. When scenarios are listed, molecule commands are scoped to run only those specific scenarios.
+- **Integration environments**: If `integration_targets` is empty or absent, all `integration-*` environments are omitted. When targets are listed, integration commands use `ansible-test integration` with only those specific targets.
+- **Unit, sanity, and galaxy environments**: Unaffected by the impact file.
+
+When no `impact_file` is configured, existing behavior is fully preserved.
+
+### ImpactReport JSON schema
+
+The impact file is a JSON object produced by `content-plugin-finder --impact`:
+
+```json
+{
+  "collection": "namespace.collection",
+  "changed_files": ["plugins/module_utils/util.py"],
+  "affected_plugins": ["namespace.collection.my_module"],
+  "molecule_scenarios": ["extensions/molecule/default"],
+  "integration_targets": ["tests/integration/targets/my_module"],
+  "reasons": {
+    "tests/integration/targets/my_module": ["plugin:namespace.collection.my_module via plugins/module_utils/util.py"]
+  }
+}
+```
+
+### Validation
+
+tox-ansible validates the impact file:
+
+- JSON must be valid and contain an object
+- `collection` field is required and must match the collection's `namespace.name` from `galaxy.yml`
+- All paths must be relative (no absolute paths or path traversal)
+- List fields must contain only strings
+
+Invalid or malformed files cause tox to exit with an actionable error message.
+
+### CI workflow example
+
+A typical CI workflow using content-plugin-finder:
+
+```yaml
+- name: Generate impact report
+  run: |
+    git diff --name-only HEAD~1 | content-plugin-finder --impact . --from-stdin --format json > impact.json
+
+- name: Run scoped tests
+  run: tox --ansible --impact-file impact.json
+```
+
+This runs only the molecule scenarios and integration targets affected by the changed files.
+
 ## Overriding the configuration
 
 Any tox environment configuration can be overridden by the user. The method depends on which configuration file you use.
