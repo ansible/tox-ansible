@@ -153,10 +153,12 @@ def _validate_impact_collection(
     if collection is not None:
         expected_collection = f"{collection.namespace}.{collection.name}"
         if data["collection"] != expected_collection:
+            # Strip control characters to prevent log injection (CWE-117)
+            safe_got = data["collection"].replace("\n", "\\n").replace("\r", "\\r")
             logger.critical(
                 "Impact file collection mismatch: expected '%s', got '%s'",
                 expected_collection,
-                data["collection"],
+                safe_got,
             )
             sys.exit(1)
 
@@ -233,30 +235,34 @@ def load_impact_report(
         return None
 
     impact_path = _resolve_impact_path(impact_file, project_dir)
-    data = _read_impact_file(impact_path)
+    raw = _read_impact_file(impact_path)
 
-    if not isinstance(data, dict):
-        err = f"Impact file must contain a JSON object, got {type(data).__name__}"
+    if not isinstance(raw, dict):
+        err = f"Impact file must contain a JSON object, got {type(raw).__name__}"
         logger.critical(err)
         sys.exit(1)
 
-    _validate_impact_collection(data, collection)
+    # Explicit typed binding after isinstance guard — removes type ambiguity for
+    # static analysis tools that don't track sys.exit() as a terminator.
+    json_data: dict[str, Any] = raw
+
+    _validate_impact_collection(json_data, collection)
 
     list_fields = ("changed_files", "affected_plugins", "molecule_scenarios", "integration_targets")
     for field_name in list_fields:
-        _validate_impact_list_field(data, field_name)
+        _validate_impact_list_field(json_data, field_name)
 
-    _validate_impact_reasons(data)
+    _validate_impact_reasons(json_data)
 
     try:
-        for path_str in data.get("changed_files", []):
+        for path_str in json_data.get("changed_files", []):
             _validate_impact_path(path_str, project_dir)
-        for path_str in data.get("molecule_scenarios", []):
+        for path_str in json_data.get("molecule_scenarios", []):
             _validate_impact_path(path_str, project_dir)
             # Also validate the scenario name (last path component)
             scenario_name = Path(path_str).name
             _validate_safe_name(scenario_name, "molecule scenario")
-        for path_str in data.get("integration_targets", []):
+        for path_str in json_data.get("integration_targets", []):
             _validate_impact_path(path_str, project_dir)
             # Also validate the target name (last path component)
             target_name = Path(path_str).name
@@ -266,10 +272,10 @@ def load_impact_report(
         sys.exit(1)
 
     return ImpactReport(
-        collection=data["collection"],
-        changed_files=data.get("changed_files", []),
-        affected_plugins=data.get("affected_plugins", []),
-        molecule_scenarios=data.get("molecule_scenarios", []),
-        integration_targets=data.get("integration_targets", []),
-        reasons=data.get("reasons", {}),
+        collection=json_data["collection"],
+        changed_files=json_data.get("changed_files", []),
+        affected_plugins=json_data.get("affected_plugins", []),
+        molecule_scenarios=json_data.get("molecule_scenarios", []),
+        integration_targets=json_data.get("integration_targets", []),
+        reasons=json_data.get("reasons", {}),
     )
