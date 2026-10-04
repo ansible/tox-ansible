@@ -359,6 +359,19 @@ class TestLoadImpactReport:
         with pytest.raises(SystemExit, match="1"):
             load_impact_report(str(impact_file), tmp_path)
 
+    def test_integration_target_wrong_prefix(self, tmp_path: Path) -> None:
+        """Integration target not under tests/integration/targets/ causes exit.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        impact_file = tmp_path / "impact.json"
+        impact_file.write_text(
+            '{"collection": "test.test", "integration_targets": ["other/smoke"]}'
+        )
+        with pytest.raises(SystemExit, match="1"):
+            load_impact_report(str(impact_file), tmp_path)
+
     def test_valid_report(self, tmp_path: Path) -> None:
         """Valid report is parsed correctly.
 

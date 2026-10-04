@@ -264,6 +264,13 @@ def load_impact_report(
             _validate_safe_name(scenario_name, "molecule scenario")
         for path_str in json_data.get("integration_targets", []):
             _validate_impact_path(path_str, project_dir)
+            # Enforce schema: integration_targets must be under tests/integration/targets/
+            if not path_str.startswith("tests/integration/targets/"):
+                logger.critical(
+                    "Integration target '%s' must start with 'tests/integration/targets/'",
+                    path_str,
+                )
+                sys.exit(1)
             # Also validate the target name (last path component)
             target_name = Path(path_str).name
             _validate_safe_name(target_name, "integration target")
