@@ -153,15 +153,68 @@ def _validate_impact_collection(
     if collection is not None:
         expected_collection = f"{collection.namespace}.{collection.name}"
         if data["collection"] != expected_collection:
-            err = (
-                f"Impact file collection mismatch: expected '{expected_collection}', "
-                f"got '{data['collection']}'"
+            logger.critical(
+                "Impact file collection mismatch: expected '%s', got '%s'",
+                expected_collection,
+                data["collection"],
             )
-            logger.critical(err)
             sys.exit(1)
 
 
-def load_impact_report(  # noqa: C901, PLR0912
+def _resolve_impact_path(impact_file: str, project_dir: Path) -> Path:
+    """Resolve an impact file path and verify it is a regular file.
+
+    Args:
+        impact_file: Path string (absolute or relative to project_dir).
+        project_dir: The project root directory.
+
+    Returns:
+        The resolved absolute path.
+    """
+    impact_path = Path(impact_file)
+    if not impact_path.is_absolute():
+        impact_path = project_dir / impact_path
+
+    if not impact_path.is_file():
+        if impact_path.is_dir():
+            err = f"Impact file path is a directory: {impact_path}"
+        elif not impact_path.exists():
+            err = f"Impact file not found: {impact_path}"
+        else:
+            err = f"Impact file is not a regular file: {impact_path}"
+        logger.critical(err)
+        sys.exit(1)
+
+    return impact_path
+
+
+def _read_impact_file(impact_path: Path) -> object:
+    """Read and JSON-parse an impact file.
+
+    Args:
+        impact_path: Resolved path to the impact file.
+
+    Returns:
+        The parsed JSON data.
+    """
+    try:
+        with impact_path.open(encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError as exc:
+        err = f"Invalid JSON in impact file {impact_path}: {exc}"
+        logger.critical(err)
+        sys.exit(1)
+    except UnicodeDecodeError as exc:
+        err = f"Impact file is not valid UTF-8: {impact_path}: {exc}"
+        logger.critical(err)
+        sys.exit(1)
+    except OSError as exc:
+        err = f"Cannot read impact file {impact_path}: {exc}"
+        logger.critical(err)
+        sys.exit(1)
+
+
+def load_impact_report(
     impact_file: str,
     project_dir: Path,
     collection: Collection | None = None,
@@ -179,35 +232,8 @@ def load_impact_report(  # noqa: C901, PLR0912
     if not impact_file:
         return None
 
-    impact_path = Path(impact_file)
-    if not impact_path.is_absolute():
-        impact_path = project_dir / impact_path
-
-    if not impact_path.is_file():
-        if impact_path.is_dir():
-            err = f"Impact file path is a directory: {impact_path}"
-        elif not impact_path.exists():
-            err = f"Impact file not found: {impact_path}"
-        else:
-            err = f"Impact file is not a regular file: {impact_path}"
-        logger.critical(err)
-        sys.exit(1)
-
-    try:
-        with impact_path.open(encoding="utf-8") as fh:
-            data = json.load(fh)
-    except json.JSONDecodeError as exc:
-        err = f"Invalid JSON in impact file {impact_path}: {exc}"
-        logger.critical(err)
-        sys.exit(1)
-    except UnicodeDecodeError as exc:
-        err = f"Impact file is not valid UTF-8: {impact_path}: {exc}"
-        logger.critical(err)
-        sys.exit(1)
-    except OSError as exc:
-        err = f"Cannot read impact file {impact_path}: {exc}"
-        logger.critical(err)
-        sys.exit(1)
+    impact_path = _resolve_impact_path(impact_file, project_dir)
+    data = _read_impact_file(impact_path)
 
     if not isinstance(data, dict):
         err = f"Impact file must contain a JSON object, got {type(data).__name__}"

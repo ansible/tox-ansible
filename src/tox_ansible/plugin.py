@@ -675,7 +675,37 @@ def _env_in_scope(env_name: str, scope: str) -> bool:
     return scope in ("all", env_name) or env_name.startswith(f"{scope}-")
 
 
-def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:  # noqa: C901
+def _filter_env_list(
+    envs: list[str],
+    impact_report: ImpactReport | None,
+    ansible_config: AnsibleConfiguration,
+    project_dir: Path,
+) -> list[str]:
+    """Filter molecule/integration environments based on impact or discovery.
+
+    Args:
+        envs: The current environment list.
+        impact_report: Optional impact report.
+        ansible_config: The ansible configuration.
+        project_dir: The project root directory.
+
+    Returns:
+        The filtered environment list.
+    """
+    if impact_report is not None:
+        if not impact_report.molecule_scenarios:
+            envs = [e for e in envs if not e.startswith("molecule-")]
+        if not impact_report.integration_targets:
+            envs = [e for e in envs if not e.startswith("integration-")]
+    else:
+        if not _should_include_molecule(ansible_config.molecule, project_dir):
+            envs = [e for e in envs if not e.startswith("molecule-")]
+        if not discover_integration_tests(project_dir):
+            envs = [e for e in envs if not e.startswith("integration-")]
+    return envs
+
+
+def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
     """Add the ansible matrix to the state.
 
     When ``downstream`` is enabled in project config, unions ``DOWNSTREAM_EXTRA``
@@ -734,19 +764,7 @@ def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:  # noqa: C9
     ]
 
     # Filter based on impact report if present
-    if impact_report is not None:
-        # If molecule_scenarios is empty, omit all molecule environments
-        if not impact_report.molecule_scenarios:
-            env_list.envs = [env for env in env_list.envs if not env.startswith("molecule-")]
-        # If integration_targets is empty, omit all integration environments
-        if not impact_report.integration_targets:
-            env_list.envs = [env for env in env_list.envs if not env.startswith("integration-")]
-    else:
-        # Normal behavior without impact report
-        if not _should_include_molecule(ansible_config.molecule, project_dir):
-            env_list.envs = [env for env in env_list.envs if not env.startswith("molecule-")]
-        if not discover_integration_tests(project_dir):
-            env_list.envs = [env for env in env_list.envs if not env.startswith("integration-")]
+    env_list.envs = _filter_env_list(env_list.envs, impact_report, ansible_config, project_dir)
 
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
@@ -1116,6 +1134,30 @@ def conf_commands_for_molecule(
     return [" ".join(parts)]
 
 
+def _resolve_ansible_test_targets(
+    integration_targets: list[str],
+    targets_dir: Path,
+) -> tuple[list[str], list[str]]:
+    """Split impact targets into found and missing ansible-test target names.
+
+    Args:
+        integration_targets: Paths from the impact report.
+        targets_dir: The collection's tests/integration/targets directory.
+
+    Returns:
+        A tuple of (valid_targets, missing_targets).
+    """
+    found = []
+    missing = []
+    for target_path in integration_targets:
+        target_name = Path(target_path).name
+        if (targets_dir / target_name).is_dir():
+            found.append(target_name)
+        else:
+            missing.append(target_name)
+    return found, missing
+
+
 def conf_commands_for_integration(
     collection: Collection,
     env_conf: EnvConfigSet,
@@ -1141,19 +1183,11 @@ def conf_commands_for_integration(
     """
     # If we have an impact report with integration targets, check if ansible-test style
     if impact_report and impact_report.integration_targets:
-        # Check if all targets exist as ansible-test style targets
         base_dir = project_dir or Path.cwd()
         targets_dir = base_dir / "tests" / "integration" / "targets"
-        ansible_test_targets = []
-        missing_targets = []
-        for target_path in impact_report.integration_targets:
-            path = Path(target_path)
-            target_name = path.name
-            # Only use ansible-test if the target directory exists
-            if (targets_dir / target_name).is_dir():
-                ansible_test_targets.append(target_name)
-            else:
-                missing_targets.append(target_name)
+        ansible_test_targets, missing_targets = _resolve_ansible_test_targets(
+            impact_report.integration_targets, targets_dir
+        )
 
         # Warn about missing targets
         for target in missing_targets:
