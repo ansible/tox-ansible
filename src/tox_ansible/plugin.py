@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import sys
 import uuid
 
@@ -28,6 +29,8 @@ from tox.config.loader.str_convert import StrConvert
 from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
 from tox.plugin import impl
 from tox.tox_env.python.api import PY_FACTORS_RE
+
+from tox_ansible.impact import ImpactReport, load_impact_report
 
 
 if TYPE_CHECKING:
@@ -152,6 +155,12 @@ class AnsibleConfigSet(ConfigSet):
             default=[],
             desc="full replacement molecule commands (ignores default and molecule_append)",
         )
+        self.add_config(
+            "impact_file",
+            of_type=str,
+            default="",
+            desc="path to ImpactReport JSON file from content-plugin-finder for scoped testing",
+        )
 
 
 @dataclass
@@ -165,6 +174,7 @@ class AnsibleConfiguration:
         molecule: Molecule test type mode ("auto", "true", or "false").
         molecule_append: Extra argv appended to the default molecule command.
         molecule_commands: Full-replacement molecule commands.
+        impact_file: Path to ImpactReport JSON file from content-plugin-finder.
     """
 
     coverage: bool = False
@@ -173,6 +183,7 @@ class AnsibleConfiguration:
     molecule: str = "auto"
     molecule_append: list[str] = field(default_factory=list)
     molecule_commands: list[str] = field(default_factory=list)
+    impact_file: str | None = None
 
 
 @dataclass
@@ -269,6 +280,14 @@ def tox_add_option(parser: ToxParser) -> None:
         help="Disable coverage reporting for unit tests",
     )
 
+    parser.add_argument(
+        "--impact-file",
+        type=str,
+        default="",
+        metavar="PATH",
+        help="Path to ImpactReport JSON file from content-plugin-finder for scoped testing",
+    )
+
 
 @impl
 def tox_add_core_config(
@@ -330,9 +349,20 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
     # When run nested, work_dir might become .tox instead of cwd and we don't
     # want to use `state.conf.work_dir` to find the galaxy file. PWD is more
     # reliable, even if there is a chance it might be also changed.
-    galaxy_path = state.conf.src_path.parent.resolve() / "galaxy.yml"
+    project_dir = state.conf.src_path.parent.resolve()
+    galaxy_path = project_dir / "galaxy.yml"
     collection = get_collection(galaxy_path=galaxy_path)
     pos_args = state.conf.pos_args(to_path=None)
+
+    # Load ansible config and impact report
+    ansible_config = _load_ansible_config(state)
+    impact_report: ImpactReport | None = None
+    if ansible_config.impact_file:
+        impact_report = load_impact_report(
+            ansible_config.impact_file,
+            project_dir,
+            collection=collection,
+        )
 
     # Extract Python version from environment name (e.g., py3.11 from integration-py3.11-2.18)
     # and explicitly set base_python to prevent tox misinterpreting ansible versions as Python
@@ -348,7 +378,6 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         else None
     )
     if test_type == "molecule":
-        ansible_config = _load_ansible_config(state)
         molecule_commands = ansible_config.molecule_commands
         molecule_append = ansible_config.molecule_append
     else:
@@ -369,9 +398,11 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             env_conf=env_conf,
             pos_args=pos_args,
             test_type=test_type,
+            project_dir=project_dir,
             coverage_config=coverage_config,
             molecule_commands=molecule_commands,
             molecule_append=molecule_append,
+            impact_report=impact_report,
         ),
         description=desc_for_env(env_conf.name),
         deps=conf_deps(test_type=test_type, coverage_enabled=coverage_enabled),
@@ -569,6 +600,8 @@ def _should_include_molecule(
 def _load_ansible_config(state: State) -> AnsibleConfiguration:
     """Load tox-ansible configuration using TOML-over-INI precedence.
 
+    CLI options take precedence over file configuration.
+
     Args:
         state: The tox state object.
 
@@ -577,6 +610,10 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
     """
     project_dir = state.conf.src_path.parent.resolve()
     pyproject_config = _load_pyproject_config(project_dir)
+
+    # CLI impact_file takes precedence (empty string treated as not set)
+    cli_impact_file_raw = getattr(state.conf.options, "impact_file", "")
+    cli_impact_file: str | None = cli_impact_file_raw or None
 
     if pyproject_config is not None:
         return AnsibleConfiguration(
@@ -588,6 +625,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
             ),
             molecule_append=pyproject_config.get("molecule_append", []),
             molecule_commands=pyproject_config.get("molecule_commands", []),
+            impact_file=cli_impact_file or pyproject_config.get("impact_file") or None,
         )
 
     ansible_config = state.conf.get_section_config(
@@ -603,6 +641,7 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         molecule=_coerce_molecule_setting(ansible_config["molecule"]),
         molecule_append=ansible_config["molecule_append"],
         molecule_commands=ansible_config["molecule_commands"],
+        impact_file=cli_impact_file or ansible_config["impact_file"] or None,
     )
 
 
@@ -636,11 +675,46 @@ def _env_in_scope(env_name: str, scope: str) -> bool:
     return scope in ("all", env_name) or env_name.startswith(f"{scope}-")
 
 
+def _filter_env_list(
+    envs: list[str],
+    impact_report: ImpactReport | None,
+    ansible_config: AnsibleConfiguration,
+    project_dir: Path,
+) -> list[str]:
+    """Filter molecule/integration environments based on impact or discovery.
+
+    Args:
+        envs: The current environment list.
+        impact_report: Optional impact report.
+        ansible_config: The ansible configuration.
+        project_dir: The project root directory.
+
+    Returns:
+        The filtered environment list.
+    """
+    if impact_report is not None:
+        if not impact_report.molecule_scenarios:
+            envs = [e for e in envs if not e.startswith("molecule-")]
+        if not impact_report.integration_targets:
+            envs = [e for e in envs if not e.startswith("integration-")]
+    else:
+        if not _should_include_molecule(ansible_config.molecule, project_dir):
+            envs = [e for e in envs if not e.startswith("molecule-")]
+        if not discover_integration_tests(project_dir):
+            envs = [e for e in envs if not e.startswith("integration-")]
+    return envs
+
+
 def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
     """Add the ansible matrix to the state.
 
     When ``downstream`` is enabled in project config, unions ``DOWNSTREAM_EXTRA``
     onto the upstream ``ENV_LIST`` before applying ``skip``.
+
+    When ``impact_file`` is configured, environments are filtered:
+    - molecule-* environments are omitted if molecule_scenarios is empty/absent
+    - integration-* environments are omitted if integration_targets is empty/absent
+    - unit, sanity, and galaxy environments are unaffected
 
     Args:
         state: The state object.
@@ -663,6 +737,16 @@ def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
 
     ansible_config = _load_ansible_config(state)
 
+    # Load impact report if configured (collection validation deferred until
+    # we have galaxy.yml loaded, which happens per-environment)
+    impact_report: ImpactReport | None = None
+    if ansible_config.impact_file:
+        impact_report = load_impact_report(
+            ansible_config.impact_file,
+            project_dir,
+            collection=None,  # Validate collection name later per-env
+        )
+
     env_list = StrConvert().to_env_list(ENV_LIST)
     if ansible_config.downstream:
         extra = StrConvert().to_env_list(DOWNSTREAM_EXTRA)
@@ -678,10 +762,10 @@ def add_ansible_matrix(state: State, scope: str = "all") -> EnvList:
         for env in env_list.envs
         if _env_in_scope(env, scope) and all(skip not in env for skip in ansible_config.skip)
     ]
-    if not _should_include_molecule(ansible_config.molecule, project_dir):
-        env_list.envs = [env for env in env_list.envs if not env.startswith("molecule-")]
-    if not discover_integration_tests(project_dir):
-        env_list.envs = [env for env in env_list.envs if not env.startswith("integration-")]
+
+    # Filter based on impact report if present
+    env_list.envs = _filter_env_list(env_list.envs, impact_report, ansible_config, project_dir)
+
     env_list.envs = sorted(env_list.envs, key=custom_sort)
     state.conf.core.loaders.insert(
         0,
@@ -903,9 +987,11 @@ def conf_commands(  # noqa: PLR0913
     pos_args: tuple[str, ...] | None,
     test_type: str,
     *,
+    project_dir: Path | None = None,
     coverage_config: Path | None = None,
     molecule_commands: list[str] | None = None,
     molecule_append: list[str] | None = None,
+    impact_report: ImpactReport | None = None,
 ) -> list[str]:
     """Build the commands for the tox environment.
 
@@ -914,14 +1000,24 @@ def conf_commands(  # noqa: PLR0913
         env_conf: The tox environment configuration object.
         pos_args: Positional arguments passed to tox command.
         test_type: The test type.
+        project_dir: The project root directory.
         coverage_config: The generated coverage configuration path.
         molecule_commands: Full-replacement molecule commands from config.
         molecule_append: Extra argv appended to the default molecule command.
+        impact_report: Optional ImpactReport for scoped testing.
 
     Returns:
         The commands to run.
     """
-    if test_type in ["integration", "unit"]:
+    if test_type == "integration":
+        return conf_commands_for_integration(
+            collection=collection,
+            env_conf=env_conf,
+            pos_args=pos_args,
+            project_dir=project_dir,
+            impact_report=impact_report,
+        )
+    if test_type == "unit":
         return conf_commands_for_integration_unit(
             pos_args=pos_args,
             test_type=test_type,
@@ -932,6 +1028,7 @@ def conf_commands(  # noqa: PLR0913
             pos_args=pos_args,
             molecule_commands=molecule_commands,
             molecule_append=molecule_append,
+            impact_report=impact_report,
         )
     if test_type == "sanity":
         return conf_commands_for_sanity(
@@ -984,17 +1081,22 @@ def conf_commands_for_molecule(
     pos_args: tuple[str, ...] | None,
     molecule_commands: list[str] | None = None,
     molecule_append: list[str] | None = None,
+    impact_report: ImpactReport | None = None,
 ) -> list[str]:
     """Build the commands for molecule tests.
 
     Default is ``python3 -m molecule test --all``. ``molecule_append`` adds
     argv after that default. Non-empty ``molecule_commands`` fully replaces the
-    default (and ignores ``molecule_append`` / ``pos_args``).
+    default (and ignores ``molecule_append`` / ``pos_args`` / ``impact_report``).
+
+    When ``impact_report`` provides ``molecule_scenarios``, the command is scoped
+    to run only those specific scenarios instead of ``--all``.
 
     Args:
         pos_args: Positional arguments passed to tox command.
         molecule_commands: Full-replacement molecule commands from config.
         molecule_append: Extra argv appended to the default molecule command.
+        impact_report: Optional ImpactReport for scoped testing.
 
     Returns:
         The commands to run.
@@ -1002,12 +1104,130 @@ def conf_commands_for_molecule(
     if molecule_commands:
         return list(molecule_commands)
 
+    # Determine if we should scope to specific scenarios
+    if impact_report and impact_report.molecule_scenarios:
+        # Extract scenario names from paths (e.g., "extensions/molecule/default" -> "default")
+        scenario_names = []
+        for scenario_path in impact_report.molecule_scenarios:
+            # Handle both full paths and just scenario names
+            path = Path(scenario_path)
+            scenario_names.append(path.name)
+
+        # Build commands to run each scenario
+        commands = []
+        for scenario in scenario_names:
+            # Quote scenario name for shell safety (validated during load, but defense in depth)
+            parts = ["python3", "-m", "molecule", "test", "-s", shlex.quote(scenario)]
+            if molecule_append:
+                parts.extend(molecule_append)
+            if pos_args:
+                parts.extend(pos_args)
+            commands.append(" ".join(parts))
+        return commands
+
+    # Default: run all scenarios
     parts = ["python3", "-m", "molecule", "test", "--all"]
     if molecule_append:
         parts.extend(molecule_append)
     if pos_args:
         parts.extend(pos_args)
     return [" ".join(parts)]
+
+
+def _resolve_ansible_test_targets(
+    integration_targets: list[str],
+    targets_dir: Path,
+) -> tuple[list[str], list[str]]:
+    """Split impact targets into found and missing ansible-test target names.
+
+    Args:
+        integration_targets: Paths from the impact report.
+        targets_dir: The collection's tests/integration/targets directory.
+
+    Returns:
+        A tuple of (valid_targets, missing_targets).
+    """
+    found = []
+    missing = []
+    for target_path in integration_targets:
+        target_name = Path(target_path).name
+        if (targets_dir / target_name).is_dir():
+            found.append(target_name)
+        else:
+            missing.append(target_name)
+    return found, missing
+
+
+def conf_commands_for_integration(
+    collection: Collection,
+    env_conf: EnvConfigSet,
+    pos_args: tuple[str, ...] | None,
+    project_dir: Path | None = None,
+    impact_report: ImpactReport | None = None,
+) -> list[str]:
+    """Build the commands for integration tests.
+
+    When ``impact_report`` provides ``integration_targets`` and the collection
+    uses ansible-test style targets (tests/integration/targets/), uses ansible-test
+    to run only those specific targets. Otherwise falls back to pytest behavior.
+
+    Args:
+        collection: The collection info.
+        env_conf: The tox environment configuration object.
+        pos_args: Positional arguments passed to tox command.
+        project_dir: The project root directory.
+        impact_report: Optional ImpactReport for scoped testing.
+
+    Returns:
+        The commands to run.
+    """
+    # If we have an impact report with integration targets, check if ansible-test style
+    if impact_report and impact_report.integration_targets:
+        base_dir = project_dir or Path.cwd()
+        targets_dir = base_dir / "tests" / "integration" / "targets"
+        ansible_test_targets, missing_targets = _resolve_ansible_test_targets(
+            impact_report.integration_targets, targets_dir
+        )
+
+        # Warn about missing targets
+        for target in missing_targets:
+            logger.warning(
+                "Integration target '%s' from impact report not found at %s/%s",
+                target,
+                targets_dir,
+                target,
+            )
+
+        # Use ansible-test only if we found valid ansible-test style targets
+        if ansible_test_targets:
+            py_ver = env_conf.name.split("-")[1].replace("py", "")
+            collection_path = _collection_install_path(env_conf, collection)
+
+            # Build ansible-test integration command with specific targets
+            # Quote target names for shell safety (validated during load, but defense in depth)
+            args = f" {' '.join(pos_args)}" if pos_args else ""
+            targets_str = " ".join(shlex.quote(t) for t in ansible_test_targets)
+            command = (
+                f"ansible-test integration --local --requirements "
+                f"--python {py_ver}{args} {targets_str}"
+            )
+            full_command = f"bash -c 'cd {collection_path} && {command}'"
+            return [full_command]
+
+        # All targets were missing - warn about fallback to pytest
+        # (missing_targets is guaranteed non-empty here since we had targets
+        # but none were found, otherwise we'd have returned above)
+        logger.warning(
+            "No valid ansible-test targets found from impact report; "
+            "falling back to pytest integration tests"
+        )
+
+    # Default pytest-based integration test command
+    return conf_commands_for_integration_unit(
+        pos_args=pos_args,
+        test_type="integration",
+        coverage_config=None,
+    )
 
 
 def conf_commands_for_sanity(

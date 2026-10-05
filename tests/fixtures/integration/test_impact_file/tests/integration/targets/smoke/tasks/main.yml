@@ -1,0 +1,4 @@
+---
+- name: Placeholder integration test
+  ansible.builtin.debug:
+    msg: "Integration test placeholder"
