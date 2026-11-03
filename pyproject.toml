@@ -2,12 +2,12 @@
 name = "tox-ansible"
 description = "A radical approach to testing ansible content"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 authors = [{ "name" = "Bradley A. Thornton", "email" = "bthornto@redhat.com" }]
 maintainers = [{ "name" = "Ansible by Red Hat", "email" = "info@ansible.com" }]
 keywords = ["ansible", "collections", "tox"]
-classifiers = ["Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "Operating System :: OS Independent", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14", "Programming Language :: Python :: Implementation :: CPython", "Programming Language :: Python :: Implementation :: PyPy", "Topic :: Software Development :: Quality Assurance", "Topic :: Software Development :: Testing", "Topic :: Utilities"]
+classifiers = ["Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "Operating System :: OS Independent", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14", "Programming Language :: Python :: Implementation :: CPython", "Programming Language :: Python :: Implementation :: PyPy", "Topic :: Software Development :: Quality Assurance", "Topic :: Software Development :: Testing", "Topic :: Utilities"]
 dependencies = [
   "pytest>=8.4.1",
   "pytest-ansible>=3.1.0",
@@ -343,7 +343,7 @@ builtins = ["__"]
 cache-dir = "./.cache/.ruff"
 fix = true
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 ignore = [
@@ -430,7 +430,7 @@ description = "Run all linters"
 skip_install = true
 
 [tool.tox.env.lower]
-base_python = ["python3.10"]
+base_python = ["python3.11"]
 dependency_groups = ["dev"]
 description = "Install using lowest constraints possible."
 runner = "uv-venv-runner"
@@ -493,12 +493,19 @@ TERM = "xterm-256color"
 
 [tool.uv]
 package = true
-# needed to test 'lower' constraints, as this is the first version that has
-# pre-build wheels for py310 and we don't want to build it ourselves
+# needed to test 'lower' constraints with pre-built wheels on the floor Python
 # gitpython is indirect dependency of tox-extra
 constraint-dependencies = [
   "cairosvg>=2.9.0",
-  "cryptography>=50.0.0",
+  "certifi>=2026.10.18",
   "cffi>=1.15.1",
-  "gitpython>=3",
+  "cryptography>=50.0.0",
+  "dnspython>=2.9.0",
+  "filelock>=4.2.1",
+  "gitpython>=3.2.1",
+  "pillow>=13.0.0",
+  "setuptools>=84.1.0",
+  "urllib3>=2.8.0",
+  "uv>=0.13.4",
+  "virtualenv>=21.14.9",
 ]
