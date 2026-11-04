@@ -1407,7 +1407,7 @@ def _test_deps(test_type: str, *, coverage_enabled: bool) -> list[str]:
         try:
             with (cwd / req_file).open() as fileh:
                 deps.extend(fileh.read().splitlines())
-        except FileNotFoundError:  # noqa: PERF203
+        except FileNotFoundError:
             pass
     return deps
 
