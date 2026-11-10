@@ -80,8 +80,13 @@ def _tox_ansible_pytest_plugin_dep() -> str:
     """Pin so collection envs install tox-ansible (pytest11 collection-loader plugin).
 
     Floor matches the first release that ships ``tox_ansible.pytest_plugin``.
+
+    Returns:
+        A setuptools-compatible requirement string for tox-ansible.
     """
     return "tox-ansible>=26.11.0"
+
+
 COVERAGE_DEPS = [
     "coverage>=7.0.0",  # Dec 2022
     "pytest-cov>=4.1.0",  # May 2023

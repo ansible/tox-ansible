@@ -368,6 +368,8 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "_version.py" = ["SIM108"]
+"src/tox_ansible/pytest_plugin.py" = ["PLC0415", "TC002"]
+"tests/unit/test_pytest_plugin.py" = ["TC003"]
 "tests/**" = ["SLF001", "S101", "S602", "S603", "T201"]
 "tests/fixtures/**/plugins/**" = ["ALL"]
 "tests/fixtures/**/tests/**" = ["ALL"]

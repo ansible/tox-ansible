@@ -6,8 +6,6 @@ import logging
 import os
 import sys
 
-import pytest
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ def inject_collection_paths_from_env() -> None:
     if not path_list:
         return
     try:
-        from ansible.utils.collection_loader._collection_finder import (
+        from ansible.utils.collection_loader._collection_finder import (  # type: ignore[import-untyped]
             _AnsibleCollectionFinder,
         )
     except ImportError:
@@ -40,7 +38,7 @@ def inject_collection_paths_from_env() -> None:
     acf._install()
 
 
-def pytest_configure(config: pytest.Config) -> None:
+def pytest_configure(config: object) -> None:
     """Initialize the Ansible collection loader before test collection.
 
     Args:
