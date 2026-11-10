@@ -67,14 +67,26 @@ DOWNSTREAM_EXTRA = """
 {integration, sanity, unit}-py3.13-{2.18}
 """
 
-# Without the minimal pytest-ansible condition, installation may fail in some
-# cases (pip, uv).
+# Installed into collection tox envs (unit/integration/molecule), not tox-ansible itself.
+# ansible-compat replaces former pytest-ansible coupling for test-tooling resolution under pip/uv.
 OUR_DEPS = [
     "pytest>=7.4.3",  # Oct 2023
     "pytest-xdist>=3.4.0",  # Nov 2023
-    "pytest-ansible>=v4.1.1",  # latest version still supporting py39 (Oct 2023)
     "ansible-compat>=25.11.0",  # Nov 2025
 ]
+
+
+def _tox_ansible_pytest_plugin_dep() -> str:
+    """Pin so collection envs install tox-ansible (pytest11 collection-loader plugin).
+
+    Floor matches the first release that ships ``tox_ansible.pytest_plugin``.
+
+    Returns:
+        A setuptools-compatible requirement string for tox-ansible.
+    """
+    return "tox-ansible>=26.11.0"
+
+
 COVERAGE_DEPS = [
     "coverage>=7.0.0",  # Dec 2022
     "pytest-cov>=4.1.0",  # May 2023
@@ -1068,12 +1080,7 @@ def conf_commands_for_integration_unit(
         else ""
     )
 
-    # Use pytest ansible unit inject only to inject the collection path
-    # into the collection finder
-    command = (
-        f"python3 -m pytest{coverage_args} "
-        f"--ansible-unit-inject-only{args}{Path()}/tests/{test_type}"
-    )
+    command = f"python3 -m pytest{coverage_args}{args}{Path()}/tests/{test_type}"
     return [command]
 
 
@@ -1398,6 +1405,7 @@ def _test_deps(test_type: str, *, coverage_enabled: bool) -> list[str]:
         The dependencies as a list of requirement strings.
     """
     deps = list(OUR_DEPS)
+    deps.append(_tox_ansible_pytest_plugin_dep())
     if test_type == "unit" and coverage_enabled:
         deps.extend(COVERAGE_DEPS)
     if test_type in ("integration", "molecule"):
