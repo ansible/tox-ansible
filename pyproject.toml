@@ -23,6 +23,9 @@ documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
 homepage = "https://github.com/ansible/tox-ansible"
 repository = "https://github.com/ansible/tox-ansible"
 
+[project.entry-points.pytest11]
+tox-ansible = "tox_ansible.pytest_plugin"
+
 [project.entry-points.tox]
 tox-ansible = "tox_ansible.plugin"
 
@@ -335,7 +338,7 @@ junit_family = "xunit2"  # see https://docs.codecov.com/docs/test-analytics
 markers = ["slow: marks tests that create isolated venvs and install dependencies (deselect with '-m \"not slow\"')"]
 testpaths = ["tests"]
 tmp_path_retention_policy = "failed"
-verbosity_assertions = "2"
+verbosity_assertions = 2
 
 [tool.ruff]
 builtins = ["__"]

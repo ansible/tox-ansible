@@ -828,6 +828,7 @@ def test_conf_deps(tmp_path: Path) -> None:
         assert "github.com/ansible/ansible" not in result
         assert "molecule" not in result
         assert "pytest-ansible" not in result
+        assert "tox-ansible>=" in result
 
 
 def test_conf_deps_all_dependency_files(tmp_path: Path) -> None:

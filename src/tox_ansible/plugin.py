@@ -74,6 +74,14 @@ OUR_DEPS = [
     "pytest-xdist>=3.4.0",  # Nov 2023
     "ansible-compat>=25.11.0",  # Nov 2025
 ]
+
+
+def _tox_ansible_pytest_plugin_dep() -> str:
+    """Pin so collection envs install tox-ansible (pytest11 collection-loader plugin).
+
+    Floor matches the first release that ships ``tox_ansible.pytest_plugin``.
+    """
+    return "tox-ansible>=26.11.0"
 COVERAGE_DEPS = [
     "coverage>=7.0.0",  # Dec 2022
     "pytest-cov>=4.1.0",  # May 2023
@@ -1392,6 +1400,7 @@ def _test_deps(test_type: str, *, coverage_enabled: bool) -> list[str]:
         The dependencies as a list of requirement strings.
     """
     deps = list(OUR_DEPS)
+    deps.append(_tox_ansible_pytest_plugin_dep())
     if test_type == "unit" and coverage_enabled:
         deps.extend(COVERAGE_DEPS)
     if test_type in ("integration", "molecule"):

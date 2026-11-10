@@ -72,6 +72,10 @@ def test_ade_workflow_config(
         deps = config.get("deps", "")
         assert "pytest-ansible" not in deps, f"{env_name}: deps must not include pytest-ansible"
         if "unit" in env_name or "integration" in env_name:
+            assert "tox-ansible>=" in deps, (
+                f"{env_name}: deps should include tox-ansible for the pytest plugin"
+            )
+        if "unit" in env_name or "integration" in env_name:
             commands = config.get("commands", "")
             assert "ansible-unit-inject-only" not in commands, (
                 f"{env_name}: commands must not use pytest-ansible inject flags"
@@ -204,9 +208,28 @@ def test_ade_workflow_e2e(
 
     pip = str(venv_dir / "bin" / "pip")
     tox_bin = str(venv_dir / "bin" / "tox")
+    wheel_dir = tmp_path / "wheels"
+    wheel_dir.mkdir()
+    subprocess.run(
+        [pip, "install", "build"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        [pip, "wheel", "-w", str(wheel_dir), str(repo_root)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    tox_wheel = next(wheel_dir.glob("tox_ansible-*.whl"))
+    (collection_dir / "test-requirements.txt").write_text(
+        f"{tox_wheel}\n",
+        encoding="utf-8",
+    )
 
     result = subprocess.run(
-        [pip, "install", "tox", "-e", str(repo_root)],
+        [pip, "install", "tox", str(tox_wheel)],
         check=True,
         capture_output=True,
         text=True,
