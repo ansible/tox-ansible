@@ -10,7 +10,6 @@ keywords = ["ansible", "collections", "tox"]
 classifiers = ["Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "Operating System :: OS Independent", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14", "Programming Language :: Python :: Implementation :: CPython", "Programming Language :: Python :: Implementation :: PyPy", "Topic :: Software Development :: Quality Assurance", "Topic :: Software Development :: Testing", "Topic :: Utilities"]
 dependencies = [
   "pytest>=8.4.1",
-  "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
   "pyyaml>=6.0.1",
   "tomli>=1.1.0; python_version < '3.11'",
@@ -403,7 +402,6 @@ dependency_groups = ["dev"]
 deps = [
   "ansible-compat @ git+https://github.com/ansible/ansible-compat.git",
   "ansible-core @ git+https://github.com/ansible/ansible.git",
-  "pytest-ansible @ git+https://github.com/ansible/pytest-ansible.git",
   "--editable=.",
 ]
 description = "Run the tests with newest dependencies (no lock and allowing prereleases)"
