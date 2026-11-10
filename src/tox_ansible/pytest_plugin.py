@@ -8,6 +8,7 @@ import sys
 
 import pytest
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +37,7 @@ def inject_collection_paths_from_env() -> None:
         logger.debug("AnsibleCollectionFinder unavailable; skip collection inject")
         return
     acf = _AnsibleCollectionFinder(paths=path_list)
-    acf._install()  # noqa: SLF001
+    acf._install()
 
 
 def pytest_configure(config: pytest.Config) -> None:

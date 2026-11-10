@@ -1,5 +1,6 @@
 Metafunc
 adrs
+addopts
 autouse
 calver
 caplog
