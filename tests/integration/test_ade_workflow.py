@@ -70,9 +70,7 @@ def test_ade_workflow_config(
             f"{env_name}: set_env should contain 'ANSIBLE_COLLECTIONS_PATH=.'"
         )
         deps = config.get("deps", "")
-        assert "pytest-ansible" not in deps, (
-            f"{env_name}: deps must not include pytest-ansible"
-        )
+        assert "pytest-ansible" not in deps, f"{env_name}: deps must not include pytest-ansible"
         if "unit" in env_name or "integration" in env_name:
             commands = config.get("commands", "")
             assert "ansible-unit-inject-only" not in commands, (
