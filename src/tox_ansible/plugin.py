@@ -406,7 +406,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         ),
         description=desc_for_env(env_conf.name),
         deps=conf_deps(test_type=test_type, coverage_enabled=coverage_enabled),
-        passenv=conf_passenv(),
+        passenv=conf_passenv(test_type=test_type),
         setenv=conf_setenv(env_conf=env_conf, test_type=test_type),
         skip_install=True,
     )
@@ -1432,14 +1432,21 @@ def conf_deps(test_type: str, *, coverage_enabled: bool = False) -> str:
     return "\n".join(deps)
 
 
-def conf_passenv() -> list[str]:
+def conf_passenv(test_type: str) -> list[str]:
     """Build the pass environment variables for the tox environment.
+
+    Molecule scenarios commonly drive containers through a rootless socket or a
+    remote daemon, so the container host address is passed through for them.
+
+    Args:
+        test_type: The test type.
 
     Returns:
         The pass environment variables.
     """
-    passenv = []
-    passenv.append("GITHUB_TOKEN")
+    passenv = ["GITHUB_TOKEN"]
+    if test_type == "molecule":
+        passenv.extend(["CONTAINER_HOST", "DOCKER_HOST"])
     return passenv
 
 

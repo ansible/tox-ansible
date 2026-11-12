@@ -265,6 +265,11 @@ The `molecule` package is automatically installed as a dependency. Additional
 molecule plugins (e.g., `molecule-plugins[docker]`) can be added via your
 collection's `requirements.txt` or `test-requirements.txt`.
 
+Molecule environments pass `CONTAINER_HOST` and `DOCKER_HOST` through from your
+shell, so scenarios that drive containers over a rootless socket or a remote
+daemon can reach it. Other variables your scenarios need can be added with
+`pass_env` in your tox configuration.
+
 ### Collection directory structure
 
 ```bash
