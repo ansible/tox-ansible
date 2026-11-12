@@ -28,6 +28,7 @@ from tox_ansible.plugin import (
     conf_commands_for_molecule,
     conf_commands_pre,
     conf_deps,
+    conf_passenv,
     discover_integration_tests,
     discover_molecule_scenarios,
     tox_add_env_config,
@@ -608,6 +609,86 @@ def test_tox_add_env_config_molecule_loads_append(
     assert isinstance(env_conf.loaders[0], MemoryLoader)
     commands = env_conf.loaders[0].raw["commands"]
     assert any("--workers" in cmd and "4" in cmd for cmd in commands)
+
+
+def test_tox_add_env_config_molecule_passes_container_hosts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test molecule envs pass CONTAINER_HOST and DOCKER_HOST through (issue #590).
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox-ansible.ini"
+    ini_file.write_text("[ansible]\nmolecule = true\n")
+    (tmp_path / "galaxy.yml").write_text("namespace: test\nname: test\nversion: 1.0.0")
+    monkeypatch.chdir(tmp_path)
+    source = discover_source(ini_file, None)
+    parsed = Parsed(
+        work_dir=tmp_path,
+        override=[],
+        config_file=ini_file,
+        root_dir=tmp_path,
+        ansible=True,
+        result_json=None,
+    )
+
+    env_conf = Config.make(
+        parsed=parsed,
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("molecule-py3.13-2.21")
+
+    env_conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    output = io.BytesIO()
+    wrapper = io.TextIOWrapper(buffer=output, encoding="utf-8", line_buffering=True)
+    state = State(
+        options=Options(
+            parsed=parsed,
+            pos_args="",
+            source=source,
+            cmd_handlers={},
+            log_handler=ToxHandler(level=0, is_colored=False, out_err=(wrapper, wrapper)),
+        ),
+        args=[],
+    )
+
+    tox_add_env_config(env_conf, state)
+
+    assert isinstance(env_conf.loaders[0], MemoryLoader)
+    passenv = env_conf.loaders[0].raw["passenv"]
+    assert "CONTAINER_HOST" in passenv
+    assert "DOCKER_HOST" in passenv
+    assert "GITHUB_TOKEN" in passenv
+
+
+@pytest.mark.parametrize(
+    ("test_type", "expected"),
+    (
+        ("molecule", ["GITHUB_TOKEN", "CONTAINER_HOST", "DOCKER_HOST"]),
+        ("unit", ["GITHUB_TOKEN"]),
+        ("integration", ["GITHUB_TOKEN"]),
+        ("sanity", ["GITHUB_TOKEN"]),
+        ("galaxy", ["GITHUB_TOKEN"]),
+    ),
+)
+def test_conf_passenv(test_type: str, expected: list[str]) -> None:
+    """Test conf_passenv adds container host vars only for molecule.
+
+    Args:
+        test_type: The test type.
+        expected: The expected pass environment variables.
+    """
+    assert conf_passenv(test_type=test_type) == expected
 
 
 def test_add_ansible_matrix_molecule_pyproject_true(
