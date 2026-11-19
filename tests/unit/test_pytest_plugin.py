@@ -107,7 +107,7 @@ def test_load_ansible_collection_finder_falls_back_to_internal_module(
             return types.ModuleType(name)
         if name == internal_module:
             module = types.ModuleType(name)
-            module._AnsibleCollectionFinder = FakeFinder
+            module._AnsibleCollectionFinder = FakeFinder  # type: ignore[attr-defined]
             return module
         return real_import(name, globals_, locals_, fromlist, level)
 
