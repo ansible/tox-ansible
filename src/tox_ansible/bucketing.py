@@ -341,12 +341,21 @@ def _cli_count(value: object, option: str) -> int | None:
     Returns:
         The CLI integer, or None when unset.
     """
-    if value is None:
+    if value is None or value == "":
         return None
-    if isinstance(value, bool) or not isinstance(value, int):
+    if isinstance(value, bool):
         logger.critical("%s must be an integer", option)
         sys.exit(1)
-    return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            logger.critical("%s must be an integer", option)
+            sys.exit(1)
+    logger.critical("%s must be an integer", option)
+    sys.exit(1)
 
 
 def resolve_matrix_limits(

@@ -425,12 +425,14 @@ def test_coerce_count(value: object, expected: int) -> None:
 def test_cli_count_rejects_non_integers() -> None:
     """Test CLI values that are not integers."""
     assert _cli_count(None, "--matrix-jobs") is None
+    assert _cli_count("", "--matrix-jobs") is None
     assert _cli_count(6, "--matrix-jobs") == 6
+    assert _cli_count("4", "--matrix-max-parallel") == 4
     not_an_int = True
     with pytest.raises(SystemExit):
         _cli_count(not_an_int, "--matrix-jobs")
     with pytest.raises(SystemExit):
-        _cli_count("4", "--matrix-max-parallel")
+        _cli_count("nope", "--matrix-max-parallel")
 
 
 def test_resolve_and_require_limits() -> None:

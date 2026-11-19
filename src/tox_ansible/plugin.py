@@ -306,15 +306,13 @@ def tox_add_option(parser: ToxParser) -> None:
     )
     parser.add_argument(
         "--matrix-jobs",
-        type=int,
-        default=None,
+        default="",
         metavar="N",
         help="balance impact-selected scenarios across N CI jobs",
     )
     parser.add_argument(
         "--matrix-max-parallel",
-        type=int,
-        default=None,
+        default="",
         metavar="N",
         help="emit max_parallel for the scenario job matrix",
     )
