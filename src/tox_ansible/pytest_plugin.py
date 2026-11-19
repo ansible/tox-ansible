@@ -27,7 +27,7 @@ def _load_ansible_collection_finder() -> type[object] | None:
                 module_name,
                 fromlist=["_AnsibleCollectionFinder"],
             )
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             continue
         finder_cls = getattr(module, "_AnsibleCollectionFinder", None)
         if finder_cls is not None:
