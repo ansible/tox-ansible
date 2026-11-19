@@ -165,6 +165,17 @@ tox -e unit-py3.13-2.19 --ansible --coverage -- --cov-report=xml
 
 A GitHub Actions matrix is dynamically created by `tox-ansible` using the `--gh-matrix` and `--ansible` flags. The list of environments is converted to a list of entries in json format which is stored under the `envlist` key in the file specified by the `GITHUB_OUTPUT` environment variable.
 
+## Balancing scenarios across jobs
+
+`--gh-matrix` lists tox environments. `--gh-matrix-jobs` reads an ImpactReport and packs the selected integration targets and molecule scenarios into time-balanced jobs. Use the same `matrix_jobs` value when generating the matrix and when running a job:
+
+```bash
+tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-max-parallel 8 --gh-matrix-jobs
+tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 -e integration-py3.12-2.19
+```
+
+Integration times come from each target's ansible-test `aliases` file. Molecule scenarios use a default of 180 seconds. `max_parallel` is emitted for the workflow; tox does not schedule runners. See [Job bucketing](configuration.md#job-bucketing) for the matrix shape and configuration.
+
 Below shows relevant snippets from a GitHub Action workflow which:
 
 1. Uses the `--gh-matrix` flag to generate a list of environments.

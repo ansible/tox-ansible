@@ -30,6 +30,7 @@ from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
 from tox.plugin import impl
 from tox.tox_env.python.api import PY_FACTORS_RE
 
+from tox_ansible.bucketing import assign_job, resolve_matrix_limits, write_scenario_matrix
 from tox_ansible.impact import ImpactReport, load_impact_report
 
 
@@ -161,6 +162,18 @@ class AnsibleConfigSet(ConfigSet):
             default="",
             desc="path to ImpactReport JSON file from content-plugin-finder for scoped testing",
         )
+        self.add_config(
+            "matrix_jobs",
+            of_type=int,
+            default=0,
+            desc="time-balanced CI jobs for impact-selected scenarios (0 disables)",
+        )
+        self.add_config(
+            "matrix_max_parallel",
+            of_type=int,
+            default=0,
+            desc="max parallel jobs emitted for GitHub Actions (0 omits the value)",
+        )
 
 
 @dataclass
@@ -175,6 +188,8 @@ class AnsibleConfiguration:
         molecule_append: Extra argv appended to the default molecule command.
         molecule_commands: Full-replacement molecule commands.
         impact_file: Path to ImpactReport JSON file from content-plugin-finder.
+        matrix_jobs: Maximum time-balanced jobs for each scenario kind.
+        matrix_max_parallel: Optional GitHub Actions max-parallel cap.
     """
 
     coverage: bool = False
@@ -184,6 +199,8 @@ class AnsibleConfiguration:
     molecule_append: list[str] = field(default_factory=list)
     molecule_commands: list[str] = field(default_factory=list)
     impact_file: str | None = None
+    matrix_jobs: int = 0
+    matrix_max_parallel: int | None = None
 
 
 @dataclass
@@ -287,6 +304,32 @@ def tox_add_option(parser: ToxParser) -> None:
         metavar="PATH",
         help="Path to ImpactReport JSON file from content-plugin-finder for scoped testing",
     )
+    parser.add_argument(
+        "--matrix-jobs",
+        type=int,
+        default=None,
+        metavar="N",
+        help="balance impact-selected scenarios across N CI jobs",
+    )
+    parser.add_argument(
+        "--matrix-max-parallel",
+        type=int,
+        default=None,
+        metavar="N",
+        help="emit max_parallel for the scenario job matrix",
+    )
+    parser.add_argument(
+        "--gh-matrix-jobs",
+        action="store_true",
+        default=False,
+        help="emit a GitHub Actions matrix of time-balanced scenario jobs",
+    )
+    parser.add_argument(
+        "--matrix-job",
+        default="",
+        metavar="JOB",
+        help="run only the scenarios assigned to one job id, such as integration-1",
+    )
 
 
 @impl
@@ -300,25 +343,41 @@ def tox_add_core_config(
         core_conf: The core configuration object.
         state: The state object.
     """
-    if state.conf.options.gh_matrix and not state.conf.options.ansible:  # pragma: no cover
-        err = "The --gh-matrix option requires --ansible"
-        logger.critical(err)
-        sys.exit(1)
-
-    if state.conf.options.coverage and not state.conf.options.ansible:  # pragma: no cover
-        err = "The --coverage option requires --ansible"
-        logger.critical(err)
-        sys.exit(1)
-
-    if not state.conf.options.ansible:  # pragma: no cover
+    options = state.conf.options
+    ansible_flags = (
+        (options.gh_matrix, "--gh-matrix"),
+        (getattr(options, "gh_matrix_jobs", False), "--gh-matrix-jobs"),
+        (bool(getattr(options, "matrix_job", "")), "--matrix-job"),
+        (bool(options.coverage), "--coverage"),
+    )
+    if not options.ansible:
+        for enabled, flag in ansible_flags:
+            if enabled:
+                logger.critical("The %s option requires --ansible", flag)
+                sys.exit(1)
         return
 
-    env_list = add_ansible_matrix(state, scope=state.conf.options.matrix_scope)
+    if getattr(options, "gh_matrix_jobs", False):
+        if options.gh_matrix:
+            logger.critical("Use either --gh-matrix or --gh-matrix-jobs")
+            sys.exit(1)
+        project_dir = state.conf.src_path.parent.resolve()
+        config = _load_ansible_config(state)
+        write_scenario_matrix(
+            project_dir,
+            config.impact_file,
+            config.matrix_jobs,
+            config.matrix_max_parallel,
+            get_collection(project_dir / "galaxy.yml"),
+        )
+        sys.exit(0)
 
-    if not state.conf.options.gh_matrix:  # pragma: no cover
+    env_list = add_ansible_matrix(state, scope=options.matrix_scope)
+
+    if not options.gh_matrix:  # pragma: no cover
         return
 
-    generate_gh_matrix(env_list=env_list, section=state.conf.options.matrix_scope)
+    generate_gh_matrix(env_list=env_list, section=options.matrix_scope)
     sys.exit(0)
 
 
@@ -364,6 +423,19 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             collection=collection,
         )
 
+    matrix_job = getattr(state.conf.options, "matrix_job", "") or None
+    if matrix_job:
+        if impact_report is None:
+            logger.critical("--matrix-job requires an impact file")
+            sys.exit(1)
+        impact_report = assign_job(
+            impact_report,
+            project_dir,
+            ansible_config.matrix_jobs,
+            ansible_config.matrix_max_parallel,
+            matrix_job,
+        )
+
     # Extract Python version from environment name (e.g., py3.11 from integration-py3.11-2.18)
     # and explicitly set base_python to prevent tox misinterpreting ansible versions as Python
     base_python: list[str] = []
@@ -403,6 +475,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
             molecule_commands=molecule_commands,
             molecule_append=molecule_append,
             impact_report=impact_report,
+            matrix_job=matrix_job,
         ),
         description=desc_for_env(env_conf.name),
         deps=conf_deps(test_type=test_type, coverage_enabled=coverage_enabled),
@@ -614,8 +687,16 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
     # CLI impact_file takes precedence (empty string treated as not set)
     cli_impact_file_raw = getattr(state.conf.options, "impact_file", "")
     cli_impact_file: str | None = cli_impact_file_raw or None
+    cli_matrix_jobs = getattr(state.conf.options, "matrix_jobs", None)
+    cli_matrix_parallel = getattr(state.conf.options, "matrix_max_parallel", None)
 
     if pyproject_config is not None:
+        matrix_jobs, matrix_max_parallel = resolve_matrix_limits(
+            pyproject_config.get("matrix_jobs", 0),
+            pyproject_config.get("matrix_max_parallel", 0),
+            cli_matrix_jobs,
+            cli_matrix_parallel,
+        )
         return AnsibleConfiguration(
             coverage=_coerce_bool(pyproject_config.get("coverage", False)),
             skip=pyproject_config.get("skip", []),
@@ -626,6 +707,8 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
             molecule_append=pyproject_config.get("molecule_append", []),
             molecule_commands=pyproject_config.get("molecule_commands", []),
             impact_file=cli_impact_file or pyproject_config.get("impact_file") or None,
+            matrix_jobs=matrix_jobs,
+            matrix_max_parallel=matrix_max_parallel,
         )
 
     ansible_config = state.conf.get_section_config(
@@ -633,6 +716,12 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         base=[],
         of_type=AnsibleConfigSet,
         for_env=None,
+    )
+    matrix_jobs, matrix_max_parallel = resolve_matrix_limits(
+        ansible_config["matrix_jobs"],
+        ansible_config["matrix_max_parallel"],
+        cli_matrix_jobs,
+        cli_matrix_parallel,
     )
     return AnsibleConfiguration(
         coverage=ansible_config["coverage"],
@@ -642,6 +731,8 @@ def _load_ansible_config(state: State) -> AnsibleConfiguration:
         molecule_append=ansible_config["molecule_append"],
         molecule_commands=ansible_config["molecule_commands"],
         impact_file=cli_impact_file or ansible_config["impact_file"] or None,
+        matrix_jobs=matrix_jobs,
+        matrix_max_parallel=matrix_max_parallel,
     )
 
 
@@ -992,6 +1083,7 @@ def conf_commands(  # noqa: PLR0913
     molecule_commands: list[str] | None = None,
     molecule_append: list[str] | None = None,
     impact_report: ImpactReport | None = None,
+    matrix_job: str | None = None,
 ) -> list[str]:
     """Build the commands for the tox environment.
 
@@ -1005,10 +1097,21 @@ def conf_commands(  # noqa: PLR0913
         molecule_commands: Full-replacement molecule commands from config.
         molecule_append: Extra argv appended to the default molecule command.
         impact_report: Optional ImpactReport for scoped testing.
+        matrix_job: Scenario job id selected with ``--matrix-job``.
 
     Returns:
         The commands to run.
     """
+    if matrix_job and test_type in {"integration", "molecule"}:
+        job_kind = matrix_job.split("-", 1)[0]
+        if test_type != job_kind:
+            logger.warning(
+                "Skipping %s environment; --matrix-job %s selects %s scenarios",
+                test_type,
+                matrix_job,
+                job_kind,
+            )
+            return [f"echo skipping {test_type} for --matrix-job {shlex.quote(matrix_job)}"]
     if test_type == "integration":
         return conf_commands_for_integration(
             collection=collection,
@@ -1016,6 +1119,7 @@ def conf_commands(  # noqa: PLR0913
             pos_args=pos_args,
             project_dir=project_dir,
             impact_report=impact_report,
+            strict_scope=matrix_job is not None,
         )
     if test_type == "unit":
         return conf_commands_for_integration_unit(
@@ -1024,6 +1128,8 @@ def conf_commands(  # noqa: PLR0913
             coverage_config=coverage_config,
         )
     if test_type == "molecule":
+        if matrix_job and molecule_commands:
+            logger.warning("molecule_commands ignores --matrix-job %s", matrix_job)
         return conf_commands_for_molecule(
             pos_args=pos_args,
             molecule_commands=molecule_commands,
@@ -1158,12 +1264,14 @@ def _resolve_ansible_test_targets(
     return found, missing
 
 
-def conf_commands_for_integration(
+def conf_commands_for_integration(  # noqa: PLR0913
     collection: Collection,
     env_conf: EnvConfigSet,
     pos_args: tuple[str, ...] | None,
     project_dir: Path | None = None,
     impact_report: ImpactReport | None = None,
+    *,
+    strict_scope: bool = False,
 ) -> list[str]:
     """Build the commands for integration tests.
 
@@ -1177,6 +1285,8 @@ def conf_commands_for_integration(
         pos_args: Positional arguments passed to tox command.
         project_dir: The project root directory.
         impact_report: Optional ImpactReport for scoped testing.
+        strict_scope: When true, fail if an assigned target is missing instead of
+            running a partial list or the full integration suite.
 
     Returns:
         The commands to run.
@@ -1197,6 +1307,14 @@ def conf_commands_for_integration(
                 targets_dir,
                 target,
             )
+
+        if strict_scope and missing_targets:
+            logger.critical(
+                "Assigned integration targets not found under %s: %s",
+                targets_dir,
+                ", ".join(missing_targets),
+            )
+            sys.exit(1)
 
         # Use ansible-test only if we found valid ansible-test style targets
         if ansible_test_targets:
@@ -1221,6 +1339,10 @@ def conf_commands_for_integration(
             "No valid ansible-test targets found from impact report; "
             "falling back to pytest integration tests"
         )
+
+    if strict_scope:
+        logger.critical("Matrix job has no integration targets to run")
+        sys.exit(1)
 
     # Default pytest-based integration test command
     return conf_commands_for_integration_unit(
