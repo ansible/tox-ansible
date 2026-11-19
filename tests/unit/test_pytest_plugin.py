@@ -91,6 +91,10 @@ def test_load_ansible_collection_finder_falls_back_to_internal_module(
     """
     real_import = builtins.__import__
     legacy_module = _ANSIBLE_COLLECTION_FINDER_MODULES[0]
+    internal_module = _ANSIBLE_COLLECTION_FINDER_MODULES[1]
+
+    class FakeFinder:
+        pass
 
     def fake_import(
         name: str,
@@ -101,10 +105,14 @@ def test_load_ansible_collection_finder_falls_back_to_internal_module(
     ) -> object:
         if name == legacy_module:
             return types.ModuleType(name)
+        if name == internal_module:
+            module = types.ModuleType(name)
+            module._AnsibleCollectionFinder = FakeFinder
+            return module
         return real_import(name, globals_, locals_, fromlist, level)
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
-    assert _load_ansible_collection_finder() is not None
+    assert _load_ansible_collection_finder() is FakeFinder
 
 
 def test_inject_collection_paths_from_env_no_paths(
