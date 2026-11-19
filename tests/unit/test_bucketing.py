@@ -488,6 +488,8 @@ def test_write_job_matrix_stdout_and_github_output(
         monkeypatch: Pytest fixture.
         capsys: Pytest fixture.
     """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     plain = JobMatrix(jobs=["integration-1"], scenarios={"integration-1": "a"})
     write_job_matrix(plain)
     assert json.loads(capsys.readouterr().out) == plain.as_dict()
@@ -549,13 +551,20 @@ def test_write_scenario_matrix_requires_file_and_positive_limits(tmp_path: Path)
         write_scenario_matrix(tmp_path, "impact.json", 2, 0, collection)
 
 
-def test_gh_matrix_jobs_output(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_gh_matrix_jobs_output(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test --gh-matrix-jobs output from the tox hook.
 
     Args:
         tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
         capsys: Pytest fixture.
     """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     config_file = _write_project(tmp_path)
     state = _state(config_file, gh_matrix_jobs=True)
     with pytest.raises(SystemExit) as exc:
@@ -638,14 +647,18 @@ def test_gh_matrix_and_gh_matrix_jobs_conflict(tmp_path: Path) -> None:
 
 def test_gh_matrix_still_lists_environments(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Test --gh-matrix still prints the tox environment list.
 
     Args:
         tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
         capsys: Pytest fixture.
     """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.delenv("GITHUB_OUTPUT", raising=False)
     config_file = tmp_path / "tox-ansible.ini"
     config_file.write_text("[ansible]\n", encoding="utf-8")
     state = _state(config_file, gh_matrix=True)
