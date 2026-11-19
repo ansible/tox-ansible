@@ -30,7 +30,7 @@ from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
 from tox.plugin import impl
 from tox.tox_env.python.api import PY_FACTORS_RE
 
-from tox_ansible.bucketing import assign_job, resolve_matrix_limits, write_scenario_matrix
+from tox_ansible.bucketing import apply_matrix_job, resolve_matrix_limits, write_scenario_matrix
 from tox_ansible.impact import ImpactReport, load_impact_report
 
 
@@ -422,17 +422,13 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         )
 
     matrix_job = getattr(state.conf.options, "matrix_job", "") or None
-    if matrix_job:
-        if impact_report is None:
-            logger.critical("--matrix-job requires an impact file")
-            sys.exit(1)
-        impact_report = assign_job(
-            impact_report,
-            project_dir,
-            ansible_config.matrix_jobs,
-            ansible_config.matrix_max_parallel,
-            matrix_job,
-        )
+    impact_report = apply_matrix_job(
+        impact_report,
+        project_dir,
+        ansible_config.matrix_jobs,
+        ansible_config.matrix_max_parallel,
+        matrix_job,
+    )
 
     # Extract Python version from environment name (e.g., py3.11 from integration-py3.11-2.18)
     # and explicitly set base_python to prevent tox misinterpreting ansible versions as Python

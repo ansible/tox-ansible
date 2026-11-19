@@ -370,10 +370,10 @@ def test_job_ids_and_narrow() -> None:
         "tests/integration/targets/b",
         "tests/integration/targets/a",
     ]
-    assert integration.molecule_scenarios == []
+    assert not integration.molecule_scenarios
     molecule = narrow_impact_report(report, "molecule-1", ["default"])
     assert molecule.molecule_scenarios == ["extensions/molecule/default"]
-    assert molecule.integration_targets == []
+    assert not molecule.integration_targets
     with pytest.raises(ValueError, match="Invalid matrix job"):
         narrow_impact_report(report, "nope", [])
     with pytest.raises(ValueError, match="Invalid matrix job"):
@@ -433,6 +433,8 @@ def test_cli_count_rejects_non_integers() -> None:
         _cli_count(not_an_int, "--matrix-jobs")
     with pytest.raises(SystemExit):
         _cli_count("nope", "--matrix-max-parallel")
+    with pytest.raises(SystemExit):
+        _cli_count(1.5, "--matrix-jobs")
 
 
 def test_resolve_and_require_limits() -> None:
@@ -472,8 +474,9 @@ def test_load_matrix_limits_from_ini_toml_and_cli(tmp_path: Path) -> None:
     from_cli_parallel = _load_ansible_config(_state(ini, matrix_max_parallel=7))
     assert from_cli_parallel.matrix_jobs == 5
     assert from_cli_parallel.matrix_max_parallel == 7
+    bad_state = _state(ini, matrix_jobs=True)
     with pytest.raises(SystemExit):
-        _load_ansible_config(_state(ini, matrix_jobs=True))
+        _load_ansible_config(bad_state)
 
 
 def test_write_job_matrix_stdout_and_github_output(

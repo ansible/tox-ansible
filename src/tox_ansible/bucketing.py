@@ -15,9 +15,9 @@ import re
 import sys
 import uuid
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from tox_ansible.impact import ImpactReport, load_impact_report
 
@@ -29,10 +29,11 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_SECONDS = 180
 SLOW_SECONDS = 3000
-_TIME_SECONDS = re.compile(r"^time=([0-9]+)s\S*$")
-_TIME_MINUTES = re.compile(r"^time=([0-9]+)m\S*$")
-_TIME_BARE = re.compile(r"^time=([0-9]+)\S*$")
-_JOB_ID = re.compile(r"^(integration|molecule)-[1-9][0-9]*$")
+_TIME_SECONDS = re.compile(r"^time=(\d+)s\S*$")
+_TIME_MINUTES = re.compile(r"^time=(\d+)m\S*$")
+# Digits and the suffix are disjoint so the match cannot backtrack.
+_TIME_BARE = re.compile(r"^time=(\d+)(?:[^\d\s]\S*)?$")
+_JOB_ID = re.compile(r"^(integration|molecule)-[1-9]\d*$")
 
 
 @dataclass(frozen=True)
@@ -108,13 +109,10 @@ def execution_seconds(aliases_text: str) -> int:
             continue
         if line == "slow":
             saw_slow = True
-        if match := _TIME_SECONDS.match(line):
-            seconds = int(match.group(1))
-            timed = True
-        elif match := _TIME_MINUTES.match(line):
+        if match := _TIME_MINUTES.match(line):
             seconds = int(match.group(1)) * 60
             timed = True
-        elif match := _TIME_BARE.match(line):
+        elif match := _TIME_SECONDS.match(line) or _TIME_BARE.match(line):
             seconds = int(match.group(1))
             timed = True
     if saw_slow and not timed:
@@ -150,6 +148,36 @@ def scenario_seconds(project_dir: Path, kind: str, name: str) -> int:
     return execution_seconds(text)
 
 
+def _find_slot(
+    item: _WeightedScenario,
+    chunks: list[_Bucket],
+    time_per_chunk: int,
+) -> int:
+    """Return the bucket index for one scenario.
+
+    A scenario at least as long as one share takes the first empty bucket.
+    A shorter scenario takes the first bucket that can hold it. Otherwise it
+    goes in the first bucket.
+
+    Args:
+        item: Scenario to place.
+        chunks: Buckets filled so far.
+        time_per_chunk: Equal share of the total runtime, in seconds.
+
+    Returns:
+        Index of the chosen bucket.
+    """
+    if item.seconds >= time_per_chunk:
+        for index, chunk in enumerate(chunks):
+            if chunk.total == 0:
+                return index
+        return 0  # pragma: no cover
+    for index, chunk in enumerate(chunks):
+        if item.seconds + chunk.total <= time_per_chunk:
+            return index
+    return 0
+
+
 def split_into_balanced_buckets(
     scenarios: list[_WeightedScenario],
     job_count: int,
@@ -179,20 +207,8 @@ def split_into_balanced_buckets(
     total_time = sum(item.seconds for item in scenarios)
     time_per_chunk = int(total_time / job_count) + 1
     chunks = [_Bucket() for _ in range(job_count)]
-
-    def find_slot(item: _WeightedScenario) -> int:
-        if item.seconds >= time_per_chunk:
-            for index, chunk in enumerate(chunks):
-                if chunk.total == 0:
-                    return index
-            return 0  # pragma: no cover
-        for index, chunk in enumerate(chunks):
-            if item.seconds + chunk.total <= time_per_chunk:
-                return index
-        return 0
-
     for item in scenarios:
-        slot = find_slot(item)
+        slot = _find_slot(item, chunks, time_per_chunk)
         chunks[slot].total += item.seconds
         chunks[slot].names.append(item.name)
     return [chunk.names for chunk in chunks if chunk.names]
@@ -305,8 +321,19 @@ def narrow_impact_report(report: ImpactReport, job_id: str, names: list[str]) ->
             chosen[name] = path
     ordered = [chosen[name] for name in names if name in chosen]
     if kind == "integration":
-        return replace(report, integration_targets=ordered, molecule_scenarios=[])
-    return replace(report, molecule_scenarios=ordered, integration_targets=[])
+        integration_targets = ordered
+        molecule_scenarios: list[str] = []
+    else:
+        integration_targets = []
+        molecule_scenarios = ordered
+    return ImpactReport(
+        collection=report.collection,
+        changed_files=list(report.changed_files),
+        affected_plugins=list(report.affected_plugins),
+        molecule_scenarios=molecule_scenarios,
+        integration_targets=integration_targets,
+        reasons=dict(report.reasons),
+    )
 
 
 def _coerce_count(value: object, *, default: int = 0) -> int:
@@ -331,6 +358,16 @@ def _coerce_count(value: object, *, default: int = 0) -> int:
     return default
 
 
+def _exit_not_integer(option: str) -> NoReturn:
+    """Reject a CLI value that is not an integer.
+
+    Args:
+        option: Option name used in the error.
+    """
+    logger.critical("%s must be an integer", option)
+    sys.exit(1)
+
+
 def _cli_count(value: object, option: str) -> int | None:
     """Return a CLI integer, or None when the option was omitted.
 
@@ -344,18 +381,15 @@ def _cli_count(value: object, option: str) -> int | None:
     if value is None or value == "":
         return None
     if isinstance(value, bool):
-        logger.critical("%s must be an integer", option)
-        sys.exit(1)
+        _exit_not_integer(option)
     if isinstance(value, int):
         return value
     if isinstance(value, str):
         try:
             return int(value)
         except ValueError:
-            logger.critical("%s must be an integer", option)
-            sys.exit(1)
-    logger.critical("%s must be an integer", option)
-    sys.exit(1)
+            _exit_not_integer(option)
+    _exit_not_integer(option)
 
 
 def resolve_matrix_limits(
@@ -500,3 +534,30 @@ def assign_job(
         logger.critical("%s", exc)
         sys.exit(1)
     return narrow_impact_report(report, job_id, names)
+
+
+def apply_matrix_job(
+    report: ImpactReport | None,
+    project_dir: Path,
+    matrix_jobs: int,
+    matrix_max_parallel: int | None,
+    job_id: str | None,
+) -> ImpactReport | None:
+    """Narrow a report to one job, or return it unchanged.
+
+    Args:
+        report: Loaded impact report, if any.
+        project_dir: Collection root.
+        matrix_jobs: Configured job count.
+        matrix_max_parallel: Configured cap, or None when omitted.
+        job_id: Job id from ``--matrix-job``, or None when that option is omitted.
+
+    Returns:
+        The original report, or the report narrowed to ``job_id``.
+    """
+    if not job_id:
+        return report
+    if report is None:
+        logger.critical("--matrix-job requires an impact file")
+        sys.exit(1)
+    return assign_job(report, project_dir, matrix_jobs, matrix_max_parallel, job_id)
