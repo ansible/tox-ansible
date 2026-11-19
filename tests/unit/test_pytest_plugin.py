@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import builtins
 import sys
+import types
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -11,13 +12,15 @@ from textwrap import dedent
 
 import pytest
 
-from tox_ansible.pytest_plugin import inject_collection_paths_from_env, pytest_configure
+from tox_ansible.pytest_plugin import (
+    _ANSIBLE_COLLECTION_FINDER_MODULES,
+    _load_ansible_collection_finder,
+    inject_collection_paths_from_env,
+    pytest_configure,
+)
 
 
 pytest.importorskip("ansible")
-from ansible.utils.collection_loader._collection_finder import (  # type: ignore[import-untyped]
-    _AnsibleCollectionFinder,
-)
 
 
 def test_inject_collection_paths_from_env_installs_finder(
@@ -46,8 +49,62 @@ def test_inject_collection_paths_from_env_installs_finder(
 
     inject_collection_paths_from_env()
 
+    finder_cls = _load_ansible_collection_finder()
+    assert finder_cls is not None
     assert str(tmp_path) in sys.path
-    assert any(isinstance(item, _AnsibleCollectionFinder) for item in sys.meta_path)
+    assert any(isinstance(item, finder_cls) for item in sys.meta_path)
+
+
+def test_load_ansible_collection_finder_returns_none(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When ansible-core exposes no finder, loading returns ``None``.
+
+    Args:
+        monkeypatch: Pytest fixture to patch modules and environment.
+    """
+    real_import = builtins.__import__
+
+    def fake_import(
+        name: str,
+        globals_: dict[str, object] | None = None,
+        locals_: Mapping[str, object] | None = None,
+        fromlist: Sequence[str] = (),
+        level: int = 0,
+    ) -> object:
+        if name in _ANSIBLE_COLLECTION_FINDER_MODULES:
+            msg = "forced for test"
+            raise ImportError(msg)
+        return real_import(name, globals_, locals_, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    assert _load_ansible_collection_finder() is None
+
+
+def test_load_ansible_collection_finder_falls_back_to_internal_module(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Legacy import paths without a finder class fall through to newer layouts.
+
+    Args:
+        monkeypatch: Pytest fixture to patch modules and environment.
+    """
+    real_import = builtins.__import__
+    legacy_module = _ANSIBLE_COLLECTION_FINDER_MODULES[0]
+
+    def fake_import(
+        name: str,
+        globals_: dict[str, object] | None = None,
+        locals_: Mapping[str, object] | None = None,
+        fromlist: Sequence[str] = (),
+        level: int = 0,
+    ) -> object:
+        if name == legacy_module:
+            return types.ModuleType(name)
+        return real_import(name, globals_, locals_, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    assert _load_ansible_collection_finder() is not None
 
 
 def test_inject_collection_paths_from_env_no_paths(
@@ -82,7 +139,7 @@ def test_inject_collection_paths_skips_without_finder(
         fromlist: Sequence[str] = (),
         level: int = 0,
     ) -> object:
-        if name == "ansible.utils.collection_loader._collection_finder":
+        if name in _ANSIBLE_COLLECTION_FINDER_MODULES:
             msg = "forced for test"
             raise ImportError(msg)
         return real_import(name, globals_, locals_, fromlist, level)
