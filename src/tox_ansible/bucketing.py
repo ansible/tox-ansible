@@ -135,6 +135,7 @@ def scenario_seconds(
         kind: ``integration`` or ``molecule``.
         name: Target or scenario name.
         strict: When ``True``, unreadable aliases files exit instead of defaulting.
+            Missing files still use the default in either mode.
 
     Returns:
         Estimated runtime in seconds.
@@ -142,10 +143,10 @@ def scenario_seconds(
     if kind != "integration":
         return DEFAULT_SECONDS
     alias_path = project_dir / "tests" / "integration" / "targets" / name / "aliases"
-    if not alias_path.is_file():
-        return DEFAULT_SECONDS
     try:
         text = alias_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return DEFAULT_SECONDS
     except (OSError, UnicodeError):
         if strict:
             logger.critical(

@@ -7,6 +7,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 
 from pathlib import Path
 from typing import cast
@@ -628,6 +629,61 @@ def test_assign_job_rejects_unreadable_aliases(
         assign_job(report, tmp_path, 2, None, "integration-1")
     assert exc.value.code == 1
     assert "Cannot read aliases" in caplog.text
+
+
+def test_build_job_matrix_rejects_aliases_permission_error(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Permission errors on aliases must not masquerade as a missing file.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    targets = tmp_path / "tests" / "integration" / "targets"
+    (targets / "a").mkdir(parents=True)
+    (targets / "b").mkdir(parents=True)
+    alias = targets / "a" / "aliases"
+    alias.write_text("slow\n", encoding="utf-8")
+    alias.chmod(0)
+    report = ImpactReport(
+        collection="test.test",
+        integration_targets=[
+            "tests/integration/targets/a",
+            "tests/integration/targets/b",
+        ],
+    )
+    caplog.set_level(logging.CRITICAL)
+    try:
+        with pytest.raises(SystemExit) as exc:
+            build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
+        assert exc.value.code == 1
+        assert "Cannot read aliases" in caplog.text
+    finally:
+        alias.chmod(0o600)
+
+
+def test_scenario_seconds_permission_error_non_strict(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Non-matrix callers keep the warning fallback when aliases cannot be opened.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    alias = tmp_path / "tests" / "integration" / "targets" / "demo" / "aliases"
+    alias.parent.mkdir(parents=True)
+    alias.write_text("time=12\n", encoding="utf-8")
+    alias.chmod(0)
+    caplog.set_level(logging.WARNING)
+    try:
+        assert scenario_seconds(tmp_path, "integration", "demo") == 180
+        assert "Cannot read aliases" in caplog.text
+    finally:
+        alias.chmod(os.stat(alias).st_mode | 0o600)
 
 
 def test_require_integration_targets_noop_without_targets(tmp_path: Path) -> None:
