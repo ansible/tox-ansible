@@ -26,7 +26,7 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 - Durations come from ansible-test `aliases` (`time=` and `slow`), matching `ansible_test_splitter`. Missing data uses 180 seconds. Molecule scenarios use 180 seconds.
 - Equal durations are ordered by name so the matrix and `--matrix-job` stay stable.
 - Empty jobs are omitted.
-- `--matrix-job <id>` rebuilds the same buckets and passes only those names to the existing integration or molecule command.
+- `--matrix-job <id>` rebuilds the buckets from the impact report and integration `aliases`, then passes only those names to the existing integration or molecule command.
 - Integration ids are target directory names. Molecule ids are impact-report paths, so scenarios that share a directory name stay distinct. Ids are space-separated and cannot contain whitespace.
 - Collection molecule scenarios run with `molecule test -s` and the name relative to `extensions/molecule/`. Other molecule scenarios run from the directory that contains `molecule/`.
 - `molecule_commands` is incompatible with `--matrix-job`; the combination exits instead of running the unscoped replacement commands.
@@ -68,12 +68,12 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 ### Positive
 
 - A collection can replace the splitter's packing step with `--impact-file` and `--gh-matrix-jobs`.
-- Generating the matrix and running a job use one implementation, so the assignment cannot drift.
+- Generating the matrix and running a job use one implementation.
 - Existing `--gh-matrix` and unscoped `--impact-file` runs stay unchanged when the new flags are absent.
 
 ### Negative
 
-- Workflows must pass the same `matrix_jobs` value to the generate step and the run step.
+- Each runner must use the same `matrix_jobs` value, impact report contents, and integration `aliases` files as the generate step. `--matrix-job` recomputes assignments from those inputs, so a different report or aliases file can move a target to another job.
 - Molecule scenarios have no aliases file, so they share one default duration.
 - `max_parallel` only takes effect when the workflow copies it into `strategy.max-parallel`.
 
@@ -105,5 +105,6 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 | 2026-11-19 | Sudhir Verma | Accepted and implemented with AAP-99999 |
 | 2026-11-20 | Sudhir Verma | Molecule jobs keep full scenario paths; reject molecule_commands with --matrix-job |
 | 2026-11-20 | Sudhir Verma | Molecule commands use -s or bash -c; reject whitespace in matrix ids |
+| 2026-11-20 | Sudhir Verma | Runners must reuse the generate-step impact report and aliases |
 
 ---

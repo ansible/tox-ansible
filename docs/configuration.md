@@ -278,7 +278,7 @@ Estimated seconds come from `tests/integration/targets/<name>/aliases`:
 
 Molecule scenarios use 180 seconds. Scenarios with the same estimate are ordered by name. The packer follows `ansible_test_splitter`: each job gets about an equal share of the total, and a scenario that fits nowhere else goes in the first job.
 
-Run one job with the same `matrix_jobs` value. `--matrix-job` recomputes the buckets and runs only that job's scenarios. The job fails if an assigned integration target directory is missing:
+Run one job with the same `matrix_jobs` value. Each runner must also use the same impact report contents and integration `aliases` files as the generate step. `--matrix-job` recomputes the buckets from those inputs and runs only that job's scenarios. The job fails if an assigned integration target directory is missing:
 
 ```bash
 tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 -e integration-py3.12-2.19

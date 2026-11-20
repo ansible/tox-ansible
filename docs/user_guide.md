@@ -167,7 +167,7 @@ A GitHub Actions matrix is dynamically created by `tox-ansible` using the `--gh-
 
 ## Balancing scenarios across jobs
 
-`--gh-matrix` lists tox environments. `--gh-matrix-jobs` reads an ImpactReport and packs the selected integration targets and molecule scenarios into time-balanced jobs. Use the same `matrix_jobs` value when generating the matrix and when running a job:
+`--gh-matrix` lists tox environments. `--gh-matrix-jobs` reads an ImpactReport and packs the selected integration targets and molecule scenarios into time-balanced jobs. Use the same `matrix_jobs` value, impact report contents, and integration `aliases` files when generating the matrix and when running a job. `--matrix-job` recomputes the buckets from those inputs:
 
 ```bash
 tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-max-parallel 8 --gh-matrix-jobs
