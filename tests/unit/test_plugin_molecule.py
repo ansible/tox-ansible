@@ -251,6 +251,68 @@ def test_commands_pre_molecule_with_requirements(
     assert result[7] == "echo ::endgroup::"
 
 
+def test_commands_pre_molecule_scenario_requirements(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Test molecule pre-commands install each scenario's own requirements.yml.
+
+    Args:
+        monkeypatch: Pytest fixture.
+        tmp_path: Pytest fixture.
+    """
+    monkeypatch.delenv("GITHUB_ACTIONS", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "requirements.yml").write_text("collections: []")
+    molecule_dir = tmp_path / "extensions" / "molecule"
+    for name in ("zeta", "alpha"):
+        (molecule_dir / name).mkdir(parents=True)
+        (molecule_dir / name / "molecule.yml").write_text("---")
+        (molecule_dir / name / "requirements.yml").write_text("collections: []")
+    (molecule_dir / "no_reqs").mkdir()
+    (molecule_dir / "no_reqs" / "molecule.yml").write_text("---")
+    (molecule_dir / "not_a_scenario").mkdir()
+    (molecule_dir / "not_a_scenario" / "requirements.yml").write_text("collections: []")
+
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+
+    conf = Config.make(
+        Parsed(
+            work_dir=tmp_path,
+            override=[],
+            config_file=ini_file,
+            root_dir=tmp_path,
+            result_json=None,
+        ),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("molecule-py3.14-2.20")
+
+    conf.add_config(
+        keys=["env_dir", "envdir"],
+        of_type=Path,
+        default=tmp_path,
+        desc="",
+    )
+
+    result = conf_commands_pre(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="molecule",
+        ansible_version="2.20",
+    )
+    expected_commands = 4
+    assert len(result) == expected_commands, result
+    assert "ade install -r tests/requirements.yml" in result[1]
+    assert "ade install -r extensions/molecule/alpha/requirements.yml" in result[2]
+    assert "ade install -r extensions/molecule/zeta/requirements.yml" in result[3]
+
+
 def test_discover_molecule_scenarios_found(tmp_path: Path) -> None:
     """Test molecule discovery when scenarios exist.
 
