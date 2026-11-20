@@ -239,6 +239,10 @@ def require_integration_targets(report: ImpactReport, project_dir: Path) -> None
 
     ``build_job_matrix`` estimates missing targets at the default duration, which
     can change job assignments relative to a full checkout.
+
+    Args:
+        report: Impact report listing integration target paths.
+        project_dir: Collection root.
     """
     if not report.integration_targets:
         return

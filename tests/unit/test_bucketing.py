@@ -22,6 +22,8 @@ from tox.config.source import discover_source
 from tox.report import ToxHandler
 from tox.session.state import State
 
+import tox_ansible.plugin as ansible_plugin
+
 from tox_ansible.bucketing import (
     JobMatrix,
     _cli_count,
@@ -29,10 +31,10 @@ from tox_ansible.bucketing import (
     _WeightedScenario,
     assign_job,
     build_job_matrix,
-    require_integration_targets,
     execution_seconds,
     job_scenario_names,
     narrow_impact_report,
+    require_integration_targets,
     require_matrix_limits,
     resolve_matrix_limits,
     scenario_seconds,
@@ -44,7 +46,6 @@ from tox_ansible.impact import ImpactReport
 from tox_ansible.plugin import (
     Collection,
     _load_ansible_config,
-    conf_commands,
     conf_commands_for_integration,
     tox_add_core_config,
     tox_add_env_config,
@@ -406,7 +407,12 @@ def test_assign_job_rejects_missing_integration_target(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Missing target dirs must fail before matrix rebuild can reshuffle jobs."""
+    """Missing target dirs must fail before matrix rebuild can reshuffle jobs.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
     (tmp_path / "tests" / "integration" / "targets" / "b").mkdir(parents=True)
     report = ImpactReport(
         collection="test.test",
@@ -424,7 +430,11 @@ def test_assign_job_rejects_missing_integration_target(
 
 
 def test_require_integration_targets_noop_without_targets(tmp_path: Path) -> None:
-    """Molecule-only reports skip integration target checks."""
+    """Molecule-only reports skip integration target checks.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
     report = ImpactReport(
         collection="test.test",
         molecule_scenarios=["extensions/molecule/default"],
@@ -781,7 +791,7 @@ def test_matrix_job_command_edges(tmp_path: Path, caplog: pytest.LogCaptureFixtu
     config_file.write_text("[ansible]\n", encoding="utf-8")
     env_conf, _ = _env(config_file, "unit-py3.14-2.19")
     collection = Collection(name="test", namespace="test", version="1.0.0")
-    unit = conf_commands(
+    unit = ansible_plugin.conf_commands(
         collection=collection,
         env_conf=env_conf,
         pos_args=None,
@@ -791,7 +801,7 @@ def test_matrix_job_command_edges(tmp_path: Path, caplog: pytest.LogCaptureFixtu
     assert unit == ["python3 -m pytest --ansible-unit-inject-only ./tests/unit"]
 
     caplog.set_level(logging.WARNING)
-    replaced = conf_commands(
+    replaced = ansible_plugin.conf_commands(
         collection=collection,
         env_conf=env_conf,
         pos_args=None,
