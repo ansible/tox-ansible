@@ -10,6 +10,7 @@ import logging
 
 from pathlib import Path
 from typing import cast
+from unittest.mock import patch
 
 import pytest
 
@@ -467,7 +468,7 @@ def test_build_job_matrix_accepts_nested_molecule_siblings(tmp_path: Path) -> No
     )
     matrix = build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
     assert len(matrix.jobs) == 2
-    names = {scenario for scenario in matrix.scenarios.values()}
+    names = set(matrix.scenarios.values())
     assert names == {
         "roles/example/molecule/group_a/default",
         "roles/example/molecule/group_b/default",
@@ -487,16 +488,16 @@ def test_reject_ambiguous_molecule_commands_exits(
     def same_target(_path: str) -> tuple[str, str]:
         return "roles/example", "default"
 
-    from unittest.mock import patch
-
-    with patch("tox_ansible.bucketing._molecule_target", side_effect=same_target):
-        with pytest.raises(SystemExit) as exc:
-            _reject_ambiguous_molecule_commands(
-                [
-                    "roles/example/molecule/group_a/default",
-                    "roles/example/molecule/group_b/default",
-                ],
-            )
+    with (
+        patch("tox_ansible.bucketing._molecule_target", side_effect=same_target),
+        pytest.raises(SystemExit) as exc,
+    ):
+        _reject_ambiguous_molecule_commands(
+            [
+                "roles/example/molecule/group_a/default",
+                "roles/example/molecule/group_b/default",
+            ],
+        )
     assert exc.value.code == 1
     assert "same command" in caplog.text
 
