@@ -7,7 +7,6 @@ from __future__ import annotations
 import io
 import json
 import logging
-import os
 
 from pathlib import Path
 from typing import cast
@@ -683,7 +682,7 @@ def test_scenario_seconds_permission_error_non_strict(
         assert scenario_seconds(tmp_path, "integration", "demo") == 180
         assert "Cannot read aliases" in caplog.text
     finally:
-        alias.chmod(os.stat(alias).st_mode | 0o600)
+        alias.chmod(alias.stat().st_mode | 0o600)
 
 
 def test_require_integration_targets_noop_without_targets(tmp_path: Path) -> None:
