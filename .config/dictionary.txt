@@ -1,4 +1,5 @@
 Metafunc
+addopts
 adrs
 autouse
 calver
@@ -13,6 +14,7 @@ envlogdir
 envtmpdir
 fileh
 fixturenames
+fromlist
 lifecycle
 metafunc
 mkfifo

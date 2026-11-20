@@ -10,7 +10,6 @@ keywords = ["ansible", "collections", "tox"]
 classifiers = ["Development Status :: 5 - Production/Stable", "Intended Audience :: Developers", "Operating System :: OS Independent", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Programming Language :: Python :: 3.13", "Programming Language :: Python :: 3.14", "Programming Language :: Python :: Implementation :: CPython", "Programming Language :: Python :: Implementation :: PyPy", "Topic :: Software Development :: Quality Assurance", "Topic :: Software Development :: Testing", "Topic :: Utilities"]
 dependencies = [
   "pytest>=8.4.1",
-  "pytest-ansible>=3.1.0",
   "pytest-xdist>=3.8.0",
   "pyyaml>=6.0.1",
   "tomli>=1.1.0; python_version < '3.11'",
@@ -23,6 +22,9 @@ changelog = "https://github.com/ansible/tox-ansible/releases"
 documentation = "https://ansible.readthedocs.io/projects/tox-ansible/"
 homepage = "https://github.com/ansible/tox-ansible"
 repository = "https://github.com/ansible/tox-ansible"
+
+[project.entry-points.pytest11]
+tox-ansible = "tox_ansible.pytest_plugin"
 
 [project.entry-points.tox]
 tox-ansible = "tox_ansible.plugin"
@@ -336,7 +338,7 @@ junit_family = "xunit2"  # see https://docs.codecov.com/docs/test-analytics
 markers = ["slow: marks tests that create isolated venvs and install dependencies (deselect with '-m \"not slow\"')"]
 testpaths = ["tests"]
 tmp_path_retention_policy = "failed"
-verbosity_assertions = "2"
+verbosity_assertions = 2
 
 [tool.ruff]
 builtins = ["__"]
@@ -366,6 +368,8 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.ruff.lint.per-file-ignores]
 "_version.py" = ["SIM108"]
+"src/tox_ansible/pytest_plugin.py" = ["PLC0415", "TC002"]
+"tests/unit/test_pytest_plugin.py" = ["TC003"]
 "tests/**" = ["SLF001", "S101", "S602", "S603", "T201"]
 "tests/fixtures/**/plugins/**" = ["ALL"]
 "tests/fixtures/**/tests/**" = ["ALL"]
@@ -403,7 +407,6 @@ dependency_groups = ["dev"]
 deps = [
   "ansible-compat @ git+https://github.com/ansible/ansible-compat.git",
   "ansible-core @ git+https://github.com/ansible/ansible.git",
-  "pytest-ansible @ git+https://github.com/ansible/pytest-ansible.git",
   "--editable=.",
 ]
 description = "Run the tests with newest dependencies (no lock and allowing prereleases)"
