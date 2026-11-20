@@ -320,10 +320,10 @@ def test_build_job_matrix_packs_by_time_and_kind(tmp_path: Path) -> None:
     assert matrix.scenarios == {
         "integration-1": "slow_target",
         "integration-2": "fast_target",
-        "molecule-1": "default",
+        "molecule-1": "extensions/molecule/default",
     }
     assert matrix.max_parallel == 4
-    _assert_partition(matrix, {"slow_target", "fast_target", "default"})
+    _assert_partition(matrix, {"slow_target", "fast_target", "extensions/molecule/default"})
 
 
 def test_build_job_matrix_tie_breaks_by_name(tmp_path: Path) -> None:
@@ -371,13 +371,39 @@ def test_job_ids_and_narrow() -> None:
         "tests/integration/targets/a",
     ]
     assert not integration.molecule_scenarios
-    molecule = narrow_impact_report(report, "molecule-1", ["default"])
+    molecule = narrow_impact_report(report, "molecule-1", ["extensions/molecule/default"])
     assert molecule.molecule_scenarios == ["extensions/molecule/default"]
     assert not molecule.integration_targets
     with pytest.raises(ValueError, match="Invalid matrix job"):
         narrow_impact_report(report, "nope", [])
     with pytest.raises(ValueError, match="Invalid matrix job"):
         narrow_impact_report(report, "sanity-1", [])
+
+
+def test_build_job_matrix_keeps_duplicate_molecule_basenames(tmp_path: Path) -> None:
+    """Molecule scenarios that share a directory name stay distinct.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    report = ImpactReport(
+        collection="test.test",
+        molecule_scenarios=[
+            "extensions/molecule/default",
+            "roles/example/molecule/default",
+            "extensions/molecule/default",
+        ],
+    )
+    matrix = build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
+    assigned = " ".join(matrix.scenarios[job] for job in matrix.jobs).split()
+    assert assigned.count("extensions/molecule/default") == 1
+    assert assigned.count("roles/example/molecule/default") == 1
+    narrowed = narrow_impact_report(
+        report,
+        "molecule-1",
+        ["roles/example/molecule/default"],
+    )
+    assert narrowed.molecule_scenarios == ["roles/example/molecule/default"]
 
 
 def test_assign_job(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -617,10 +643,10 @@ def test_gh_matrix_jobs_output(
     assert payload["jobs"] == ["integration-1", "integration-2", "molecule-1"]
     assert payload["scenarios"]["integration-1"] == "slow_target"
     assert payload["scenarios"]["integration-2"] == "fast_target"
-    assert payload["scenarios"]["molecule-1"] == "default"
+    assert payload["scenarios"]["molecule-1"] == "extensions/molecule/default"
     assert payload["max_parallel"] == 4
     assigned = " ".join(payload["scenarios"].values()).split()
-    assert sorted(assigned) == ["default", "fast_target", "slow_target"]
+    assert sorted(assigned) == ["extensions/molecule/default", "fast_target", "slow_target"]
 
 
 @pytest.mark.parametrize(

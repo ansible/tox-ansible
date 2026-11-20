@@ -1135,7 +1135,12 @@ def conf_commands(  # noqa: PLR0913
         )
     if test_type == "molecule":
         if matrix_job and molecule_commands:
-            logger.warning("molecule_commands ignores --matrix-job %s", matrix_job)
+            logger.critical(
+                "molecule_commands cannot be used with --matrix-job %s; "
+                "remove molecule_commands so the selected scenarios can run",
+                matrix_job,
+            )
+            sys.exit(1)
         return conf_commands_for_molecule(
             pos_args=pos_args,
             molecule_commands=molecule_commands,
@@ -1184,6 +1189,34 @@ def conf_commands_for_integration_unit(
     return [command]
 
 
+def _molecule_scenario_command(
+    scenario_path: str,
+    molecule_append: list[str] | None,
+    pos_args: tuple[str, ...] | None,
+) -> str:
+    """Build one molecule command for an impact-report scenario path.
+
+    Args:
+        scenario_path: Scenario path or name from the impact report.
+        molecule_append: Extra argv appended to the command.
+        pos_args: Positional arguments passed to tox.
+
+    Returns:
+        A shell command that runs that scenario.
+    """
+    path = Path(scenario_path)
+    parts = ["python3", "-m", "molecule"]
+    parent = path.parent
+    if parent.name == "molecule" and parent.parent.parts:
+        parts.extend(["--directory", shlex.quote(str(parent.parent))])
+    parts.extend(["test", "-s", shlex.quote(path.name)])
+    if molecule_append:
+        parts.extend(molecule_append)
+    if pos_args:
+        parts.extend(pos_args)
+    return " ".join(parts)
+
+
 def conf_commands_for_molecule(
     pos_args: tuple[str, ...] | None,
     molecule_commands: list[str] | None = None,
@@ -1211,26 +1244,11 @@ def conf_commands_for_molecule(
     if molecule_commands:
         return list(molecule_commands)
 
-    # Determine if we should scope to specific scenarios
     if impact_report and impact_report.molecule_scenarios:
-        # Extract scenario names from paths (e.g., "extensions/molecule/default" -> "default")
-        scenario_names = []
-        for scenario_path in impact_report.molecule_scenarios:
-            # Handle both full paths and just scenario names
-            path = Path(scenario_path)
-            scenario_names.append(path.name)
-
-        # Build commands to run each scenario
-        commands = []
-        for scenario in scenario_names:
-            # Quote scenario name for shell safety (validated during load, but defense in depth)
-            parts = ["python3", "-m", "molecule", "test", "-s", shlex.quote(scenario)]
-            if molecule_append:
-                parts.extend(molecule_append)
-            if pos_args:
-                parts.extend(pos_args)
-            commands.append(" ".join(parts))
-        return commands
+        return [
+            _molecule_scenario_command(scenario_path, molecule_append, pos_args)
+            for scenario_path in impact_report.molecule_scenarios
+        ]
 
     # Default: run all scenarios
     parts = ["python3", "-m", "molecule", "test", "--all"]

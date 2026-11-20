@@ -700,11 +700,11 @@ def test_conf_commands_unit_ignores_matrix_job(tmp_path: Path) -> None:
     assert result == ["python3 -m pytest ./tests/unit"]
 
 
-def test_conf_commands_molecule_custom_ignores_matrix_job(
+def test_conf_commands_molecule_custom_rejects_matrix_job(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Configured molecule_commands are kept when --matrix-job is set.
+    """Configured molecule_commands cannot be combined with --matrix-job.
 
     Args:
         tmp_path: Pytest fixture.
@@ -719,18 +719,19 @@ def test_conf_commands_molecule_custom_ignores_matrix_job(
         source=source,
         extra_envs=[],
     ).get_env("molecule-py3.14-2.19")
-    caplog.set_level(logging.WARNING)
+    caplog.set_level(logging.CRITICAL)
 
-    result = conf_commands(
-        env_conf=conf,
-        collection=Collection(name="test", namespace="test", version="1.0.0"),
-        test_type="molecule",
-        pos_args=None,
-        molecule_commands=["true"],
-        matrix_job="molecule-1",
-    )
-    assert result == ["true"]
-    assert "molecule_commands ignores --matrix-job molecule-1" in caplog.text
+    with pytest.raises(SystemExit) as exc:
+        conf_commands(
+            env_conf=conf,
+            collection=Collection(name="test", namespace="test", version="1.0.0"),
+            test_type="molecule",
+            pos_args=None,
+            molecule_commands=["true"],
+            matrix_job="molecule-1",
+        )
+    assert exc.value.code == 1
+    assert "molecule_commands cannot be used with --matrix-job molecule-1" in caplog.text
 
 
 def test_conf_commands_sanity(tmp_path: Path) -> None:

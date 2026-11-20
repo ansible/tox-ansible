@@ -284,7 +284,9 @@ Run one job with the same `matrix_jobs` value. `--matrix-job` recomputes the buc
 tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 -e integration-py3.12-2.19
 ```
 
-`--matrix-job` requires an impact file. A molecule environment does not run integration scenarios, and an integration environment does not run molecule scenarios. `molecule_commands` still replaces the molecule command.
+`--matrix-job` requires an impact file. A molecule environment does not run integration scenarios, and an integration environment does not run molecule scenarios. `molecule_commands` cannot be combined with `--matrix-job`; remove it so the selected scenarios run.
+
+Molecule jobs keep the impact-report path as the scenario id, so two scenarios named `default` in different directories stay distinct. Integration jobs still use the target directory name.
 
 `--gh-matrix` and `--gh-matrix-jobs` are separate. The first lists tox environments. The second lists scenario jobs.
 

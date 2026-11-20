@@ -708,8 +708,25 @@ class TestConfCommandsForMoleculeImpact:
 
         expected_scenario_count = 2
         assert len(result) == expected_scenario_count
-        assert "python3 -m molecule test -s default" in result[0]
-        assert "python3 -m molecule test -s custom" in result[1]
+        assert result[0] == "python3 -m molecule --directory extensions test -s default"
+        assert result[1] == "python3 -m molecule --directory extensions test -s custom"
+
+    def test_duplicate_molecule_basenames_keep_directories(self) -> None:
+        """Scenarios that share a name run from their own molecule directories."""
+        impact_report = ImpactReport(
+            collection="test.test",
+            molecule_scenarios=[
+                "extensions/molecule/default",
+                "roles/example/molecule/default",
+            ],
+        )
+
+        result = conf_commands_for_molecule(pos_args=None, impact_report=impact_report)
+
+        assert result == [
+            "python3 -m molecule --directory extensions test -s default",
+            "python3 -m molecule --directory roles/example test -s default",
+        ]
 
     def test_molecule_scenarios_with_append(self) -> None:
         """Molecule scenarios with append adds extra args."""
@@ -724,7 +741,9 @@ class TestConfCommandsForMoleculeImpact:
             impact_report=impact_report,
         )
 
-        assert result == ["python3 -m molecule test -s default --workers 4"]
+        assert result == [
+            "python3 -m molecule --directory extensions test -s default --workers 4",
+        ]
 
     def test_molecule_scenarios_with_pos_args(self) -> None:
         """Molecule scenarios with positional args passes them through."""
@@ -738,7 +757,7 @@ class TestConfCommandsForMoleculeImpact:
             impact_report=impact_report,
         )
 
-        assert result == ["python3 -m molecule test -s default --debug"]
+        assert result == ["python3 -m molecule --directory extensions test -s default --debug"]
 
     def test_molecule_commands_overrides_impact(self) -> None:
         """Custom molecule_commands overrides impact_report."""

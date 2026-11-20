@@ -27,6 +27,8 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 - Equal durations are ordered by name so the matrix and `--matrix-job` stay stable.
 - Empty jobs are omitted.
 - `--matrix-job <id>` rebuilds the same buckets and passes only those names to the existing integration or molecule command.
+- Integration ids are target directory names. Molecule ids are impact-report paths, so scenarios that share a directory name stay distinct.
+- `molecule_commands` is incompatible with `--matrix-job`; the combination exits instead of running the unscoped replacement commands.
 - `max_parallel` is data for the workflow. Tox does not schedule runners.
 
 ## Alternatives Considered
@@ -100,5 +102,6 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 | Date | Author | Change |
 |------|--------|--------|
 | 2026-11-19 | Sudhir Verma | Accepted and implemented with AAP-99999 |
+| 2026-11-20 | Sudhir Verma | Molecule jobs keep full scenario paths; reject molecule_commands with --matrix-job |
 
 ---

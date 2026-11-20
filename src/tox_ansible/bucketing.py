@@ -214,19 +214,23 @@ def split_into_balanced_buckets(
     return [chunk.names for chunk in chunks if chunk.names]
 
 
-def _unique_names(paths: list[str]) -> list[str]:
-    """Return scenario names in first-seen order.
+def _scenario_ids(paths: list[str], kind: str) -> list[str]:
+    """Return unique scenario ids in first-seen order.
+
+    Integration uses the target directory name. Molecule keeps the impact-report
+    path so two scenarios that share a directory name stay distinct.
 
     Args:
         paths: Impact-report paths or names.
+        kind: ``integration`` or ``molecule``.
 
     Returns:
-        Unique final path components.
+        Unique scenario ids.
     """
     seen: set[str] = set()
     names: list[str] = []
     for path in paths:
-        name = Path(path).name
+        name = Path(path).name if kind == "integration" else path
         if name in seen:
             continue
         seen.add(name)
@@ -249,7 +253,7 @@ def require_integration_targets(report: ImpactReport, project_dir: Path) -> None
     targets_dir = project_dir / "tests" / "integration" / "targets"
     missing = [
         name
-        for name in _unique_names(report.integration_targets)
+        for name in _scenario_ids(report.integration_targets, "integration")
         if not (targets_dir / name).is_dir()
     ]
     if missing:
@@ -290,7 +294,7 @@ def build_job_matrix(
     for kind, paths in groups:
         weighted = [
             _WeightedScenario(name, scenario_seconds(project_dir, kind, name))
-            for name in _unique_names(paths)
+            for name in _scenario_ids(paths, kind)
         ]
         weighted.sort(key=lambda item: (-item.seconds, item.name))
         buckets = split_into_balanced_buckets(weighted, job_count)
@@ -343,7 +347,7 @@ def narrow_impact_report(report: ImpactReport, job_id: str, names: list[str]) ->
     chosen: dict[str, str] = {}
     paths = report.integration_targets if kind == "integration" else report.molecule_scenarios
     for path in paths:
-        name = Path(path).name
+        name = Path(path).name if kind == "integration" else path
         if name in order and name not in chosen:
             chosen[name] = path
     ordered = [chosen[name] for name in names if name in chosen]
