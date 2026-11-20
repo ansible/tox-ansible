@@ -239,6 +239,29 @@ def _scenario_ids(paths: list[str], kind: str) -> list[str]:
     return names
 
 
+def _reject_ambiguous_molecule_commands(paths: list[str]) -> None:
+    """Exit when two impact paths would run the same Molecule command.
+
+    Args:
+        paths: Molecule scenario paths from the impact report.
+    """
+    seen: dict[tuple[str | None, str], str] = {}
+    for path in paths:
+        project, scenario = _molecule_target(path)
+        key = (project, scenario)
+        prior = seen.get(key)
+        if prior is not None and prior != path:
+            logger.critical(
+                "Molecule scenarios %r and %r run the same command (project=%r, -s=%r)",
+                prior,
+                path,
+                project,
+                scenario,
+            )
+            sys.exit(1)
+        seen[key] = path
+
+
 def _reject_whitespace_ids(names: list[str]) -> None:
     """Exit when a scenario id cannot survive a space-separated matrix value.
 
@@ -305,9 +328,9 @@ def _molecule_target(scenario_path: str) -> tuple[str | None, str]:
     marker = len(parts) - 1 - parts[::-1].index("molecule")
     project = parts[:marker]
     rest = parts[marker + 1 :]
+    scenario = "/".join(rest) if rest else "default"
     if project == ("extensions",):
-        return None, "/".join(rest) if rest else "default"
-    scenario = rest[-1] if rest else "default"
+        return None, scenario
     if not project:
         return None, scenario
     return "/".join(project), scenario
@@ -369,6 +392,8 @@ def build_job_matrix(
     for kind, paths in groups:
         names = _scenario_ids(paths, kind)
         _reject_whitespace_ids(names)
+        if kind == "molecule":
+            _reject_ambiguous_molecule_commands(names)
         weighted = [
             _WeightedScenario(name, scenario_seconds(project_dir, kind, name)) for name in names
         ]

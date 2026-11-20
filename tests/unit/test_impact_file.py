@@ -124,6 +124,15 @@ class TestValidateImpactPath:
         with pytest.raises(ValueError, match="Path traversal not allowed"):
             _validate_impact_path("tests/../../../etc/passwd", tmp_path)
 
+    def test_backslash_traversal_rejected(self, tmp_path: Path) -> None:
+        """Backslash paths normalize like forward slashes before containment checks.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        with pytest.raises(ValueError, match="Path traversal not allowed"):
+            _validate_impact_path("..\\outside\\molecule\\default", tmp_path)
+
 
 class TestValidateSafeName:
     """Tests for _validate_safe_name function."""

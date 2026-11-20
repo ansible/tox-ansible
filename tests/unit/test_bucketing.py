@@ -26,6 +26,7 @@ from tox_ansible.bucketing import (
     JobMatrix,
     _cli_count,
     _coerce_count,
+    _reject_ambiguous_molecule_commands,
     _WeightedScenario,
     assign_job,
     build_job_matrix,
@@ -426,7 +427,18 @@ def test_build_job_matrix_keeps_duplicate_molecule_basenames(tmp_path: Path) -> 
             "bash -c 'cd roles/example && python3 -m molecule test -s default'",
         ),
         ("molecule/default", "python3 -m molecule test -s default"),
-        ("molecule/group/merged", "python3 -m molecule test -s merged"),
+        (
+            "molecule/group/merged",
+            "python3 -m molecule test -s group/merged",
+        ),
+        (
+            "roles/example/molecule/group_a/default",
+            "bash -c 'cd roles/example && python3 -m molecule test -s group_a/default'",
+        ),
+        (
+            "roles/example/molecule/group_b/default",
+            "bash -c 'cd roles/example && python3 -m molecule test -s group_b/default'",
+        ),
         ("molecule", "python3 -m molecule test -s default"),
     ),
 )
@@ -438,6 +450,55 @@ def test_molecule_scenario_command(scenario_path: str, expected: str) -> None:
         expected: Command that must be produced.
     """
     assert molecule_scenario_command(scenario_path, None, None) == expected
+
+
+def test_build_job_matrix_accepts_nested_molecule_siblings(tmp_path: Path) -> None:
+    """Sibling nested scenarios must map to distinct Molecule commands.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    report = ImpactReport(
+        collection="test.test",
+        molecule_scenarios=[
+            "roles/example/molecule/group_a/default",
+            "roles/example/molecule/group_b/default",
+        ],
+    )
+    matrix = build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
+    assert len(matrix.jobs) == 2
+    names = {scenario for scenario in matrix.scenarios.values()}
+    assert names == {
+        "roles/example/molecule/group_a/default",
+        "roles/example/molecule/group_b/default",
+    }
+
+
+def test_reject_ambiguous_molecule_commands_exits(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Two paths that share a Molecule target must fail matrix generation.
+
+    Args:
+        caplog: Pytest fixture.
+    """
+    caplog.set_level(logging.CRITICAL)
+
+    def same_target(_path: str) -> tuple[str, str]:
+        return "roles/example", "default"
+
+    from unittest.mock import patch
+
+    with patch("tox_ansible.bucketing._molecule_target", side_effect=same_target):
+        with pytest.raises(SystemExit) as exc:
+            _reject_ambiguous_molecule_commands(
+                [
+                    "roles/example/molecule/group_a/default",
+                    "roles/example/molecule/group_b/default",
+                ],
+            )
+    assert exc.value.code == 1
+    assert "same command" in caplog.text
 
 
 def test_build_job_matrix_rejects_whitespace_ids(
