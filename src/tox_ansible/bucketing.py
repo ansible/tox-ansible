@@ -234,6 +234,29 @@ def _unique_names(paths: list[str]) -> list[str]:
     return names
 
 
+def require_integration_targets(report: ImpactReport, project_dir: Path) -> None:
+    """Exit when the report names integration targets that are not on disk.
+
+    ``build_job_matrix`` estimates missing targets at the default duration, which
+    can change job assignments relative to a full checkout.
+    """
+    if not report.integration_targets:
+        return
+    targets_dir = project_dir / "tests" / "integration" / "targets"
+    missing = [
+        name
+        for name in _unique_names(report.integration_targets)
+        if not (targets_dir / name).is_dir()
+    ]
+    if missing:
+        logger.critical(
+            "Integration targets from impact report not found under %s: %s",
+            targets_dir,
+            ", ".join(missing),
+        )
+        sys.exit(1)
+
+
 def build_job_matrix(
     report: ImpactReport,
     project_dir: Path,
@@ -527,6 +550,7 @@ def assign_job(
         Report containing only that job's scenarios.
     """
     job_count, max_parallel = require_matrix_limits(matrix_jobs, matrix_max_parallel)
+    require_integration_targets(report, project_dir)
     matrix = build_job_matrix(report, project_dir, job_count, max_parallel)
     try:
         names = job_scenario_names(matrix, job_id)

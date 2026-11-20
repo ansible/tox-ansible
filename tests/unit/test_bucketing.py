@@ -29,6 +29,7 @@ from tox_ansible.bucketing import (
     _WeightedScenario,
     assign_job,
     build_job_matrix,
+    require_integration_targets,
     execution_seconds,
     job_scenario_names,
     narrow_impact_report,
@@ -391,6 +392,7 @@ def test_assign_job(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
         collection="test.test",
         integration_targets=["tests/integration/targets/a"],
     )
+    (tmp_path / "tests" / "integration" / "targets" / "a").mkdir(parents=True)
     assigned = assign_job(report, tmp_path, 1, None, "integration-1")
     assert assigned.integration_targets == ["tests/integration/targets/a"]
     caplog.set_level(logging.CRITICAL)
@@ -398,6 +400,36 @@ def test_assign_job(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
         assign_job(report, tmp_path, 1, None, "integration-9")
     assert exc.value.code == 1
     assert "Unknown matrix job 'integration-9'" in caplog.text
+
+
+def test_assign_job_rejects_missing_integration_target(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Missing target dirs must fail before matrix rebuild can reshuffle jobs."""
+    (tmp_path / "tests" / "integration" / "targets" / "b").mkdir(parents=True)
+    report = ImpactReport(
+        collection="test.test",
+        integration_targets=[
+            "tests/integration/targets/a",
+            "tests/integration/targets/b",
+        ],
+    )
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as exc:
+        assign_job(report, tmp_path, 2, None, "integration-1")
+    assert exc.value.code == 1
+    assert "not found under" in caplog.text
+    assert "a" in caplog.text
+
+
+def test_require_integration_targets_noop_without_targets(tmp_path: Path) -> None:
+    """Molecule-only reports skip integration target checks."""
+    report = ImpactReport(
+        collection="test.test",
+        molecule_scenarios=["extensions/molecule/default"],
+    )
+    require_integration_targets(report, tmp_path)
 
 
 @pytest.mark.parametrize(
