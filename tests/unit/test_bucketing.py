@@ -571,6 +571,65 @@ def test_assign_job_rejects_missing_integration_target(
     assert "a" in caplog.text
 
 
+def test_build_job_matrix_rejects_unreadable_aliases(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unreadable aliases must fail matrix generation instead of defaulting to 180s.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    targets = tmp_path / "tests" / "integration" / "targets"
+    (targets / "a").mkdir(parents=True)
+    (targets / "b").mkdir(parents=True)
+    alias = targets / "a" / "aliases"
+    alias.write_bytes(b"\xff")
+    report = ImpactReport(
+        collection="test.test",
+        integration_targets=[
+            "tests/integration/targets/a",
+            "tests/integration/targets/b",
+        ],
+    )
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as exc:
+        build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
+    assert exc.value.code == 1
+    assert "Cannot read aliases" in caplog.text
+    assert "targets/a" in caplog.text
+
+
+def test_assign_job_rejects_unreadable_aliases(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Selected job execution must fail when aliases cannot be read.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    targets = tmp_path / "tests" / "integration" / "targets"
+    (targets / "a").mkdir(parents=True)
+    (targets / "b").mkdir(parents=True)
+    (targets / "a" / "aliases").write_bytes(b"\xff")
+    (targets / "b" / "aliases").write_text("slow\n", encoding="utf-8")
+    report = ImpactReport(
+        collection="test.test",
+        integration_targets=[
+            "tests/integration/targets/a",
+            "tests/integration/targets/b",
+        ],
+    )
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as exc:
+        assign_job(report, tmp_path, 2, None, "integration-1")
+    assert exc.value.code == 1
+    assert "Cannot read aliases" in caplog.text
+
+
 def test_require_integration_targets_noop_without_targets(tmp_path: Path) -> None:
     """Molecule-only reports skip integration target checks.
 

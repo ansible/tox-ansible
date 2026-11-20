@@ -121,13 +121,20 @@ def execution_seconds(aliases_text: str) -> int:
     return seconds
 
 
-def scenario_seconds(project_dir: Path, kind: str, name: str) -> int:
+def scenario_seconds(
+    project_dir: Path,
+    kind: str,
+    name: str,
+    *,
+    strict: bool = False,
+) -> int:
     """Return the estimated seconds for one scenario.
 
     Args:
         project_dir: Collection root.
         kind: ``integration`` or ``molecule``.
         name: Target or scenario name.
+        strict: When ``True``, unreadable aliases files exit instead of defaulting.
 
     Returns:
         Estimated runtime in seconds.
@@ -140,6 +147,13 @@ def scenario_seconds(project_dir: Path, kind: str, name: str) -> int:
     try:
         text = alias_path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
+        if strict:
+            logger.critical(
+                "Cannot read aliases for integration target %s at %s",
+                name,
+                alias_path,
+            )
+            sys.exit(1)
         logger.warning(
             "Cannot read aliases for integration target %s; using %ss",
             name,
@@ -395,7 +409,8 @@ def build_job_matrix(
         if kind == "molecule":
             _reject_ambiguous_molecule_commands(names)
         weighted = [
-            _WeightedScenario(name, scenario_seconds(project_dir, kind, name)) for name in names
+            _WeightedScenario(name, scenario_seconds(project_dir, kind, name, strict=True))
+            for name in names
         ]
         weighted.sort(key=lambda item: (-item.seconds, item.name))
         buckets = split_into_balanced_buckets(weighted, job_count)
