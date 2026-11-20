@@ -37,6 +37,7 @@ When `tox-ansible` sets up a test environment (e.g. `unit-py3.13-2.19`), it runs
 
 - **Test matrix**: Generates the Python version x Ansible version matrix (`py3.13-2.19`, `py3.12-devel`, etc.)
 - **GitHub Actions integration**: Produces JSON matrix output for CI workflows via `--gh-matrix`
+- **Scenario job matrix**: `--gh-matrix-jobs` packs impact-selected integration targets and molecule scenarios into time-balanced CI jobs (ADR-002)
 - **Environment configuration**: Sets up each tox env with the right dependencies, environment variables, and commands
 - **Test commands**: Configures `pytest` for unit/integration tests, `molecule`
   for molecule scenarios, `ansible-test sanity` for sanity tests, and
