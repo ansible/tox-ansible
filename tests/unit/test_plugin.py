@@ -637,7 +637,7 @@ def test_conf_commands_unit(tmp_path: Path) -> None:
         pos_args=None,
     )
     assert len(result) == 1
-    assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/unit"
+    assert result[0] == "python3 -m pytest ./tests/unit"
 
 
 def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
@@ -668,7 +668,7 @@ def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
     assert result == [
         (
             f"python3 -m pytest --cov --cov-config={coverage_config} "
-            "--ansible-unit-inject-only --cov-report=xml -v ./tests/unit"
+            "--cov-report=xml -v ./tests/unit"
         ),
     ]
 
@@ -732,7 +732,7 @@ def test_conf_commands_integration(tmp_path: Path) -> None:
         pos_args=None,
     )
     assert len(result) == 1
-    assert result[0] == "python3 -m pytest --ansible-unit-inject-only ./tests/integration"
+    assert result[0] == "python3 -m pytest ./tests/integration"
 
 
 def test_conf_commands_integration_ignores_coverage(tmp_path: Path) -> None:
@@ -759,7 +759,7 @@ def test_conf_commands_integration_ignores_coverage(tmp_path: Path) -> None:
         coverage_config=tmp_path / "coverage.ini",
     )
 
-    assert result == ["python3 -m pytest --ansible-unit-inject-only ./tests/integration"]
+    assert result == ["python3 -m pytest ./tests/integration"]
 
 
 def test_conf_commands_invalid(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
@@ -827,6 +827,8 @@ def test_conf_deps(tmp_path: Path) -> None:
         assert "requirement-test" in result
         assert "github.com/ansible/ansible" not in result
         assert "molecule" not in result
+        assert "pytest-ansible" not in result
+        assert "tox-ansible>=" in result
 
 
 def test_conf_deps_all_dependency_files(tmp_path: Path) -> None:
@@ -859,6 +861,7 @@ def test_conf_deps_integration(tmp_path: Path) -> None:
         result = conf_deps(test_type="integration")
         assert "ansible-dev-environment>=26.2.0" in result
         assert "molecule>=26.4.0" in result
+        assert "pytest-ansible" not in result
 
 
 def test_conf_deps_sanity() -> None:
