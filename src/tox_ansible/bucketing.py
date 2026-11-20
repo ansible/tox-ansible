@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import re
+import shlex
 import sys
 import uuid
 
@@ -238,6 +239,80 @@ def _scenario_ids(paths: list[str], kind: str) -> list[str]:
     return names
 
 
+def _reject_whitespace_ids(names: list[str]) -> None:
+    """Exit when a scenario id cannot survive a space-separated matrix value.
+
+    Args:
+        names: Scenario ids about to be packed into one job kind.
+    """
+    spaced = [name for name in names if any(char.isspace() for char in name)]
+    if not spaced:
+        return
+    logger.critical(
+        "Scenario ids cannot contain whitespace; matrix jobs are space-separated: %s",
+        ", ".join(repr(name) for name in spaced),
+    )
+    sys.exit(1)
+
+
+def molecule_scenario_command(
+    scenario_path: str,
+    molecule_append: list[str] | None,
+    pos_args: tuple[str, ...] | None,
+) -> str:
+    """Build one molecule command for an impact-report scenario path.
+
+    Collection scenarios under ``extensions/molecule/`` use ``molecule test -s``
+    with the path relative to that directory. Molecule has no project-directory
+    option, so every other scenario runs from the directory that contains
+    ``molecule/`` via ``bash -c``.
+
+    Args:
+        scenario_path: Scenario path or name from the impact report.
+        molecule_append: Extra argv appended to the command.
+        pos_args: Positional arguments passed to tox.
+
+    Returns:
+        A command that runs that scenario.
+    """
+    project, scenario = _molecule_target(scenario_path)
+    argv = ["python3", "-m", "molecule", "test", "-s", scenario]
+    if molecule_append:
+        argv.extend(molecule_append)
+    if pos_args:
+        argv.extend(pos_args)
+    command = " ".join(shlex.quote(part) for part in argv)
+    if project is None:
+        return command
+    script = f"cd {shlex.quote(project)} && {command}"
+    return f"bash -c {shlex.quote(script)}"
+
+
+def _molecule_target(scenario_path: str) -> tuple[str | None, str]:
+    """Return the working directory and ``-s`` name for one scenario path.
+
+    Args:
+        scenario_path: Scenario path or name from the impact report.
+
+    Returns:
+        Project directory, or None to stay at the collection root, and the
+        scenario name Molecule accepts.
+    """
+    normalized = scenario_path.replace("\\", "/").strip("/")
+    parts = tuple(part for part in normalized.split("/") if part not in {"", "."})
+    if "molecule" not in parts:
+        return None, normalized
+    marker = len(parts) - 1 - parts[::-1].index("molecule")
+    project = parts[:marker]
+    rest = parts[marker + 1 :]
+    if project == ("extensions",):
+        return None, "/".join(rest) if rest else "default"
+    scenario = rest[-1] if rest else "default"
+    if not project:
+        return None, scenario
+    return "/".join(project), scenario
+
+
 def require_integration_targets(report: ImpactReport, project_dir: Path) -> None:
     """Exit when the report names integration targets that are not on disk.
 
@@ -292,9 +367,10 @@ def build_job_matrix(
         ("molecule", report.molecule_scenarios),
     )
     for kind, paths in groups:
+        names = _scenario_ids(paths, kind)
+        _reject_whitespace_ids(names)
         weighted = [
-            _WeightedScenario(name, scenario_seconds(project_dir, kind, name))
-            for name in _scenario_ids(paths, kind)
+            _WeightedScenario(name, scenario_seconds(project_dir, kind, name)) for name in names
         ]
         weighted.sort(key=lambda item: (-item.seconds, item.name))
         buckets = split_into_balanced_buckets(weighted, job_count)

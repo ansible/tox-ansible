@@ -31,6 +31,7 @@ from tox_ansible.bucketing import (
     build_job_matrix,
     execution_seconds,
     job_scenario_names,
+    molecule_scenario_command,
     narrow_impact_report,
     require_integration_targets,
     require_matrix_limits,
@@ -404,6 +405,61 @@ def test_build_job_matrix_keeps_duplicate_molecule_basenames(tmp_path: Path) -> 
         ["roles/example/molecule/default"],
     )
     assert narrowed.molecule_scenarios == ["roles/example/molecule/default"]
+
+
+@pytest.mark.parametrize(
+    ("scenario_path", "expected"),
+    (
+        ("default", "python3 -m molecule test -s default"),
+        ("extensions/molecule/default", "python3 -m molecule test -s default"),
+        (
+            "extensions/molecule/appliance_vlans/merged",
+            "python3 -m molecule test -s appliance_vlans/merged",
+        ),
+        ("extensions/molecule", "python3 -m molecule test -s default"),
+        (
+            "roles/example/molecule/default",
+            "bash -c 'cd roles/example && python3 -m molecule test -s default'",
+        ),
+        (
+            "roles/example/molecule",
+            "bash -c 'cd roles/example && python3 -m molecule test -s default'",
+        ),
+        ("molecule/default", "python3 -m molecule test -s default"),
+        ("molecule/group/merged", "python3 -m molecule test -s merged"),
+        ("molecule", "python3 -m molecule test -s default"),
+    ),
+)
+def test_molecule_scenario_command(scenario_path: str, expected: str) -> None:
+    """Molecule commands use -s, and role layouts cd to the molecule parent.
+
+    Args:
+        scenario_path: Impact-report scenario path.
+        expected: Command that must be produced.
+    """
+    assert molecule_scenario_command(scenario_path, None, None) == expected
+
+
+def test_build_job_matrix_rejects_whitespace_ids(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A space in a scenario id cannot survive the space-separated matrix.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    report = ImpactReport(
+        collection="test.test",
+        molecule_scenarios=["roles/my role/molecule/default"],
+    )
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as exc:
+        build_job_matrix(report, tmp_path, job_count=1, max_parallel=None)
+    assert exc.value.code == 1
+    assert "cannot contain whitespace" in caplog.text
+    assert "roles/my role/molecule/default" in caplog.text
 
 
 def test_assign_job(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:

@@ -30,7 +30,12 @@ from tox.config.sets import ConfigSet, CoreConfigSet, EnvConfigSet
 from tox.plugin import impl
 from tox.tox_env.python.api import PY_FACTORS_RE
 
-from tox_ansible.bucketing import apply_matrix_job, resolve_matrix_limits, write_scenario_matrix
+from tox_ansible.bucketing import (
+    apply_matrix_job,
+    molecule_scenario_command,
+    resolve_matrix_limits,
+    write_scenario_matrix,
+)
 from tox_ansible.impact import ImpactReport, load_impact_report
 
 
@@ -1189,34 +1194,6 @@ def conf_commands_for_integration_unit(
     return [command]
 
 
-def _molecule_scenario_command(
-    scenario_path: str,
-    molecule_append: list[str] | None,
-    pos_args: tuple[str, ...] | None,
-) -> str:
-    """Build one molecule command for an impact-report scenario path.
-
-    Args:
-        scenario_path: Scenario path or name from the impact report.
-        molecule_append: Extra argv appended to the command.
-        pos_args: Positional arguments passed to tox.
-
-    Returns:
-        A shell command that runs that scenario.
-    """
-    path = Path(scenario_path)
-    parts = ["python3", "-m", "molecule"]
-    parent = path.parent
-    if parent.name == "molecule" and parent.parent.parts:
-        parts.extend(["--directory", shlex.quote(str(parent.parent))])
-    parts.extend(["test", "-s", shlex.quote(path.name)])
-    if molecule_append:
-        parts.extend(molecule_append)
-    if pos_args:
-        parts.extend(pos_args)
-    return " ".join(parts)
-
-
 def conf_commands_for_molecule(
     pos_args: tuple[str, ...] | None,
     molecule_commands: list[str] | None = None,
@@ -1246,7 +1223,7 @@ def conf_commands_for_molecule(
 
     if impact_report and impact_report.molecule_scenarios:
         return [
-            _molecule_scenario_command(scenario_path, molecule_append, pos_args)
+            molecule_scenario_command(scenario_path, molecule_append, pos_args)
             for scenario_path in impact_report.molecule_scenarios
         ]
 

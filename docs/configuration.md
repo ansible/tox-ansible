@@ -286,7 +286,9 @@ tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integratio
 
 `--matrix-job` requires an impact file. A molecule environment does not run integration scenarios, and an integration environment does not run molecule scenarios. `molecule_commands` cannot be combined with `--matrix-job`; remove it so the selected scenarios run.
 
-Molecule jobs keep the impact-report path as the scenario id, so two scenarios named `default` in different directories stay distinct. Integration jobs still use the target directory name.
+Molecule jobs keep the impact-report path as the scenario id, so two scenarios named `default` in different directories stay distinct. Integration jobs still use the target directory name. Those ids are space-separated, so a path that contains whitespace is rejected.
+
+Collection scenarios run with `molecule test -s` and the path under `extensions/molecule/` as the scenario name. Every other scenario runs from the directory that contains `molecule/`, because Molecule has no project-directory option.
 
 `--gh-matrix` and `--gh-matrix-jobs` are separate. The first lists tox environments. The second lists scenario jobs.
 
