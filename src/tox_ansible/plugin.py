@@ -1312,6 +1312,30 @@ def _add_collection_req_commands(
         commands.append(end_group)
 
 
+def _molecule_scenario_requirements(project_dir: Path) -> list[str]:
+    """Find requirements files inside molecule scenario directories.
+
+    Molecule's ansible-native layout keeps per-scenario collection
+    dependencies in ``extensions/molecule/<scenario>/requirements.yml``.
+    The tox environment points ``ANSIBLE_COLLECTIONS_PATH`` at the
+    isolated env, so these must be installed there as well.
+
+    Args:
+        project_dir: The collection root.
+
+    Returns:
+        Relative paths of the scenario requirements files, sorted.
+    """
+    molecule_dir = project_dir / "extensions" / "molecule"
+    if not molecule_dir.is_dir():
+        return []
+    return sorted(
+        (scenario / "requirements.yml").relative_to(project_dir).as_posix()
+        for scenario in molecule_dir.iterdir()
+        if (scenario / "molecule.yml").is_file() and (scenario / "requirements.yml").is_file()
+    )
+
+
 def _add_sanity_git_init(
     commands: list[str],
     env_conf: EnvConfigSet,
@@ -1378,6 +1402,8 @@ def conf_commands_pre(
     req_paths = TEST_REQUIREMENTS_YML.get(test_type, [])
     cwd = Path.cwd()
     found_reqs = [p for p in req_paths if (cwd / p).is_file()]
+    if test_type == "molecule":
+        found_reqs.extend(_molecule_scenario_requirements(cwd))
     if found_reqs:
         _add_collection_req_commands(commands, found_reqs, envdir, acv, end_group)
 
