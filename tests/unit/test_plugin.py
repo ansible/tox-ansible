@@ -697,7 +697,7 @@ def test_conf_commands_unit_ignores_matrix_job(tmp_path: Path) -> None:
         pos_args=None,
         matrix_job="integration-1",
     )
-    assert result == ["python3 -m pytest --ansible-unit-inject-only ./tests/unit"]
+    assert result == ["python3 -m pytest ./tests/unit"]
 
 
 def test_conf_commands_molecule_custom_ignores_matrix_job(
