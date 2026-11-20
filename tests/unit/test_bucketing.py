@@ -22,8 +22,6 @@ from tox.config.source import discover_source
 from tox.report import ToxHandler
 from tox.session.state import State
 
-import tox_ansible.plugin as ansible_plugin
-
 from tox_ansible.bucketing import (
     JobMatrix,
     _cli_count,
@@ -781,7 +779,7 @@ def test_matrix_job_requires_impact_file(tmp_path: Path, monkeypatch: pytest.Mon
 
 
 def test_matrix_job_command_edges(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """Test unit envs, molecule_commands, and strict integration scope.
+    """Test strict integration scope when a matrix job is selected.
 
     Args:
         tmp_path: Pytest fixture.
@@ -789,28 +787,8 @@ def test_matrix_job_command_edges(tmp_path: Path, caplog: pytest.LogCaptureFixtu
     """
     config_file = tmp_path / "tox-ansible.ini"
     config_file.write_text("[ansible]\n", encoding="utf-8")
-    env_conf, _ = _env(config_file, "unit-py3.14-2.19")
+    env_conf, _ = _env(config_file, "integration-py3.14-2.19")
     collection = Collection(name="test", namespace="test", version="1.0.0")
-    unit = ansible_plugin.conf_commands(
-        collection=collection,
-        env_conf=env_conf,
-        pos_args=None,
-        test_type="unit",
-        matrix_job="integration-1",
-    )
-    assert unit == ["python3 -m pytest --ansible-unit-inject-only ./tests/unit"]
-
-    caplog.set_level(logging.WARNING)
-    replaced = ansible_plugin.conf_commands(
-        collection=collection,
-        env_conf=env_conf,
-        pos_args=None,
-        test_type="molecule",
-        molecule_commands=["true"],
-        matrix_job="molecule-1",
-    )
-    assert replaced == ["true"]
-    assert "molecule_commands ignores --matrix-job molecule-1" in caplog.text
 
     with pytest.raises(SystemExit) as empty_scope:
         conf_commands_for_integration(

@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import logging
 import os
 import re
 import typing
@@ -671,6 +672,65 @@ def test_conf_commands_unit_coverage(tmp_path: Path) -> None:
             "--ansible-unit-inject-only --cov-report=xml -v ./tests/unit"
         ),
     ]
+
+
+def test_conf_commands_unit_ignores_matrix_job(tmp_path: Path) -> None:
+    """Unit environments still run when --matrix-job selects integration.
+
+    Args:
+        tmp_path: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+    conf = Config.make(
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("unit-py3.14-2.19")
+
+    result = conf_commands(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="unit",
+        pos_args=None,
+        matrix_job="integration-1",
+    )
+    assert result == ["python3 -m pytest --ansible-unit-inject-only ./tests/unit"]
+
+
+def test_conf_commands_molecule_custom_ignores_matrix_job(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Configured molecule_commands are kept when --matrix-job is set.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    ini_file = tmp_path / "tox.ini"
+    ini_file.touch()
+    source = discover_source(ini_file, None)
+    conf = Config.make(
+        _parsed(work_dir=tmp_path, config_file=ini_file, root_dir=tmp_path),
+        pos_args=[],
+        source=source,
+        extra_envs=[],
+    ).get_env("molecule-py3.14-2.19")
+    caplog.set_level(logging.WARNING)
+
+    result = conf_commands(
+        env_conf=conf,
+        collection=Collection(name="test", namespace="test", version="1.0.0"),
+        test_type="molecule",
+        pos_args=None,
+        molecule_commands=["true"],
+        matrix_job="molecule-1",
+    )
+    assert result == ["true"]
+    assert "molecule_commands ignores --matrix-job molecule-1" in caplog.text
 
 
 def test_conf_commands_sanity(tmp_path: Path) -> None:
