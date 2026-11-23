@@ -404,8 +404,6 @@ def _molecule_target(scenario_path: str) -> tuple[str | None, str]:
     project = parts[:marker]
     rest = parts[marker + 1 :]
     scenario = "/".join(rest) if rest else "default"
-    if project == ("extensions",):
-        return None, scenario
     if not project:
         return None, scenario
     return "/".join(project), scenario
