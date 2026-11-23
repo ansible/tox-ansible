@@ -29,6 +29,7 @@ from tox_ansible.bucketing import (
     _coerce_count,
     _reject_ambiguous_molecule_commands,
     _WeightedScenario,
+    apply_matrix_job,
     assign_job,
     build_job_matrix,
     execution_seconds,
@@ -86,6 +87,7 @@ def _option_values(config_file: Path, **overrides: object) -> dict[str, object]:
         "gh_matrix": False,
         "gh_matrix_jobs": False,
         "matrix_job": "",
+        "matrix_hash": "",
         "matrix_jobs": None,
         "matrix_max_parallel": None,
         "impact_file": "",
@@ -344,10 +346,17 @@ def test_build_job_matrix_tie_breaks_by_name(tmp_path: Path) -> None:
     )
     matrix = build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
     assert matrix.scenarios == {"integration-1": "a", "integration-2": "b"}
-    assert matrix.as_dict() == {
+    payload = matrix.as_dict()
+    assert payload == {
         "jobs": ["integration-1", "integration-2"],
         "scenarios": matrix.scenarios,
+        "matrix_jobs": 2,
+        "content_hash": payload["content_hash"],
     }
+    again = build_job_matrix(report, tmp_path, job_count=2, max_parallel=None)
+    assert payload["content_hash"] == again.as_dict()["content_hash"]
+    packed = build_job_matrix(report, tmp_path, job_count=1, max_parallel=None)
+    assert packed.as_dict()["content_hash"] != payload["content_hash"]
 
 
 def test_job_ids_and_narrow() -> None:
@@ -419,6 +428,11 @@ def test_build_job_matrix_keeps_duplicate_molecule_basenames(tmp_path: Path) -> 
             "python3 -m molecule test -s appliance_vlans/merged",
         ),
         ("extensions/molecule", "python3 -m molecule test -s default"),
+        ("extensions/molecule/molecule", "python3 -m molecule test -s molecule"),
+        (
+            "extensions/molecule/foo/molecule",
+            "python3 -m molecule test -s foo/molecule",
+        ),
         (
             "roles/example/molecule/default",
             "bash -c 'cd roles/example && python3 -m molecule test -s default'",
@@ -569,6 +583,84 @@ def test_assign_job_rejects_missing_integration_target(
     assert exc.value.code == 1
     assert "not found under" in caplog.text
     assert "a" in caplog.text
+
+
+def test_write_scenario_matrix_rejects_missing_integration_target(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Generate path must reject missing targets before packing can reshuffle jobs.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    (tmp_path / "tests" / "integration" / "targets" / "b").mkdir(parents=True)
+    impact = tmp_path / "impact.json"
+    impact.write_text(
+        json.dumps(
+            {
+                "collection": "test.test",
+                "integration_targets": [
+                    "tests/integration/targets/a",
+                    "tests/integration/targets/b",
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+    collection = Collection(name="test", namespace="test", version="1.0.0")
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as exc:
+        write_scenario_matrix(tmp_path, "impact.json", 2, None, collection)
+    assert exc.value.code == 1
+    assert "not found under" in caplog.text
+    assert "targets: a" in caplog.text
+
+
+def test_assign_job_checks_matrix_hash(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A supplied hash must match the recomputed assignment.
+
+    Args:
+        tmp_path: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    (tmp_path / "tests" / "integration" / "targets" / "a").mkdir(parents=True)
+    report = ImpactReport(
+        collection="test.test",
+        integration_targets=["tests/integration/targets/a"],
+    )
+    built = build_job_matrix(report, tmp_path, job_count=1, max_parallel=None)
+    digest = str(built.as_dict()["content_hash"])
+    assigned = assign_job(
+        report,
+        tmp_path,
+        1,
+        None,
+        "integration-1",
+        expected_hash=digest.upper(),
+    )
+    assert assigned.integration_targets == ["tests/integration/targets/a"]
+
+    caplog.set_level(logging.CRITICAL)
+    with pytest.raises(SystemExit) as bad_digest:
+        assign_job(report, tmp_path, 1, None, "integration-1", expected_hash="zz")
+    assert bad_digest.value.code == 1
+    assert "64-character" in caplog.text
+
+    caplog.clear()
+    with pytest.raises(SystemExit) as mismatch:
+        assign_job(report, tmp_path, 1, None, "integration-1", expected_hash="0" * 64)
+    assert mismatch.value.code == 1
+    assert "does not match" in caplog.text
+
+    with pytest.raises(SystemExit) as needs_job:
+        apply_matrix_job(report, tmp_path, 1, None, None, expected_hash=digest)
+    assert needs_job.value.code == 1
+    assert "requires --matrix-job" in caplog.text
 
 
 def test_build_job_matrix_rejects_unreadable_aliases(
@@ -797,13 +889,21 @@ def test_write_job_matrix_stdout_and_github_output(
 
     output = tmp_path / "github_output.txt"
     monkeypatch.setenv("GITHUB_OUTPUT", str(output))
-    write_job_matrix(
-        JobMatrix(jobs=["integration-1"], scenarios={"integration-1": "a"}, max_parallel=2),
+    published = JobMatrix(
+        jobs=["integration-1"],
+        scenarios={"integration-1": "a"},
+        max_parallel=2,
+        matrix_jobs=2,
     )
+    write_job_matrix(published)
     text = output.read_text(encoding="utf-8")
+    digest = str(published.as_dict()["content_hash"])
     assert 'jobs=["integration-1"]\n' in text
     assert 'scenarios={"integration-1": "a"}\n' in text
     assert "max_parallel=2\n" in text
+    assert "matrix_jobs=2\n" in text
+    assert f"content_hash={digest}\n" in text
+    assert f'content_hash="{digest}"' not in text
 
     monkeypatch.delenv("GITHUB_OUTPUT")
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
@@ -877,6 +977,8 @@ def test_gh_matrix_jobs_output(
     assert payload["scenarios"]["integration-2"] == "fast_target"
     assert payload["scenarios"]["molecule-1"] == "extensions/molecule/default"
     assert payload["max_parallel"] == 4
+    assert payload["matrix_jobs"] == 2
+    assert len(str(payload["content_hash"])) == 64
     assigned = " ".join(payload["scenarios"].values()).split()
     assert sorted(assigned) == ["extensions/molecule/default", "fast_target", "slow_target"]
 
@@ -887,6 +989,7 @@ def test_gh_matrix_jobs_output(
         ({"gh_matrix": True}, "--gh-matrix"),
         ({"gh_matrix_jobs": True}, "--gh-matrix-jobs"),
         ({"matrix_job": "integration-1"}, "--matrix-job"),
+        ({"matrix_hash": "ab" * 32}, "--matrix-hash"),
         ({"coverage": True}, "--coverage"),
     ),
 )
@@ -1034,6 +1137,33 @@ def test_matrix_job_requires_impact_file(tmp_path: Path, monkeypatch: pytest.Mon
     with pytest.raises(SystemExit) as exc:
         tox_add_env_config(env_conf, state)
     assert exc.value.code == 1
+
+
+def test_matrix_hash_mismatch_fails_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The env hook must fail when --matrix-hash does not match this tree.
+
+    Args:
+        tmp_path: Pytest fixture.
+        monkeypatch: Pytest fixture.
+        caplog: Pytest fixture.
+    """
+    monkeypatch.chdir(tmp_path)
+    config_file = _write_project(tmp_path)
+    caplog.set_level(logging.CRITICAL)
+    env_conf, state = _env(
+        config_file,
+        "integration-py3.14-2.19",
+        matrix_job="integration-1",
+        matrix_hash="0" * 64,
+    )
+    with pytest.raises(SystemExit) as exc:
+        tox_add_env_config(env_conf, state)
+    assert exc.value.code == 1
+    assert "does not match" in caplog.text
 
 
 def test_matrix_job_command_edges(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:

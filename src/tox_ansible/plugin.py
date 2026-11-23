@@ -345,6 +345,12 @@ def tox_add_option(parser: ToxParser) -> None:
         metavar="JOB",
         help="run only the scenarios assigned to one job id, such as integration-1",
     )
+    parser.add_argument(
+        "--matrix-hash",
+        default="",
+        metavar="SHA256",
+        help="fail --matrix-job when the recomputed matrix hash differs",
+    )
 
 
 @impl
@@ -363,6 +369,7 @@ def tox_add_core_config(
         (options.gh_matrix, "--gh-matrix"),
         (getattr(options, "gh_matrix_jobs", False), "--gh-matrix-jobs"),
         (bool(getattr(options, "matrix_job", "")), "--matrix-job"),
+        (bool(getattr(options, "matrix_hash", "")), "--matrix-hash"),
         (bool(options.coverage), "--coverage"),
     )
     if not options.ansible:
@@ -445,6 +452,7 @@ def tox_add_env_config(env_conf: EnvConfigSet, state: State) -> None:
         ansible_config.matrix_jobs,
         ansible_config.matrix_max_parallel,
         matrix_job,
+        expected_hash=getattr(state.conf.options, "matrix_hash", "") or None,
     )
 
     # Extract Python version from environment name (e.g., py3.11 from integration-py3.11-2.18)

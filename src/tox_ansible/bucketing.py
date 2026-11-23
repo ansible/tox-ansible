@@ -8,6 +8,7 @@ jobs up to an equal share of the total. Integration times come from ansible-test
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -35,6 +36,7 @@ _TIME_MINUTES = re.compile(r"^time=(\d+)m\S*$")
 # Digits and the suffix are disjoint so the match cannot backtrack.
 _TIME_BARE = re.compile(r"^time=(\d+)(?:[^\d\s]\S*)?$")
 _JOB_ID = re.compile(r"^(integration|molecule)-[1-9]\d*$")
+_MATRIX_HASH = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 @dataclass(frozen=True)
@@ -45,22 +47,77 @@ class JobMatrix:
         jobs: Job ids such as ``integration-1`` or ``molecule-2``.
         scenarios: Map of job id to a space-separated scenario list.
         max_parallel: Optional cap for the workflow ``max-parallel`` setting.
+        matrix_jobs: Configured job count echoed for runners, when known.
     """
 
     jobs: list[str]
     scenarios: dict[str, str]
     max_parallel: int | None = None
+    matrix_jobs: int | None = None
 
     def as_dict(self) -> dict[str, object]:
         """Return the JSON object printed for ``--gh-matrix-jobs``.
 
         Returns:
             Matrix payload. ``max_parallel`` is omitted when unset.
+            ``matrix_jobs`` and ``content_hash`` are omitted when the job
+            count was not recorded.
         """
         payload: dict[str, object] = {"jobs": list(self.jobs), "scenarios": dict(self.scenarios)}
         if self.max_parallel is not None:
             payload["max_parallel"] = self.max_parallel
+        if self.matrix_jobs is not None:
+            payload["matrix_jobs"] = self.matrix_jobs
+            payload["content_hash"] = _matrix_content_hash(self.matrix_jobs, self.scenarios)
         return payload
+
+
+def _matrix_content_hash(matrix_jobs: int, scenarios: dict[str, str]) -> str:
+    """Return the sha256 of the job assignment.
+
+    The digest is lowercase hex. The hashed document is compact JSON with
+    sorted keys and two fields: ``matrix_jobs`` and ``scenarios``.
+
+    Args:
+        matrix_jobs: Configured job count for each scenario kind.
+        scenarios: Map of job id to a space-separated scenario list.
+
+    Returns:
+        Lowercase sha256 hex digest.
+    """
+    body = json.dumps(
+        {"matrix_jobs": matrix_jobs, "scenarios": scenarios},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(body.encode()).hexdigest()
+
+
+def _check_matrix_hash(
+    matrix_jobs: int,
+    scenarios: dict[str, str],
+    expected: str | None,
+) -> None:
+    """Exit when a caller-supplied hash does not match the recomputed matrix.
+
+    Args:
+        matrix_jobs: Configured job count for each scenario kind.
+        scenarios: Map of job id to a space-separated scenario list.
+        expected: Hex digest from ``--matrix-hash``, or None when omitted.
+    """
+    if not expected:
+        return
+    if _MATRIX_HASH.fullmatch(expected) is None:
+        logger.critical("--matrix-hash must be a 64-character sha256 hex digest")
+        sys.exit(1)
+    actual = _matrix_content_hash(matrix_jobs, scenarios)
+    if actual != expected.lower():
+        logger.critical(
+            "Scenario matrix does not match --matrix-hash %s (recomputed %s)",
+            expected.lower(),
+            actual,
+        )
+        sys.exit(1)
 
 
 @dataclass(frozen=True)
@@ -338,6 +395,9 @@ def _molecule_target(scenario_path: str) -> tuple[str | None, str]:
     """
     normalized = scenario_path.replace("\\", "/").strip("/")
     parts = tuple(part for part in normalized.split("/") if part not in {"", "."})
+    if parts[:2] == ("extensions", "molecule"):
+        rest = parts[2:]
+        return None, "/".join(rest) if rest else "default"
     if "molecule" not in parts:
         return None, normalized
     marker = len(parts) - 1 - parts[::-1].index("molecule")
@@ -419,7 +479,12 @@ def build_job_matrix(
             job_id = f"{kind}-{index}"
             jobs.append(job_id)
             scenarios[job_id] = " ".join(names)
-    return JobMatrix(jobs=jobs, scenarios=scenarios, max_parallel=max_parallel)
+    return JobMatrix(
+        jobs=jobs,
+        scenarios=scenarios,
+        max_parallel=max_parallel,
+        matrix_jobs=job_count,
+    )
 
 
 def job_scenario_names(matrix: JobMatrix, job_id: str) -> list[str]:
@@ -615,8 +680,11 @@ def write_job_matrix(matrix: JobMatrix) -> None:
         sys.exit(1)
 
     lines: list[str] = []
-    for key in ("jobs", "scenarios", "max_parallel"):
+    for key in ("jobs", "scenarios", "max_parallel", "matrix_jobs", "content_hash"):
         if key not in payload:
+            continue
+        if key == "content_hash":
+            lines.append(f"{key}={payload[key]}\n")
             continue
         value = json.dumps(payload[key])
         if "\n" in value:
@@ -652,15 +720,18 @@ def write_scenario_matrix(
     if report is None:  # pragma: no cover
         logger.critical("--gh-matrix-jobs requires an impact file")
         sys.exit(1)
+    require_integration_targets(report, project_dir)
     write_job_matrix(build_job_matrix(report, project_dir, job_count, max_parallel))
 
 
-def assign_job(
+def assign_job(  # noqa: PLR0913
     report: ImpactReport,
     project_dir: Path,
     matrix_jobs: int,
     matrix_max_parallel: int | None,
     job_id: str,
+    *,
+    expected_hash: str | None = None,
 ) -> ImpactReport:
     """Return the impact report narrowed to one matrix job.
 
@@ -670,6 +741,7 @@ def assign_job(
         matrix_jobs: Configured job count.
         matrix_max_parallel: Configured cap, or None when omitted.
         job_id: Job id selected with ``--matrix-job``.
+        expected_hash: Digest from ``--matrix-hash``, or None when omitted.
 
     Returns:
         Report containing only that job's scenarios.
@@ -677,6 +749,7 @@ def assign_job(
     job_count, max_parallel = require_matrix_limits(matrix_jobs, matrix_max_parallel)
     require_integration_targets(report, project_dir)
     matrix = build_job_matrix(report, project_dir, job_count, max_parallel)
+    _check_matrix_hash(job_count, matrix.scenarios, expected_hash)
     try:
         names = job_scenario_names(matrix, job_id)
     except ValueError as exc:
@@ -685,12 +758,14 @@ def assign_job(
     return narrow_impact_report(report, job_id, names)
 
 
-def apply_matrix_job(
+def apply_matrix_job(  # noqa: PLR0913
     report: ImpactReport | None,
     project_dir: Path,
     matrix_jobs: int,
     matrix_max_parallel: int | None,
     job_id: str | None,
+    *,
+    expected_hash: str | None = None,
 ) -> ImpactReport | None:
     """Narrow a report to one job, or return it unchanged.
 
@@ -700,13 +775,24 @@ def apply_matrix_job(
         matrix_jobs: Configured job count.
         matrix_max_parallel: Configured cap, or None when omitted.
         job_id: Job id from ``--matrix-job``, or None when that option is omitted.
+        expected_hash: Digest from ``--matrix-hash``, or None when omitted.
 
     Returns:
         The original report, or the report narrowed to ``job_id``.
     """
+    if expected_hash and not job_id:
+        logger.critical("--matrix-hash requires --matrix-job")
+        sys.exit(1)
     if not job_id:
         return report
     if report is None:
         logger.critical("--matrix-job requires an impact file")
         sys.exit(1)
-    return assign_job(report, project_dir, matrix_jobs, matrix_max_parallel, job_id)
+    return assign_job(
+        report,
+        project_dir,
+        matrix_jobs,
+        matrix_max_parallel,
+        job_id,
+        expected_hash=expected_hash,
+    )

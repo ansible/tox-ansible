@@ -264,11 +264,15 @@ matrix_max_parallel = 8
     "integration-1": "slow_target",
     "integration-2": "fast_target"
   },
-  "max_parallel": 8
+  "max_parallel": 8,
+  "matrix_jobs": 24,
+  "content_hash": "<sha256>"
 }
 ```
 
-On GitHub Actions the same object is appended to `GITHUB_OUTPUT` as `jobs`, `scenarios`, and, when set, `max_parallel`.
+`content_hash` is the sha256 of compact JSON with sorted keys and two fields, `matrix_jobs` and `scenarios`. On GitHub Actions the same object is appended to `GITHUB_OUTPUT` as `jobs`, `scenarios`, `matrix_jobs`, `content_hash`, and, when set, `max_parallel`.
+
+`--gh-matrix-jobs` exits when an integration target directory named in the impact report is missing. A missing directory would otherwise be timed at 180 seconds and could change the job boundaries.
 
 Estimated seconds come from `tests/integration/targets/<name>/aliases`:
 
@@ -278,10 +282,10 @@ Estimated seconds come from `tests/integration/targets/<name>/aliases`:
 
 Molecule scenarios use 180 seconds. Scenarios with the same estimate are ordered by name. The packer follows `ansible_test_splitter`: each job gets about an equal share of the total, and a scenario that fits nowhere else goes in the first job.
 
-Run one job with the same `matrix_jobs` value. Each runner must also use the same impact report contents and integration `aliases` files as the generate step. `--matrix-job` recomputes the buckets from those inputs and runs only that job's scenarios. The job fails if an assigned integration target directory is missing:
+Run one job with the same `matrix_jobs` value. Each runner must also use the same impact report contents and integration `aliases` files as the generate step. `--matrix-job` recomputes the buckets from those inputs and runs only that job's scenarios. Pass the generated `content_hash` as `--matrix-hash` so the run exits when those inputs differ. The job also fails if an assigned integration target directory is missing:
 
 ```bash
-tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 -e integration-py3.12-2.19
+tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 --matrix-hash "$CONTENT_HASH" -e integration-py3.12-2.19
 ```
 
 `--matrix-job` requires an impact file. A molecule environment does not run integration scenarios, and an integration environment does not run molecule scenarios. `molecule_commands` cannot be combined with `--matrix-job`; remove it so the selected scenarios run.

@@ -21,7 +21,9 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 **We will pack impact-selected integration targets and molecule scenarios inside tox-ansible, emit that packing as a GitHub Actions matrix, and rerun a single job with `--matrix-job`.**
 
 - `matrix_jobs` and `matrix_max_parallel` are config and CLI settings.
-- `--gh-matrix-jobs` prints `{jobs, scenarios, max_parallel}` and exits. It does not replace `--gh-matrix`.
+- `--gh-matrix-jobs` prints `{jobs, scenarios, max_parallel, matrix_jobs, content_hash}` and exits. It does not replace `--gh-matrix`.
+- Generate and `--matrix-job` both exit when an integration target directory from the impact report is missing.
+- `--matrix-hash` exits when the recomputed assignment does not match the `content_hash` from generate. The digest is sha256 of compact JSON `{"matrix_jobs", "scenarios"}` with sorted keys.
 - Integration targets and molecule scenarios are packed separately into `integration-N` and `molecule-N` jobs.
 - Durations come from ansible-test `aliases` (`time=` and `slow`), matching `ansible_test_splitter`. Missing data uses 180 seconds. Molecule scenarios use 180 seconds.
 - Equal durations are ordered by name so the matrix and `--matrix-job` stay stable.
@@ -73,7 +75,7 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 
 ### Negative
 
-- Each runner must use the same `matrix_jobs` value, impact report contents, and integration `aliases` files as the generate step. `--matrix-job` recomputes assignments from those inputs, so a different report or aliases file can move a target to another job.
+- Each runner must use the same `matrix_jobs` value, impact report contents, and integration `aliases` files as the generate step. `--matrix-job` recomputes assignments from those inputs. Without `--matrix-hash`, a different report or aliases file can move a target to another job. With `--matrix-hash`, that drift exits before any scenario runs.
 - Molecule scenarios have no aliases file, so they share one default duration.
 - `max_parallel` only takes effect when the workflow copies it into `strategy.max-parallel`.
 
@@ -106,5 +108,6 @@ Config for this plugin is exposed on both INI (`[ansible]`) and TOML (`[tool.tox
 | 2026-11-20 | Sudhir Verma | Molecule jobs keep full scenario paths; reject molecule_commands with --matrix-job |
 | 2026-11-20 | Sudhir Verma | Molecule commands use -s or bash -c; reject whitespace in matrix ids |
 | 2026-11-20 | Sudhir Verma | Runners must reuse the generate-step impact report and aliases |
+| 2026-11-23 | Sudhir Verma | Generate rejects missing targets; matrix emits matrix_jobs and content_hash |
 
 ---
