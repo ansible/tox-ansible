@@ -61,6 +61,8 @@ present:
 - `tests/requirements.yml`
 - `tests/integration/requirements.yml` (shared with integration during migration)
 - `tests/molecule/requirements.yml` (optional molecule-only deps)
+- `extensions/molecule/<scenario>/requirements.yml` for each scenario that has
+  a `molecule.yml`
 
 ### Integration autodetection
 
