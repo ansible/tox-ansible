@@ -124,6 +124,15 @@ class TestValidateImpactPath:
         with pytest.raises(ValueError, match="Path traversal not allowed"):
             _validate_impact_path("tests/../../../etc/passwd", tmp_path)
 
+    def test_backslash_traversal_rejected(self, tmp_path: Path) -> None:
+        """Backslash paths normalize like forward slashes before containment checks.
+
+        Args:
+            tmp_path: Pytest fixture.
+        """
+        with pytest.raises(ValueError, match="Path traversal not allowed"):
+            _validate_impact_path("..\\outside\\molecule\\default", tmp_path)
+
 
 class TestValidateSafeName:
     """Tests for _validate_safe_name function."""
@@ -708,8 +717,25 @@ class TestConfCommandsForMoleculeImpact:
 
         expected_scenario_count = 2
         assert len(result) == expected_scenario_count
-        assert "python3 -m molecule test -s default" in result[0]
-        assert "python3 -m molecule test -s custom" in result[1]
+        assert result[0] == "python3 -m molecule test -s default"
+        assert result[1] == "python3 -m molecule test -s custom"
+
+    def test_duplicate_molecule_basenames_keep_directories(self) -> None:
+        """Scenarios that share a name run from their own molecule directories."""
+        impact_report = ImpactReport(
+            collection="test.test",
+            molecule_scenarios=[
+                "extensions/molecule/default",
+                "roles/example/molecule/default",
+            ],
+        )
+
+        result = conf_commands_for_molecule(pos_args=None, impact_report=impact_report)
+
+        assert result == [
+            "python3 -m molecule test -s default",
+            "bash -c 'cd roles/example && python3 -m molecule test -s default'",
+        ]
 
     def test_molecule_scenarios_with_append(self) -> None:
         """Molecule scenarios with append adds extra args."""

@@ -11,11 +11,12 @@ Decisions that are fully reflected in the codebase.
 | ADR | Title | Date |
 |-----|-------|------|
 | [ADR-001](ADR-001-downstream-matrix-extends-upstream.md) | Downstream Matrix Extends Upstream | 2026-07-13 |
+| [ADR-002](ADR-002-time-based-scenario-job-bucketing.md) | Time-based Scenario Job Bucketing | 2026-11-19 |
 
 ## Creating New ADRs
 
 1. Copy the template from `../templates/adr.md`
-2. Use the next available number (currently ADR-002)
+2. Use the next available number (currently ADR-003)
 3. Include:
    - Status (Proposed → Accepted → Implemented)
    - Date

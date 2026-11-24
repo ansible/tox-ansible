@@ -54,7 +54,8 @@ def _validate_impact_path(path_str: str, project_dir: Path) -> None:
     Raises:
         ValueError: If the path is absolute or contains traversal.
     """
-    path = Path(path_str)
+    normalized = path_str.replace("\\", "/")
+    path = Path(normalized)
     if path.is_absolute():
         msg = f"Absolute paths not allowed in impact report: {path_str}"
         raise ValueError(msg)

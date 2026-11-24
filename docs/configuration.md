@@ -229,6 +229,73 @@ A typical CI workflow using content-plugin-finder:
 
 This runs only the molecule scenarios and integration targets affected by the changed files.
 
+## Job bucketing
+
+Large integration suites can be split across CI jobs by estimated runtime. `matrix_jobs` is the maximum number of jobs for integration targets and, separately, for molecule scenarios. `matrix_max_parallel` is copied into the matrix for a workflow `strategy.max-parallel` setting. Tox does not start or limit runners.
+
+Set both values in either config file. TOML wins over INI. CLI wins over both. `0` in a config file leaves `max_parallel` out of the matrix. `--matrix-max-parallel` must be a positive integer.
+
+```bash
+tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-max-parallel 8 --gh-matrix-jobs
+```
+
+```toml
+# pyproject.toml
+[tool.tox-ansible]
+impact_file = "impact.json"
+matrix_jobs = 24
+matrix_max_parallel = 8
+```
+
+```ini
+# tox-ansible.ini
+[ansible]
+impact_file = impact.json
+matrix_jobs = 24
+matrix_max_parallel = 8
+```
+
+`--gh-matrix-jobs` prints a matrix and exits. Every selected scenario appears in exactly one job. Empty jobs are omitted. Integration targets and molecule scenarios are packed separately, so job ids look like `integration-1` and `molecule-1`.
+
+```json
+{
+  "jobs": ["integration-1", "integration-2"],
+  "scenarios": {
+    "integration-1": "slow_target",
+    "integration-2": "fast_target"
+  },
+  "max_parallel": 8,
+  "matrix_jobs": 24,
+  "content_hash": "<sha256>"
+}
+```
+
+`content_hash` is the sha256 of compact JSON with sorted keys and two fields, `matrix_jobs` and `scenarios`. On GitHub Actions the same object is appended to `GITHUB_OUTPUT` as `jobs`, `scenarios`, `matrix_jobs`, `content_hash`, and, when set, `max_parallel`.
+
+`--gh-matrix-jobs` exits when an integration target directory named in the impact report is missing. A missing directory would otherwise be timed at 180 seconds and could change the job boundaries.
+
+Estimated seconds come from `tests/integration/targets/<name>/aliases`:
+
+- `time=45s`, `time=2m`, or `time=45`
+- `slow` uses 3000 seconds when no `time=` alias is present
+- otherwise 180 seconds
+
+Molecule scenarios use 180 seconds. Scenarios with the same estimate are ordered by name. The packer follows `ansible_test_splitter`: each job gets about an equal share of the total, and a scenario that fits nowhere else goes in the first job.
+
+Run one job with the same `matrix_jobs` value. Each runner must also use the same impact report contents and integration `aliases` files as the generate step. `--matrix-job` recomputes the buckets from those inputs and runs only that job's scenarios. Pass the generated `content_hash` as `--matrix-hash` so the run exits when those inputs differ. The job also fails if an assigned integration target directory is missing:
+
+```bash
+tox --ansible --impact-file impact.json --matrix-jobs 24 --matrix-job integration-1 --matrix-hash "$CONTENT_HASH" -e integration-py3.12-2.19
+```
+
+`--matrix-job` requires an impact file. A molecule environment does not run integration scenarios, and an integration environment does not run molecule scenarios. `molecule_commands` cannot be combined with `--matrix-job`; remove it so the selected scenarios run.
+
+Molecule jobs keep the impact-report path as the scenario id, so two scenarios named `default` in different directories stay distinct. Integration jobs still use the target directory name. Those ids are space-separated, so a path that contains whitespace is rejected.
+
+Collection scenarios run with `molecule test -s` and the path under `extensions/molecule/` as the scenario name. Every other scenario runs from the directory that contains `molecule/`, because Molecule has no project-directory option.
+
+`--gh-matrix` and `--gh-matrix-jobs` are separate. The first lists tox environments. The second lists scenario jobs.
+
 ## Overriding the configuration
 
 Any tox environment configuration can be overridden by the user. The method depends on which configuration file you use.
