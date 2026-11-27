@@ -1,12 +1,10 @@
 Metafunc
 addopts
 adrs
-autouse
 calver
 caplog
 capsys
 coveragerc
-delenv
 endgroup
 envdir
 envlist
